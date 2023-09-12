@@ -1,0 +1,79 @@
+# Node.js and Express.js
+node_modules/
+npm-debug.log
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+lib-cov/
+coverage/
+.nyc_output/
+.grunt/
+bower_components/
+jspm_packages/
+
+# Compiled binary addons (for example, node-sass)
+build/Release
+
+# dotenv environment variables file
+.env
+
+# Mac OS system files
+.DS_Store
+
+# Editor-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Log files for testing
+*.log
+
+# Dependency lock files
+package-lock.json
+yarn.lock
+
+# Production build output
+dist/
+
+# Local environment configuration
+config/env.local.js
+
+# Ignore API keys and secrets
+config/keys.js
+
+# Ignore environment configuration
+config/env.js
+
+# Ignore sensitive information
+config/secrets.json
+
+# Ignore IDE-specific files
+*.iml
+
+# Ignore system files
+Thumbs.db
+ehthumbs.db
+
+# Ignore application-specific files
+*.log
+logs
+*.ejs
+*.map
+
+# Ignore generated coverage reports
+coverage/
+.lcov
+
+# Ignore test-specific files
+test/
+__tests__/
