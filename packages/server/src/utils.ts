@@ -1,7 +1,22 @@
 import { PrismaClient } from '@prisma/client';
+import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
 
-// Constants class
+// Interfaces
+interface IGoogleAuthTokenResponse {
+    userId: string;
+    email: string;
+    name: string;
+    profile: string;
+    success: boolean;
+}
+/**
+ *
+ *
+ *
+ *
+ */
+// Application constants
 export class Constants {
     public static JWT_SECRET = process.env.JWT_SECRET;
     public static PORT = process.env.PORT;
@@ -10,7 +25,12 @@ export class Constants {
     public static CLIENT_HOST = process.env.CLIENT_HOST;
     public static MAGIC_LINK_TOKEN_EXPIRATION_TIME = process.env.MAGIC_LINK_TOKEN_EXPIRATION_TIME; // in minutes
 }
-
+/**
+ *
+ *
+ *
+ *
+ */
 /** Verify the JSON WEB TOKEN */
 export const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
     const JWT_SECRET = process.env.JWT_SECRET;
@@ -92,4 +112,30 @@ export function jwtExpireDate() {
     // add this hours to current time to get the expiration time
     const expirationTime = new Date(Date.now() + hourInteger * 60 * 60 * 1000);
     return expirationTime;
+}
+
+/** Verify the Google Auth Token */
+export async function verifyGoogleAuthToken(token: string): Promise<IGoogleAuthTokenResponse> {
+    const response = await axios.get('https://oauth2.googleapis.com/tokeninfo', {
+        params: {
+            access_token: token,
+        },
+    });
+
+    const userInfoEndpoint = 'https://www.googleapis.com/oauth2/v1/userinfo';
+    const userInfoResponse = await axios.get(userInfoEndpoint, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const userProfile = userInfoResponse.data;
+
+    const payload = response.data;
+    const userId = payload.sub;
+    const email = payload.email;
+    const name = userProfile.name;
+    const picture = userProfile.picture;
+
+    return { success: true, userId, email, name, profile: picture };
 }

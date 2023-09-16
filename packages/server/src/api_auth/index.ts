@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 } from 'uuid';
-import { Constants, PrismaClientSingleton, generateToken, isMagicTokenValid, jwtExpireDate } from '../utils';
+import { Constants, PrismaClientSingleton, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -290,5 +290,142 @@ router.post(
         res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
     },
 );
+
+/**
+ *
+ * Signup with google
+ *
+ */
+router.post('/google', async (req, res) => {
+    // token is required
+    if (!('token' in req.body)) {
+        res.status(400).send({ error: 'Token is required' });
+        return;
+    }
+
+    if (!req.body.token) {
+        res.status(400).send({ error: 'Token is required' });
+        return;
+    }
+
+    const token = req.body.token;
+
+    const tokenPayload = await verifyGoogleAuthToken(token);
+    if (!tokenPayload.success) {
+        res.status(401).send({ error: 'Invalid token' });
+        return;
+    }
+
+    const email = tokenPayload.email;
+    // check if user already exit in the database
+    const prisma = PrismaClientSingleton.prisma;
+    const oldUser = await prisma.user.findUnique({
+        where: {
+            email: email,
+        },
+    });
+
+    if (oldUser) {
+        res.status(409).send({ error: 'User already exists' });
+        return;
+    }
+
+    // create the new user
+    const userId = tokenPayload.userId;
+    const password = v4();
+
+    const newUser = await prisma.user.create({
+        data: {
+            email: email,
+            userId: userId,
+            password: password,
+        },
+        select: {
+            userId: true,
+            email: true,
+        },
+    });
+
+    // generate the JWT token
+    const tokenJWT = generateToken(email, newUser.userId, false);
+    res.send({ token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email });
+});
+
+/**
+ * Sign-in with google
+ *
+ */
+router.post('/google_login', async (req, res) => {
+    // token is required
+    if (!('token' in req.body)) {
+        res.status(400).send({ error: 'Token is required' });
+        return;
+    }
+
+    if (!req.body.token) {
+        res.status(400).send({ error: 'Token is required' });
+        return;
+    }
+
+    const token = req.body.token;
+    const tokenPayload = await verifyGoogleAuthToken(token);
+    if (!tokenPayload.success) {
+        res.status(401).send({ error: 'Invalid token' });
+        return;
+    }
+
+    const email = tokenPayload.email;
+
+    // check if user already exit in the database
+    const prisma = PrismaClientSingleton.prisma;
+    const oldUser = await prisma.user.findUnique({
+        where: {
+            email: email,
+        },
+        include: {
+            sessions: true,
+        },
+    });
+
+    if (!oldUser) {
+        res.status(401).send({ error: 'Invalid token' });
+        return;
+    }
+
+    // generate the JWT token
+    const tokenJWT = generateToken(email, oldUser.userId, false);
+
+    // check for the number of active sessions
+    if (oldUser.numberOfSessions === oldUser.sessions.length) {
+        res.status(401).send({ error: 'Too many sessions' });
+        return;
+    }
+
+    // update the user sessions
+    await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            sessions: {
+                createMany: {
+                    data: [
+                        {
+                            token: tokenJWT,
+                            expiresAt: jwtExpireDate(),
+                            ipAddress: req.ip,
+                            userAgent: req.headers['user-agent'] || '',
+                        },
+                    ],
+                },
+            },
+            numberOfSessions: {
+                increment: 1,
+            },
+        },
+    });
+
+    res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+});
 
 export default router;
