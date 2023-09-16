@@ -2,11 +2,48 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["debian-openssl-1.1.x", "native"]
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  username  String?     @unique
+  userId    String
+  password  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  sessions  Session[]
+  role      String? // Role of the user (admin, user, etc.)
+  fullName  String? // Full name of the user
+  magicLink MagicLink[]
+  numberOfSessions Int @default(1)
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  ipAddress String // Store the IP address
+  location  String? // Store the location (e.g., city or country)
+  userAgent String // Store the user agent (web browser info)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], name: "idx_user_id")
+}
+
+model MagicLink {
+  id        Int      @id @default(autoincrement())
+  linkToken String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
