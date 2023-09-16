@@ -29,7 +29,7 @@ model User {
 model Session {
   id        Int      @id @default(autoincrement())
   userId    Int
-  token     String   @unique
+  token     String   @unique @db.VarChar(1000)
   expiresAt DateTime
   createdAt DateTime @default(now())
   ipAddress String // Store the IP address

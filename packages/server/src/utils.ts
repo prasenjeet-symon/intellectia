@@ -53,6 +53,7 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
         res.locals.userId = decodedToken.userId;
         res.locals.email = decodedToken.email;
         res.locals.isAdmin = decodedToken.isAdmin;
+        res.locals.token = token;
         // Move to the next middleware
         next();
     } catch (error) {

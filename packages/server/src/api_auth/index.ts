@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { v4 } from 'uuid';
-import { Constants, PrismaClientSingleton, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
+import { Constants, PrismaClientSingleton, authenticateUser, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -13,6 +13,8 @@ router.get('/', (req, res) => {
  * Authenticate user with email and password
  */
 router.post('/login', async (req, res) => {
+    console.log('HIT');
+
     if (!('email' in req.body) || !('password' in req.body)) {
         res.status(400).send({ error: 'Email and password are required' });
         return;
@@ -48,14 +50,14 @@ router.post('/login', async (req, res) => {
         return;
     }
 
-    // generate the JWT token
-    const token = generateToken(email, oldUser.userId, false);
-
     // check for number of sessions
     if (oldUser.numberOfSessions === oldUser.sessions.length) {
         res.status(401).send({ error: 'Too many sessions' });
         return;
     }
+
+    // generate the JWT token
+    const token = generateToken(email, oldUser.userId, false);
 
     // update the number of sessions
     await prisma.user.update({
@@ -426,6 +428,114 @@ router.post('/google_login', async (req, res) => {
     });
 
     res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+});
+
+/**
+ * Logout the user
+ */
+router.post('/logout', authenticateUser, async (req, res) => {
+    // res.locals should contain email and token
+    if (!('token' in res.locals) || !('email' in res.locals)) {
+        res.status(400).send({ error: 'Token and email are required' });
+        return;
+    }
+
+    if (!res.locals.token || !res.locals.email) {
+        res.status(400).send({ error: 'Token and email are required' });
+        return;
+    }
+
+    const email = res.locals.email;
+    const token = res.locals.token;
+
+    // check if the user is already associated with the email
+    const prisma = PrismaClientSingleton.prisma;
+    const oldUser = await prisma.user.findUnique({
+        where: {
+            email: email,
+        },
+        include: {
+            sessions: true,
+        },
+    });
+
+    if (!oldUser) {
+        res.status(401).send({ error: 'Invalid token or email' });
+        return;
+    }
+
+    const isSessionExists = oldUser.sessions.find((session) => session.token === token);
+    if (!isSessionExists) {
+        res.status(401).send({ error: 'Invalid token or email' });
+        return;
+    }
+
+    // delete the session
+    await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            sessions: {
+                delete: {
+                    token: token,
+                },
+            },
+        },
+    });
+
+    res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+});
+
+/**
+ *
+ * Logout all the sessions
+ *
+ */
+router.post('/logout_all', authenticateUser, async (req, res) => {
+    // res.locals should contain email and token
+    if (!('token' in res.locals) || !('email' in res.locals)) {
+        res.status(400).send({ error: 'Token and email are required' });
+        return;
+    }
+
+    if (!res.locals.token || !res.locals.email) {
+        res.status(400).send({ error: 'Token and email are required' });
+        return;
+    }
+
+    const email = res.locals.email;
+    const token = res.locals.token;
+
+    // check if the user is already associated with the email
+    const prisma = PrismaClientSingleton.prisma;
+    const oldUser = await prisma.user.findUnique({
+        where: {
+            email: email,
+        },
+        include: {
+            sessions: true,
+        },
+    });
+
+    if (!oldUser) {
+        res.status(401).send({ error: 'Invalid token or email' });
+        return;
+    }
+
+    // delete the session
+    await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            sessions: {
+                deleteMany: {},
+            },
+        },
+    });
+
+    res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
 });
 
 export default router;
