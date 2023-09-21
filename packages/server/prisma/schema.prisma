@@ -12,18 +12,23 @@ datasource db {
 }
 
 model User {
-  id        Int         @id @default(autoincrement())
-  email     String      @unique
-  username  String?     @unique
-  userId    String
-  password  String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  sessions  Session[]
-  role      String? // Role of the user (admin, user, etc.)
-  fullName  String? // Full name of the user
-  magicLink MagicLink[]
-  numberOfSessions Int @default(1)
+  id               Int             @id @default(autoincrement())
+  email            String          @unique
+  username         String?         @unique
+  userId           String
+  password         String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  sessions         Session[]
+  role             String? // Role of the user (admin, user, etc.)
+  fullName         String? // Full name of the user
+  magicLink        MagicLink[]
+  numberOfSessions Int             @default(1)
+  topics           Topic[]
+  articleSeries    ArticleSeries[]
+  articles         Article[]
+  comment          Comment[]
+  readLater        ReadLater[]
 }
 
 model Session {
@@ -35,7 +40,7 @@ model Session {
   ipAddress String // Store the IP address
   location  String? // Store the location (e.g., city or country)
   userAgent String // Store the user agent (web browser info)
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId], name: "idx_user_id")
 }
@@ -44,6 +49,75 @@ model MagicLink {
   id        Int      @id @default(autoincrement())
   linkToken String   @unique
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+model Topic {
+  id          Int       @id @default(autoincrement())
+  title       String    @unique
+  description String
+  logo        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  users       User[]
+  articles    Article[]
+}
+
+model ArticleSeries {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  logo        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  articles    Article[]
+}
+
+model Article {
+  id              Int            @id @default(autoincrement())
+  title           String
+  subtitle        String
+  htmlContent     String         @db.LongText
+  markdownContent String         @db.LongText
+  coverImage      String?
+  readTimeMinutes Decimal
+  canPublishStory Boolean        @default(true)
+  isPublished     Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          Int
+  articleSeries   ArticleSeries? @relation(fields: [articleSeriesId], references: [id], onDelete: SetNull)
+  articleSeriesId Int?
+  topics          Topic[]
+  comment         Comment[]
+  readLater       ReadLater[]
+}
+
+model Comment {
+  id              Int       @id @default(autoincrement())
+  content         String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  author          User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId        Int
+  article         Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId       Int
+  parentComment   Comment?  @relation("RepliesTo", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  parentCommentId Int?
+  replies         Comment[] @relation("RepliesTo")
+}
+
+// This collection is used to store read later articles, user can add articles to read later
+model ReadLater {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
 }
