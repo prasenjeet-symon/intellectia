@@ -1546,7 +1546,9 @@ router.get('/user/comment/:id/replies/:size/:cursor', async (req, res) => {
     res.send(replies);
 });
 /**
+ *
  * Add article to read later
+ *
  */
 router.post('/user/read_later', async (req, res) => {
     // id ( article id ) is required
@@ -1581,5 +1583,79 @@ router.post('/user/read_later', async (req, res) => {
             },
         },
     });
+
+    res.send('Article added to read later');
 });
+
+/**
+ *
+ * Remove article from read later
+ *
+ */
+router.delete('/user/read_later/:id', async (req, res) => {
+    // read later id is required
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const readLaterId = +req.params.id; // read later id
+
+    const prisma = PrismaClientSingleton.prisma;
+    // remove the article from read later
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            readLater: {
+                delete: {
+                    id: readLaterId,
+                },
+            },
+        },
+    });
+
+    res.send('Article removed from read later');
+});
+
+/**
+ *
+ * Get all the read later articles
+ *
+ */
+router.get('/user/read_later', async (req, res) => {
+    const prisma = PrismaClientSingleton.prisma;
+    const readLater = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            readLater: {
+                include: {
+                    article: {
+                        include: {
+                            topics: true,
+                            user: true,
+                        }
+                    },
+                }
+            },
+        },
+    });
+
+    if (!readLater) {
+        res.status(404).send({ error: 'No articles found' });
+        return;
+    }
+
+    res.send(readLater.readLater);
+});
+
 export default router;
