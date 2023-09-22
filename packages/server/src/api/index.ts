@@ -1904,7 +1904,7 @@ router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => 
             status: status === 'liked' ? 'liked' : 'disliked',
             id: {
                 gt: cursor,
-            }
+            },
         },
         include: {
             user: true,
@@ -1916,6 +1916,272 @@ router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => 
     });
 
     res.send(likes);
+});
+/**
+ *
+ * Follow an user
+ *
+ */
+router.put('/user/follow/:id', async (req, res) => {
+    // ( user 1 ) o------> ( user 2 )
+    // user 1 is the follower of user 2
+    // user 2 is the following of user 1
+    // id  ( user 2 user id )
+    // user 1 is always the logged in user who can follow user 2
+
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const user2Id = +req.params.id; // user 2 id
+    const prisma = PrismaClientSingleton.prisma;
+    // remove old follow if there is one
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followings: {
+                deleteMany: {
+                    followedId: user2Id,
+                },
+            },
+        },
+    });
+
+    // follow the user
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followings: {
+                create: {
+                    followed: {
+                        connect: {
+                            id: user2Id,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('User followed');
+});
+/**
+ *
+ * Remove from following
+ *
+ */
+router.delete('/user/follow/:id', async (req, res) => {
+    // ( user 1 ) o------> ( user 2 )
+    // user 1 is the follower of user 2
+    // user 2 is the following of user 1
+    // id  ( user 2 user id )
+    // user 1 is always the logged in user who can follow user 2
+
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const user2Id = +req.params.id; // user 2 id
+    const prisma = PrismaClientSingleton.prisma;
+    // remove old follow if there is one
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followings: {
+                deleteMany: {
+                    followedId: user2Id,
+                },
+            },
+        },
+    });
+
+    res.send('User removed from following');
+});
+/**
+ *
+ * Remove from followers
+ *
+ */
+router.delete('/user/follower/:id', async (req, res) => {
+    // ( user 1 ) o------> ( user 2 )
+    // user 1 is the follower of user 2
+    // user 2 is the following of user 1
+    // in this case user 2 is logged in user
+    // id  ( user 1 user id )
+
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const user1Id = +req.params.id; // user 1 id
+    const prisma = PrismaClientSingleton.prisma;
+    // remove the follower
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followers: {
+                deleteMany: {
+                    followerId: user1Id,
+                },
+            },
+        },
+    });
+
+    res.send('User removed from followers');
+});
+/**
+ *
+ * Get followers with pagination
+ *
+ */
+router.get('/user/followers/:size/:cursor', async (req, res) => {
+    // only cursor is optional , size is required
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if ('cursor' in req.params) {
+        if (isNaN(+req.params.cursor)) {
+            res.status(400).send({ error: 'Cursor is required' });
+            return;
+        }
+    }
+
+    const size = +req.params.size; // size
+    const cursor = 'cursor' in req.params ? +req.params.cursor : 0; // cursor
+    const prisma = PrismaClientSingleton.prisma;
+    // Get followers
+    const followers = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            followers: {
+                where: {
+                    id: {
+                        gt: cursor,
+                    },
+                },
+                include: {
+                    follower: true,
+                },
+                take: size,
+                orderBy: {
+                    id: 'asc',
+                },
+            },
+        },
+    });
+
+    if (!followers) {
+        res.status(404).send({ error: 'Followers not found' });
+        return;
+    }
+
+    res.send(followers.followers);
+});
+/**
+ * 
+ * Get followings with pagination
+ * 
+ */
+router.get('/user/followings/:size/:cursor', async (req, res) => {
+    // only cursor is optional , size is required
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if ('cursor' in req.params) {
+        if (isNaN(+req.params.cursor)) {
+            res.status(400).send({ error: 'Cursor is required' });
+            return;
+        }
+    }
+
+
+    const size = +req.params.size; // size
+    const cursor = 'cursor' in req.params ? +req.params.cursor : 0; // cursor
+    const prisma = PrismaClientSingleton.prisma;
+    // Get followings
+    const followings = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            followings: {
+                where: {
+                    id: {
+                        gt: cursor,
+                    },
+                },
+                include: {
+                    followed: true,
+                },
+                take: size,
+                orderBy: {
+                    id: 'asc',
+                },
+            },
+        },
+    });
+
+    if (!followings) {
+        res.status(404).send({ error: 'Followings not found' });
+        return;
+    }
+
+    res.send(followings.followings);
 });
 
 export default router;

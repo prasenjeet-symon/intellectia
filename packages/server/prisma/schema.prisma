@@ -30,6 +30,8 @@ model User {
   comment          Comment[]
   readLater        ReadLater[]
   likedArticles    Like[]
+  followers        Follow[]        @relation(name: "UserFollowings")
+  followings       Follow[]         @relation(name: "UserFollowers")
 }
 
 model Session {
@@ -140,4 +142,14 @@ model Like {
 enum LikeStatus {
   liked
   disliked
+}
+
+model Follow {
+  id         Int      @id @default(autoincrement())
+  follower   User     @relation(name: "UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId Int
+  followed   User     @relation(name: "UserFollowings", fields: [followedId], references: [id], onDelete: Cascade)
+  followedId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
