@@ -29,6 +29,7 @@ model User {
   articles         Article[]
   comment          Comment[]
   readLater        ReadLater[]
+  likedArticles    Like[]
 }
 
 model Session {
@@ -95,6 +96,7 @@ model Article {
   topics          Topic[]
   comment         Comment[]
   readLater       ReadLater[]
+  likes           Like[]
 }
 
 model Comment {
@@ -120,4 +122,22 @@ model ReadLater {
   articleId Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
+}
+
+// This collection will be used to hold the likes of the article
+model Like {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    LikeStatus
+  article   Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+}
+
+// ENUM of like
+enum LikeStatus {
+  liked
+  disliked
 }

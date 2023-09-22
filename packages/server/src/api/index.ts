@@ -1643,9 +1643,9 @@ router.get('/user/read_later', async (req, res) => {
                         include: {
                             topics: true,
                             user: true,
-                        }
+                        },
                     },
-                }
+                },
             },
         },
     });
@@ -1656,6 +1656,266 @@ router.get('/user/read_later', async (req, res) => {
     }
 
     res.send(readLater.readLater);
+});
+
+/**
+ *
+ * Like an article
+ *
+ */
+router.put('/user/article/:id/like', async (req, res) => {
+    // id is required
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const articleId = +req.params.id; // article id
+
+    const prisma = PrismaClientSingleton.prisma;
+    // remove old dislike if there is one
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            likedArticles: {
+                deleteMany: {
+                    articleId: articleId,
+                },
+            },
+        },
+    });
+
+    // like the article
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            likedArticles: {
+                create: {
+                    status: 'liked',
+                    article: {
+                        connect: {
+                            id: articleId,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('Article liked');
+});
+
+/**
+ *
+ * Dislike an article
+ *
+ */
+router.put('/user/article/:id/dislike', async (req, res) => {
+    // id is required
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const articleId = +req.params.id; // article id
+
+    const prisma = PrismaClientSingleton.prisma;
+    // remove old like if there is one
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            likedArticles: {
+                deleteMany: {
+                    articleId: articleId,
+                },
+            },
+        },
+    });
+
+    // dislike the article
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            likedArticles: {
+                create: {
+                    status: 'disliked',
+                    article: {
+                        connect: {
+                            id: articleId,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('Article disliked');
+});
+/**
+ *
+ * Get all the liked/disliked articles by the user with pagination
+ *
+ */
+router.get('/user/liked_articles/:status/:size/:cursor', async (req, res) => {
+    // only cursor is optional , size is required, status is required
+
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!('status' in req.params)) {
+        res.status(400).send({ error: 'Status is required' });
+        return;
+    }
+
+    if (!req.params.status) {
+        res.status(400).send({ error: 'Status is required' });
+        return;
+    }
+
+    const size = +req.params.size; // size
+    const status = req.params.status as string; // like status
+    const cursor = 'cursor' in req.params ? +req.params.cursor : 0; // cursor
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    // get liked/disliked articles
+    const likedArticles = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            likedArticles: {
+                where: {
+                    status: status === 'liked' ? 'liked' : 'disliked',
+                    id: {
+                        gt: cursor,
+                    },
+                },
+                include: {
+                    article: {
+                        include: {
+                            topics: true,
+                            user: true,
+                        },
+                    },
+                },
+                take: size,
+                orderBy: {
+                    id: 'asc',
+                },
+            },
+        },
+    });
+
+    if (!likedArticles) {
+        res.status(404).send({ error: 'No articles found' });
+        return;
+    }
+
+    res.send(likedArticles.likedArticles);
+});
+
+/**
+ *
+ * Get all the likes/dislikes of the given article with pagination
+ *
+ */
+router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => {
+    // only cursor is optional , size is required, status is required, id is required
+
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        // id cannot be 0
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        // size cannot be 0
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!('status' in req.params)) {
+        res.status(400).send({ error: 'Status is required' });
+        return;
+    }
+
+    if (!req.params.status) {
+        res.status(400).send({ error: 'Status is required' });
+        return;
+    }
+
+    const id = +req.params.id; // article id
+    const status = req.params.status as string; // like status
+    const size = +req.params.size; // size
+    const cursor = 'cursor' in req.params ? +req.params.cursor : 0; // cursor
+
+    const prisma = PrismaClientSingleton.prisma;
+    const likes = await prisma.like.findMany({
+        where: {
+            articleId: id,
+            status: status === 'liked' ? 'liked' : 'disliked',
+            id: {
+                gt: cursor,
+            }
+        },
+        include: {
+            user: true,
+        },
+        take: size,
+        orderBy: {
+            id: 'asc',
+        },
+    });
+
+    res.send(likes);
 });
 
 export default router;
