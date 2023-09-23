@@ -1,5 +1,9 @@
 # intellectia
-Empowering human thoughts in the age of AI
+## Your Guardian Against Misleading AI-Generated Content.
+
+At Intellectia, we're on a mission to eliminate misinformation and AI-generated deception. Our vigilant system detects and removes misleading articles, thanks to the dedicated efforts of our user community. With human reviews ensuring accuracy, we're your trusted platform for truthful, transparent, and reliable content. Join us in the fight against misinformation!
+
+## Setup
 
 **Project Setup Instructions**
 
