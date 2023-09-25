@@ -1919,7 +1919,7 @@ router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => 
 });
 /**
  *
- * Follow an user
+ * Follow an user removing old follow if there is, that may be suggested user
  *
  */
 router.put('/user/follow/:id', async (req, res) => {
@@ -1978,7 +1978,7 @@ router.put('/user/follow/:id', async (req, res) => {
 });
 /**
  *
- * Remove from following
+ * Remove from following also suggested
  *
  */
 router.delete('/user/follow/:id', async (req, res) => {
@@ -2019,7 +2019,7 @@ router.delete('/user/follow/:id', async (req, res) => {
 });
 /**
  *
- * Remove from followers
+ * Remove from followers 
  *
  */
 router.delete('/user/follower/:id', async (req, res) => {
@@ -2060,7 +2060,7 @@ router.delete('/user/follower/:id', async (req, res) => {
 });
 /**
  *
- * Get followers with pagination
+ * Get followers with pagination no suggested users
  *
  */
 router.get('/user/followers/:size/:cursor', async (req, res) => {
@@ -2122,7 +2122,7 @@ router.get('/user/followers/:size/:cursor', async (req, res) => {
 });
 /**
  * 
- * Get followings with pagination
+ * Get followings with pagination no suggested users
  * 
  */
 router.get('/user/followings/:size/:cursor', async (req, res) => {
@@ -2182,6 +2182,46 @@ router.get('/user/followings/:size/:cursor', async (req, res) => {
     }
 
     res.send(followings.followings);
+});
+/**
+ * 
+ * Add suggested user 
+ * 
+ */
+router.put('/user/follow/suggest/:id', async (req, res) => {
+    // id is the user id of suggested user to the logged in user
+});
+/**
+ * 
+ * Get all the suggested users to follow for the logged in user sort by suggestionCount ( asc )
+ * 
+ */
+router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
+    
+});
+/**
+ * 
+ * Add article to clicked articles, if already added then do nothing
+ * 
+ */
+router.put('/user/articleReads/:id', async (req, res) => {
+    // id is the article id of the article to be added
+});
+/**
+ * 
+ * Update the read time and percentage read of the article with the given id
+ * If the read time exceeds total reading time of the article then the article will be unaffected
+ * Also increase the readCount of the article if under total reading time of the article
+ */
+router.put('/user/articleReads/:id/time', async (req, res) => {
+    
+});
+/**
+ * Get the read later articles of the logged in user with pagination that are not read
+ * 
+ */
+router.get('/user/readLater/unread/:size/:cursor', async (req, res) => {
+    
 });
 
 export default router;
