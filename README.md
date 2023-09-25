@@ -3,6 +3,9 @@
 
 At Intellectia, we're on a mission to eliminate misinformation and AI-generated deception. Our vigilant system detects and removes misleading articles, thanks to the dedicated efforts of our user community. With human reviews ensuring accuracy, we're your trusted platform for truthful, transparent, and reliable content. Join us in the fight against misinformation!
 
+🔗 **Useful Links:**
+💬 [Discord]: https://discord.gg/8vV4bjSh
+
 ## Setup
 
 **Project Setup Instructions**
