@@ -33,6 +33,8 @@ model User {
   followers        Follow[]        @relation(name: "UserFollowings")
   followings       Follow[]        @relation(name: "UserFollowers")
   articleReads     ArticleRead[]
+  articleStories   ArticleStoryDistribution[]
+  articleActivities UserActivity[]
 }
 
 model Session {
@@ -101,6 +103,8 @@ model Article {
   readLater       ReadLater[]
   likes           Like[]
   reader          ArticleRead[]
+  story           ArticleStory?
+  userActivities  UserActivity[]
 }
 
 model Comment {
@@ -170,4 +174,48 @@ model ArticleRead {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   readCount         Int @default(1) // Number of times the article has been read
+}
+
+// Article stories 
+model ArticleStory {
+  id        Int      @id @default(autoincrement())
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  story     String @db.LongText // AI generated summary
+  storyFor ArticleStoryDistribution[]
+}
+
+// Article story distribution
+model ArticleStoryDistribution {
+  id        Int      @id @default(autoincrement())
+  isSeen    Boolean
+  story     ArticleStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storyId   Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+}
+
+// User activity
+model UserActivity {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  action    UserActivityAction
+}
+
+enum UserActivityAction {
+  like
+  comment
+  dislike
+  save
+  create
 }

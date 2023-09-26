@@ -2019,7 +2019,7 @@ router.delete('/user/follow/:id', async (req, res) => {
 });
 /**
  *
- * Remove from followers 
+ * Remove from followers
  *
  */
 router.delete('/user/follower/:id', async (req, res) => {
@@ -2098,6 +2098,7 @@ router.get('/user/followers/:size/:cursor', async (req, res) => {
         select: {
             followers: {
                 where: {
+                    isSuggested: false,
                     id: {
                         gt: cursor,
                     },
@@ -2121,9 +2122,9 @@ router.get('/user/followers/:size/:cursor', async (req, res) => {
     res.send(followers.followers);
 });
 /**
- * 
+ *
  * Get followings with pagination no suggested users
- * 
+ *
  */
 router.get('/user/followings/:size/:cursor', async (req, res) => {
     // only cursor is optional , size is required
@@ -2149,7 +2150,6 @@ router.get('/user/followings/:size/:cursor', async (req, res) => {
         }
     }
 
-
     const size = +req.params.size; // size
     const cursor = 'cursor' in req.params ? +req.params.cursor : 0; // cursor
     const prisma = PrismaClientSingleton.prisma;
@@ -2161,6 +2161,7 @@ router.get('/user/followings/:size/:cursor', async (req, res) => {
         select: {
             followings: {
                 where: {
+                    isSuggested: false,
                     id: {
                         gt: cursor,
                     },
@@ -2184,44 +2185,515 @@ router.get('/user/followings/:size/:cursor', async (req, res) => {
     res.send(followings.followings);
 });
 /**
- * 
- * Add suggested user 
- * 
+ *
+ * Add suggested user
+ *
  */
 router.put('/user/follow/suggest/:id', async (req, res) => {
     // id is the user id of suggested user to the logged in user
+    // id is required
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const userId = +req.params.id; // user id
+
+    const prisma = PrismaClientSingleton.prisma;
+    // remove old suggested user if any
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followings: {
+                deleteMany: {
+                    followedId: userId,
+                },
+            },
+        },
+    });
+
+    // add new suggested user
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followings: {
+                create: {
+                    followed: {
+                        connect: {
+                            id: userId,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('Suggested user added');
 });
+
 /**
- * 
- * Get all the suggested users to follow for the logged in user sort by suggestionCount ( asc )
- * 
+ *
+ * Get all the suggested users to follow for the logged in user with pagination
+ *
  */
 router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
-    
+    // size is required, cursor is optional
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        // size cannot be 0
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if ('cursor' in req.params) {
+        if (isNaN(+req.params.cursor)) {
+            res.status(400).send({ error: 'Cursor is required' });
+            return;
+        }
+    }
+
+    const size = +req.params.size; // size
+    const cursor = 'cursor' in req.params ? +req.params.cursor : 0; // cursor
+
+    const prisma = PrismaClientSingleton.prisma;
+    // Get suggested users
+    const suggestedUsers = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            followings: {
+                where: {
+                    isSuggested: true,
+                    id: {
+                        gt: cursor,
+                    },
+                },
+                include: {
+                    followed: true,
+                },
+                take: size,
+                distinct: ['followedId'],
+                orderBy: {
+                    id: 'asc',
+                },
+            },
+        },
+    });
+
+    if (!suggestedUsers) {
+        res.status(404).send({ error: 'Suggested users not found' });
+        return;
+    }
+
+    res.send(suggestedUsers.followings);
 });
 /**
+ * Get suggested users to follow for the logged in user given the size sorted by suggestion count ( asc )
  * 
+ */
+router.get('/user/followings/suggest/:size', async (req, res) => {
+    // size is required
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        // size cannot be 0
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    const size = +req.params.size; // size
+    const prisma = PrismaClientSingleton.prisma;
+    // Get suggested users
+    const suggestedUsers = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            followings: {
+                where: {
+                    isSuggested: true,
+                },
+                include: {
+                    followed: true,
+                },
+                take: size,
+                distinct: ['followedId'],
+                orderBy: {
+                    suggestionCount: 'asc',
+                },
+            },
+        },
+    });
+
+    if (!suggestedUsers) {
+        res.status(404).send({ error: 'Suggested users not found' });
+        return;
+    }
+
+    res.send(suggestedUsers.followings);
+});
+/**
+ *
+ * Update the suggestion count of the suggested users
+ *
+ */
+router.put('/user/followings/suggest', async (req, res) => {
+    // req body should contain ids of the suggested users
+    // ids are required
+    if (!('ids' in req.body)) {
+        res.status(400).send({ error: 'Ids are required' });
+        return;
+    }
+
+    if (!req.body.ids) {
+        res.status(400).send({ error: 'Ids are required' });
+        return;
+    }
+
+    if (req.body.ids.length === 0) {
+        res.status(400).send({ error: 'Ids are required' });
+        return;
+    }
+
+    const userIds = req.body.ids as number[];
+    const isIdsNumbers = userIds.every((id) => {
+        return typeof id === 'number';
+    });
+
+    if (!isIdsNumbers) {
+        res.status(400).send({ error: 'Ids are required' });
+        return;
+    }
+
+    const prisma = PrismaClientSingleton.prisma;
+    // update the suggestion count
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            followings: {
+                updateMany: {
+                    data: {
+                        suggestionCount: {
+                            increment: 1,
+                        },
+                    },
+                    where: {
+                        followedId: {
+                            in: userIds,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('Suggested users updated');
+});
+/**
+ *
  * Add article to clicked articles, if already added then do nothing
- * 
+ *
  */
 router.put('/user/articleReads/:id', async (req, res) => {
     // id is the article id of the article to be added
+    // id is required
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    const articleId = +req.params.id; // article id
+
+    const prisma = PrismaClientSingleton.prisma;
+    // check if the article is already added
+    const article = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            articleReads: {
+                where: {
+                    article: {
+                        id: articleId,
+                    },
+                },
+            },
+        },
+    });
+
+    if (article) {
+        res.send('Article already added');
+        return;
+    }
+
+    // add the article
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            articleReads: {
+                create: {
+                    article: {
+                        connect: {
+                            id: articleId,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('Article added to clicked articles');
 });
 /**
- * 
+ *
  * Update the read time and percentage read of the article with the given id
  * If the read time exceeds total reading time of the article then the article will be unaffected
  * Also increase the readCount of the article if under total reading time of the article
  */
 router.put('/user/articleReads/:id/time', async (req, res) => {
-    
+    // id is the article id of the article to be added
+    // id is required
+    if (!('id' in req.params)) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    if (!req.params.id) {
+        res.status(400).send({ error: 'Id is required' });
+        return;
+    }
+
+    // req.body contains read time of the article
+    if (!('readTimeMinutes' in req.body)) {
+        res.status(400).send({ error: 'Read time is required' });
+        return;
+    }
+
+    if (!req.body.readTimeMinutes) {
+        // read time cannot be 0
+        res.status(400).send({ error: 'Read time is required' });
+        return;
+    }
+
+    if (isNaN(+req.body.readTimeMinutes)) {
+        res.status(400).send({ error: 'Read time is required' });
+        return;
+    }
+
+    const readTimeMinutes = +req.body.readTimeMinutes; // read time
+    const articleId = +req.params.id; // article id
+
+    const prisma = PrismaClientSingleton.prisma;
+    // check if the article is already added
+    const article = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            articleReads: {
+                where: {
+                    article: {
+                        id: articleId,
+                    },
+                },
+                include: {
+                    article: true,
+                },
+            },
+        },
+    });
+
+    if (!article) {
+        res.status(400).send({ error: 'Article not found' });
+        return;
+    }
+
+    // check the article read time
+    const articleReadTime = +article.articleReads[0].article.readTimeMinutes;
+    const currentReadTime = +readTimeMinutes;
+    const totalReadTime = +article.articleReads[0].readTimeInMinutes + currentReadTime;
+    let finalReadTime = 0;
+    // check if the read time exceeds total reading time of the article
+    if (totalReadTime >= articleReadTime) {
+        finalReadTime = articleReadTime;
+    } else {
+        finalReadTime = totalReadTime;
+    }
+
+    const percentageRead = Math.round((finalReadTime / articleReadTime) * 100);
+    // update the read time
+    await prisma.user.update({
+        where: {
+            email: res.locals.email,
+        },
+        data: {
+            articleReads: {
+                updateMany: {
+                    data: {
+                        readTimeInMinutes: +finalReadTime,
+                        readPercentage: +percentageRead,
+                    },
+                    where: {
+                        articleId: articleId,
+                    },
+                },
+            },
+        },
+    });
+
+    res.send('Article read time updated');
 });
 /**
  * Get the read later articles of the logged in user with pagination that are not read
- * 
+ *
  */
 router.get('/user/readLater/unread/:size/:cursor', async (req, res) => {
-    
+    // size is required, cursor is optional
+    if (!('size' in req.params)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (!req.params.size) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if (isNaN(+req.params.size)) {
+        res.status(400).send({ error: 'Size is required' });
+        return;
+    }
+
+    if ('cursor' in req.params) {
+        if (!req.params.cursor) {
+            res.status(400).send({ error: 'Cursor is required' });
+            return;
+        }
+
+        if (isNaN(+req.params.cursor)) {
+            res.status(400).send({ error: 'Cursor is required' });
+            return;
+        }
+    }
+
+    const size = +req.params.size;
+    const cursor = 'cursor' in req.params ? +req.params.cursor : 0;
+    const prisma = PrismaClientSingleton.prisma;
+
+    const isArticleRead = async (articleId: number) => {
+        const article = await prisma.user.findUnique({
+            where: {
+                email: res.locals.email,
+            },
+            select: {
+                articleReads: {
+                    where: {
+                        readPercentage: {
+                            gte: 10, // if the read percentage is less than 10 then the article is not read
+                        },
+                        article: {
+                            id: articleId,
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!article) {
+            return false;
+        }
+
+        if (article.articleReads.length === 0) {
+            return false;
+        }
+
+        return true;
+    };
+
+    // fetch all the saved articles
+    const savedArticles = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            readLater: {
+                where: {
+                    id: {
+                        gt: cursor,
+                    },
+                },
+                include: {
+                    article: true,
+                },
+                take: size,
+                orderBy: {
+                    id: 'asc',
+                },
+            },
+        },
+    });
+
+    if (!savedArticles) {
+        res.status(404).send({ error: 'Saved articles not found' });
+        return;
+    }
+
+    // filter the saved articles that are not read
+    const articleWithReadPromises = savedArticles.readLater.map(async (rA) => {
+        const article = await isArticleRead(rA.articleId);
+        return {
+            ...rA,
+            isRead: article,
+        };
+    });
+
+    const articleWithRead = await Promise.all(articleWithReadPromises);
+
+    if (cursor < 0) {
+        const onlyUnReadArticles = articleWithRead.filter((a) => {
+            return !a.isRead;
+        });
+
+        res.send(onlyUnReadArticles);
+    } else {
+        res.send(articleWithRead);
+    }
 });
 
 export default router;
