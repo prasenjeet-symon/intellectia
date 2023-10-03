@@ -11,6 +11,20 @@ interface IGoogleAuthTokenResponse {
     success: boolean;
 }
 /**
+ * Events constants
+ */
+export class Events {
+    public static ARTICLE_CREATED = 'ARTICLE_CREATED';
+    public static ARTICLE_PUBLISHED = 'ARTICLE_PUBLISHED';
+    public static ARTICLE_LIKED = 'ARTICLE_LIKED';
+    public static ARTICLE_DISLIKED = 'ARTICLE_DISLIKED';
+    public static ARTICLE_SAVED = 'ARTICLE_SAVED';
+    public static ARTICLE_SHARED = 'ARTICLE_SHARED';
+    public static ARTICLE_COMMENTED = 'ARTICLE_COMMENTED';
+    public static ARTICLE_STORY_CREATED = 'ARTICLE_STORY_CREATED';
+}
+
+/**
  *
  *
  *
