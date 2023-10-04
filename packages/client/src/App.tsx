@@ -1,10 +1,13 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import reactLogo from "./assets/react.svg";
+import viteLogo from "/vite.svg";
+import "./App.css";
+import { useUsers } from "./hooks/useUsers";
+import { User } from "./types/user";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+  const { data, isLoading } = useUsers();
 
   return (
     <>
@@ -28,8 +31,37 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
+
+      {!isLoading ? (
+        <table>
+          <thead>
+            <tr>
+              <td>ID</td>
+              <td>Name</td>
+              <td>Username</td>
+              <td>Email</td>
+              <td>Phone</td>
+              <td>Website</td>
+            </tr>
+          </thead>
+          <tbody>
+            {(data as User[]).map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.name}</td>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.phone}</td>
+                <td>{user.website}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <div>LOADING.....</div>
+      )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
