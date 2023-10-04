@@ -211,11 +211,6 @@ router.post(
     }),
     async (req, res) => {
         // token and email are required
-        if (!('token' in req.body) || !('email' in req.body)) {
-            res.status(400).send({ error: 'Token and email are required' });
-            return;
-        }
-
         if (!(req.body.token && req.body.email)) {
             res.status(400).send({ error: 'Token and email are required' });
             return;
