@@ -41,6 +41,7 @@ build/Release
 # Dependency lock files
 package-lock.json
 yarn.lock
+bun.lockb
 
 # Production build output
 dist/
