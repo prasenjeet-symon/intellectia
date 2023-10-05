@@ -17,6 +17,13 @@ The rationale behind this policy is to address concerns related to potential mis
 
 Think of "Intellectia" as a vast library of knowledge that users can engage with through conversational interactions. We achieve this through the use of LLM technology, although it's important to clarify that we don't utilize OpenAI models specifically. Instead, we are considering the adoption of the "https://mistral.ai/news/announcing-mistral-7b/" technology, which appears to be a promising choice for our platform. This decision aligns with our commitment to delivering accurate and trustworthy information to our users while leveraging advanced AI tools to enhance their experience.
 
+## Intellectia's Content Verification Process: Keeping It Reliable
+To maintain accuracy in the articles you find on Intellectia, we take a special approach. See, it's really tough for computers to spot if a piece of writing was done by a smart AI like chatGPT or a human 🤖🧑. So, we rely on real people to check.
+
+Here's how it works: When someone wants to share an article on Intellectia, we don't just post it right away. Instead, we send it to a group of reviewers 👩‍⚖️👨‍⚖️. These are users who are pretty smart in certain topics 🧠. They pick at least three areas they're good at and review articles related to those topics. For an article to go live, it needs the thumbs-up from at least half of these reviewers 👍👍.
+
+But here's the cool part: These reviewers are chosen carefully 🕵️‍♀️🕵️. We look at their past work and what they know to make sure they're the right folks for the job 🔍. So, anyone on Intellectia can be both a reviewer and a writer 📝👩‍⚖️, making our community strong and dependable. 💪
+
 ## Setup
 
 **Project Setup Instructions**
