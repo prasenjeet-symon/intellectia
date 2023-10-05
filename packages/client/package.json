@@ -13,7 +13,8 @@
     "@tanstack/react-query-devtools": "^4.35.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-query": "^3.39.3"
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.16.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
@@ -24,6 +25,9 @@
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "localforage": "^1.10.0",
+    "match-sorter": "^6.3.1",
+    "sort-by": "^1.2.0",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
   }
