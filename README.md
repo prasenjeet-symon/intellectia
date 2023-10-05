@@ -5,7 +5,7 @@ At Intellectia, we're on a mission to eliminate misinformation and AI-generated 
 
 🔗 **Useful Links:**
 
-- 💬[Discord]: https://discord.gg/8vV4bjSh
+- 💬[Discord]: https://discord.gg/eQjh6AdEmg
 - 📫[PostMan]: https://www.postman.com/galactic-firefly-721755/workspace/intellectia/request/10849501-459d4afa-6e15-4611-92e6-7d852344e17c
 
 ## Do we use AI?
