@@ -1,11 +1,11 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
-import IndexPage from "./pages";
+import LoginPage from "./pages/Authentication/LoginPage/LoginPage";
 import UserById from "./pages/UserById";
 
 const routes = createBrowserRouter([
   {
     path: "/",
-    element: <IndexPage />,
+    element: <LoginPage />,
   },
   {
     path: "user/:userId",
