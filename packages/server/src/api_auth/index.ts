@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
  * Authenticate user with email and password
  */
 router.post('/login', async (req, res) => {
-    console.log('HIT');
+    
 
     if (!('email' in req.body) || !('password' in req.body)) {
         res.status(400).send({ error: 'Email and password are required' });

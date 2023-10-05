@@ -2308,7 +2308,7 @@ router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
 });
 /**
  * Get suggested users to follow for the logged in user given the size sorted by suggestion count ( asc )
- * 
+ *
  */
 router.get('/user/followings/suggest/:size', async (req, res) => {
     // size is required
@@ -2423,7 +2423,7 @@ router.put('/user/followings/suggest', async (req, res) => {
  * Add article to clicked articles, if already added then do nothing
  *
  */
-router.put('/user/articleReads/:id', async (req, res) => {
+router.put('/user/article-reads/:id', async (req, res) => {
     // id is the article id of the article to be added
     // id is required
     if (!('id' in req.params)) {
@@ -2486,7 +2486,7 @@ router.put('/user/articleReads/:id', async (req, res) => {
  * If the read time exceeds total reading time of the article then the article will be unaffected
  * Also increase the readCount of the article if under total reading time of the article
  */
-router.put('/user/articleReads/:id/time', async (req, res) => {
+router.put('/user/article-reads/:id/time', async (req, res) => {
     // id is the article id of the article to be added
     // id is required
     if (!('id' in req.params)) {
@@ -2583,7 +2583,7 @@ router.put('/user/articleReads/:id/time', async (req, res) => {
  * Get the read later articles of the logged in user with pagination that are not read
  *
  */
-router.get('/user/readLater/unread/:size/:cursor', async (req, res) => {
+router.get('/user/read-later/unread/:size/:cursor', async (req, res) => {
     // size is required, cursor is optional
     if (!('size' in req.params)) {
         res.status(400).send({ error: 'Size is required' });
@@ -2694,6 +2694,40 @@ router.get('/user/readLater/unread/:size/:cursor', async (req, res) => {
     } else {
         res.send(articleWithRead);
     }
+});
+
+/**
+ * Get user activities of the logged in user with pagination ( latest first )
+ */
+router.get('/user/article-activities/:size/:cursor', async (req, res) => {
+    // size is required, cursor is required
+    // both size and cursor is integer
+    // size >= 1 and cursor >= 0
+    // fetch article activities from the database sorted by the id ( desc ) and take ( size ) elements at a time
+    // this way we can fetch the latest activities from the database
+    // map the final result to include the activity's message that convey the activity in human readable form. i.e "Prasenjeet Kumar like an article 'Introduction to Docker'".
+    // result should not contain full article just the minimal information needed to convey the activity in human readable form and to generate the link on the frontend to nav to full article page.
+});
+
+/**
+ * Get all active article stories of the logged in user to see
+ */
+router.get('/user/article-stories', async (req, res) => {
+    // fetch all active article stories from the database for the logged in user
+    // fetched stories should not contain full article
+    // fetched stories should not be expired
+    // sort the stories by the createdAt ( desc ) to get the latest stories first
+    // stories should contain author minimal information like name, email, profile picture etc
+});
+/**
+ * Mark the story as seen by the logged in user given the story distribution id
+ */
+router.put('/user/article-story/:id', async (req, res) => {
+    // id is required
+    // id is the id of the story distribution
+    // only the isSeen property can be updated for the article distribution
+    // update the isSeen property to true ( even if already updated )
+    // return the meaning full message to the user
 });
 
 export default router;
