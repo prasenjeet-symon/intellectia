@@ -1,1 +1,2 @@
 .env
+packages/server/prisma/migrations/**
