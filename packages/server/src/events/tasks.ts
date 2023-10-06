@@ -39,21 +39,22 @@ export async function AddSuggestedUserToFollow(email: string, articleId: number)
  */
 export async function AddLikeActivity(email: string, articleId: number) {
     const prisma = PrismaClientSingleton.prisma;
-    const user = await prisma.user.findFirst({
+    await prisma.user.update({
         where: {
-            email,
+            email: email,
         },
-    });
-
-    const newLike = await prisma.like.create({
         data: {
-            userId: user?.id!,
-            articleId,
-            status: 'liked',
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'like',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
         },
     });
-
-    return newLike;
 }
 /**
  * Task ( Runs after the article dislike is created successfully ).
