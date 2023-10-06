@@ -32,6 +32,36 @@ export async function DistributeArticleStory(email: string, articleId: number) {
  */
 export async function AddSuggestedUserToFollow(email: string, articleId: number) {
     // email is the email id of logged in user
+    const prisma = PrismaClientSingleton.prisma;
+    const article = await prisma.article.findUnique({
+        where: {
+            id: articleId,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                },
+            },
+        },
+    });
+
+    const authorId = article?.user.id!
+
+    const updatedUser = await prisma.user.update({
+        where: {
+            email,
+        },
+        data: {
+            followers: {
+                connect: {
+                    id: authorId
+                }
+            }
+        },
+    });
+
+    return updatedUser
 }
 /**
  * Task ( Runs after the article like is created successfully ).
@@ -111,7 +141,7 @@ export async function AddSaveActivity(email: string, articleId: number) {
  * Add comment activity to the logged in user
  */
 export async function AddCommentActivity(email: string, articleId: number) {
-  const prisma = PrismaClientSingleton.prisma;
+    const prisma = PrismaClientSingleton.prisma;
     const updatedUser = await prisma.user.update({
         where: {
             email: email,
@@ -130,14 +160,13 @@ export async function AddCommentActivity(email: string, articleId: number) {
     });
 
     return updatedUser;
-
 }
 /**
  * Task ( Runs after the article is created successfully ).
  * Add article created activity to the logged in user
  */
 export async function AddArticleCreatedActivity(email: string, articleId: number) {
-  const prisma = PrismaClientSingleton.prisma;
+    const prisma = PrismaClientSingleton.prisma;
     const updatedUser = await prisma.user.update({
         where: {
             email: email,
@@ -156,5 +185,4 @@ export async function AddArticleCreatedActivity(email: string, articleId: number
     });
 
     return updatedUser;
-
 }
