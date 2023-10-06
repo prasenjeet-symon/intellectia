@@ -1,0 +1,7 @@
+#back {
+  background-image: linear-gradient(to right, #3e5151, #587068, #7b907b, #a8ae8d, #decba4);
+}
+
+#backImage {
+  background-image: url("../../../assets/images/Signup_background.jpg");
+}
