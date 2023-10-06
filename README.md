@@ -44,50 +44,73 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
    git clone git@github.com:prasenjeet-symon/intellectia.git
    ```
 
-2. **Navigate to the Project Directory**:
-   ```
-   cd intellectia/packages/server
-   ```
+2. **Database Configuration**:
 
-3. **Install Dependencies**:
-   ```
-   npm install
-   ```
+      ***Method 1 (Local Setup)***
+      
+      - Ensure you have XAMPP installed and running.
 
-4. **Database Configuration**:
-   - Ensure you have XAMPP installed and running.
-   - Create a MySQL database for your project in XAMPP. Note down the database name, username, and password.
-   - Copy the `.env.example` file to a new file named `.env` in the `packages/server` directory.
-   - Open the `.env` file and replace the placeholders with your MySQL database connection details
+      - Create a MySQL database for your project in XAMPP. Note down the database name, username, and password.
+
+      - Copy the `.env.example` file to a new file named `.env` in the `packages/server` directory.
+
+      - Open the `.env` file and replace the placeholders with your MySQL database connection details
     
-5. **Generate Prisma Client**:
-   ```
-   npx prisma generate
-   ```
+    ***Method 2 (Using Docker)***
 
-6. **Run Database Migrations**:
-   ```
-   npx prisma migrate dev
-   ```
-   This command will create database tables based on your Prisma schema and apply any pending migrations.
+      - Ensure you have [Docker](https://docs.docker.com/engine/install/), [Docker Compose](https://docs.docker.com/compose/install/), and [Docker Desktop setup](https://docs.docker.com/desktop/) installed
+        
+      - Create `.env` file in the root directory using the template from `.env.example` file
+        
+      - Start docker deamon using the below mentioned command. This command will steup `mysql` at port 3306 and a basic admin gui at `localhost:8080`
+      ```bash
+      docker-compose up -d
+      ```
+            
+      - (Optional) For spinning only `mysql` server run 
+      ```bash
+      docker-compose up -d  db
+      ```
+3. **Server Setup**
 
-7. **Start the Development Server**:
-   ```
-   npm start
-   ```
-   This command uses `ts-node-dev` to run the TypeScript files in your `src` directory. It will automatically restart the server whenever you make changes to your code.
+   - Navigate to  `server` folder
+      ```bash
+      cd packages/server
+      ```
+   
+   - Install packages
+      ```bash
+      npm install
+      ```
 
-8. **Build the Project (Optional)**:
-   ```
-   npm run build
-   ```
-   If you want to create a production-ready build of your project, use this command. The output will be in the `dist` directory.
+   - Run prisma migrate
+      ```bash
+      npx prisma migrate dev
+      ```
+   
+   - Start the server
+      ```bash
+      npm start
+      ```
 
-9. **Testing**:
-   - Run your tests with the following command:
-     ```
-     npm test
-     ```
-     Modify the test script in your `package.json` file to specify your testing framework (e.g., Jest, Mocha).
+4. **Client Setup**
+
+   - Navigate to  `client` folder
+      ```bash
+      cd packages/client
+      ```
+   
+   - Install packages
+      ```bash
+      npm install
+      ```
+   
+   - Start the server
+      ```bash
+      npm dev
+      ```
+5. **Environment setup**
+
+   - There is a `env.example` file available in the corresponding folder. Create a `.env` file and copy environmnet variables from `.env.example` file
 
 By following these setup instructions, you'll have your Express project located at 'packages/server' connected to a MySQL database using XAMPP, with database migration capabilities using Prisma, and environment variables properly configured. Make sure to adapt the configuration and environment variables to your specific project requirements.
