@@ -79,22 +79,82 @@ export async function AddDislikeActivity(email: string, articleId: number) {
         },
     });
 
-  return updatedUser
+    return updatedUser;
 }
 /**
  * Task ( Runs after the article save is created successfully ).
  * Add save activity to the logged in user
  */
 export async function AddSaveActivity(email: string, articleId: number) {
-    
+    const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'save',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
+        },
+    });
+
+    return updatedUser;
 }
 /**
  * Task ( Runs after the article comment is created successfully ).
  * Add comment activity to the logged in user
  */
-export async function AddCommentActivity(email: string, articleId: number) {}
+export async function AddCommentActivity(email: string, articleId: number) {
+  const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'comment',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
+        },
+    });
+
+    return updatedUser;
+
+}
 /**
  * Task ( Runs after the article is created successfully ).
  * Add article created activity to the logged in user
  */
-export async function AddArticleCreatedActivity(email: string, articleId: number) {}
+export async function AddArticleCreatedActivity(email: string, articleId: number) {
+  const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'create',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
+        },
+    });
+
+    return updatedUser;
+
+}
