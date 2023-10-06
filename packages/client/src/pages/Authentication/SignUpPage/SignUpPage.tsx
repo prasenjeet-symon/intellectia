@@ -3,13 +3,12 @@ import "./SignUpPage.css";
 function SignUpPage() {
   return (
     <>
-      <div className="min-h-screen py-40 text-gray-800" id="back">
-        <div className="container mx-auto">
-          <div className="border-2 flex flex-col lg:flex-row w-10/12 lg:w-8/12 bg-background rounded-xl mx-auto shadow-lg overflow-hidden">
+      <div className="min-h-screen max-h-screen flex justify-center items-center text-gray-800" id="back">
+      <div className="border-2 flex flex-col lg:flex-row w-1/2 lg:w-8/12 bg-background rounded-xl mx-auto shadow-lg overflow-hidden">
             <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-12 bg-no-repeat bg-cover bg-center" id="backImage">
-              <h1 className="text-white text-3xl mb-3">Welcome to Intellectia</h1>
+              <h1 className="text-primary text-3xl mb-3">Welcome to Intellectia</h1>
               <div>
-                <p className="text-white text-center">
+                <p className="text-primary text-center">
                   Your guardian against misleading AI-Generated content{" "}
                   <a href="#" className="text-stone-400 font-semibold">
                     Learn more
@@ -17,9 +16,9 @@ function SignUpPage() {
                 </p>
               </div>
             </div>
-            <div className="w-full lg:w-1/2 py-16 px-12">
+            <div className="w-full lg:w-1/2 py-16 px-12 text-primary">
               <h2 className="text-3xl mb-4">Register</h2>
-              <p className="mb-4">Create your account. It’s free and only takes a minute</p>
+              <p className="mb-4 text-text">Create your account. It’s free and only takes a minute</p>
               <form action="#">
                 <div className="grid grid-cols-2 gap-5">
                   <input type="text" placeholder="Firstname" className="border rounded border-gray-400 py-1 px-2" />
@@ -53,7 +52,6 @@ function SignUpPage() {
               </form>
             </div>
           </div>
-        </div>
       </div>
     </>
   );
