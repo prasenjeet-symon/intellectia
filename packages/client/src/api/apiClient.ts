@@ -6,9 +6,12 @@ export class AxiosClient {
 
   private constructor() {
     this.axiosInstance = axios.create({
-      baseURL: 'https://api.example.com',
-      timeout: 1000,
-      headers: { 'Content-Type': 'application/json' },
+      baseURL: 'https://api.example.com', //API URL
+      timeout: 1000,  // Setting the timeout for requests
+      headers: {
+        'Content-Type': 'application/json'
+        // Add any other headers if needed
+      },
     });
   }
 
