@@ -1,3 +1,5 @@
+import { PrismaClientSingleton } from '../utils';
+
 /**
  * Task ( Runs after the article is published successfully ).
  * Create the article story
@@ -24,7 +26,24 @@ export async function AddLikeActivity(email: string, articleId: number) {}
  * Task ( Runs after the article dislike is created successfully ).
  * Add dislike activity to the logged in user
  */
-export async function AddDislikeActivity(email: string, articleId: number) {}
+export async function AddDislikeActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const user = await prisma.user.findFirst({
+        where: {
+            email,
+        },
+    });
+
+    const newLike = await prisma.like.create({
+        data: {
+            userId: user?.id!,
+            articleId,
+            status: 'liked',
+        },
+    });
+
+    return newLike;
+}
 /**
  * Task ( Runs after the article save is created successfully ).
  * Add save activity to the logged in user
