@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance } from "axios";
 
 export class AxiosClient {
   private static instance: AxiosClient;
@@ -6,56 +6,37 @@ export class AxiosClient {
 
   private constructor() {
     this.axiosInstance = axios.create({
-      baseURL: 'https://api.example.com', //API URL
-      timeout: 1000,  // Setting the timeout for requests
-      headers: {
-        'Content-Type': 'application/json'
-        // Add any other headers if needed
-      },
+      baseURL: import.meta.env.VITE_API_BASE_URL + "/server",
+      timeout: 5000,
     });
   }
 
   public static getInstance(): AxiosClient {
     if (!AxiosClient.instance) {
       AxiosClient.instance = new AxiosClient();
+      AxiosClient.instance.setBearerToken();
     }
+
     return AxiosClient.instance;
   }
-
-  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response: AxiosResponse<T> = await this.axiosInstance.get(url, config);
-      return response.data;
-    } catch (error) {
-      throw error;
+  /**
+   * Sets the bearer token for the axios instance.
+   *
+   */
+  public setBearerToken(): void {
+    const token = localStorage.getItem("token");
+    if (token) {
+      this.axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete this.axiosInstance.defaults.headers.common["Authorization"];
     }
   }
 
-  public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response: AxiosResponse<T> = await this.axiosInstance.post(url, data, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response: AxiosResponse<T> = await this.axiosInstance.put(url, data, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    try {
-      const response: AxiosResponse<T> = await this.axiosInstance.delete(url, config);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  /**
+   * Add token to local storage
+   */
+  public addToken(token: string) {
+    localStorage.setItem("token", token);
   }
 }
 

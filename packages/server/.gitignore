@@ -78,3 +78,7 @@ coverage/
 # Ignore test-specific files
 test/
 __tests__/
+
+# Ignore Prisma migration folders
+/migrations
+/prisma/migrations

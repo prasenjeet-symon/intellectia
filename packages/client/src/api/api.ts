@@ -1,13 +1,17 @@
-import { User } from "../types/user";
+import { AxiosResponse } from "axios";
+import AxiosClient from "./apiClient";
 
-export const fetchUsers = async () => {
-  const res = await fetch("https://jsonplaceholder.typicode.com/users");
-  const users: User[] = await res.json();
-  return users;
-};
+/**
+ * SignUp with email and password
+ *
+ */
+export async function signupWithEmailPassword(email: string, password: string): Promise<AxiosResponse<any, any>> {
+  const apiUrl = `/auth/signup`;
 
-export const fetchUserById = async (id: string) => {
-  const res = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
-  const user: User = await res.json();
-  return user;
-};
+  const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
+    email,
+    password,
+  });
+
+  return axiosClient;
+}
