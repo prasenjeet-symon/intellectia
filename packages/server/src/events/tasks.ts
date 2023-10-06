@@ -28,21 +28,24 @@ export async function AddLikeActivity(email: string, articleId: number) {}
  */
 export async function AddDislikeActivity(email: string, articleId: number) {
     const prisma = PrismaClientSingleton.prisma;
-    const user = await prisma.user.findFirst({
+    const updatedUser = await prisma.user.update({
         where: {
-            email,
+            email: email,
         },
-    });
-
-    const newLike = await prisma.like.create({
         data: {
-            userId: user?.id!,
-            articleId,
-            status: 'liked',
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'dislike',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
         },
     });
 
-    return newLike;
+  return updatedUser
 }
 /**
  * Task ( Runs after the article save is created successfully ).
