@@ -12,14 +12,14 @@ export async function CreateArticleStory(email: string, articleId: number) {
         },
     });
 
-  const newArticleStory = await prisma.articleStory.create({
-    data: {
-      story: article?.subtitle!,
-      articleId
-    }
-  })
+    const newArticleStory = await prisma.articleStory.create({
+        data: {
+            story: article?.subtitle!,
+            articleId,
+        },
+    });
 
-  return newArticleStory
+    return newArticleStory;
 }
 /**
  * Task ( Runs after the article's story is created successfully ).
@@ -37,7 +37,24 @@ export async function AddSuggestedUserToFollow(email: string, articleId: number)
  * Task ( Runs after the article like is created successfully ).
  * Add like activity to the logged in user
  */
-export async function AddLikeActivity(email: string, articleId: number) {}
+export async function AddLikeActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const user = await prisma.user.findFirst({
+        where: {
+            email,
+        },
+    });
+
+    const newLike = await prisma.like.create({
+        data: {
+            userId: user?.id!,
+            articleId,
+            status: 'liked',
+        },
+    });
+
+    return newLike;
+}
 /**
  * Task ( Runs after the article dislike is created successfully ).
  * Add dislike activity to the logged in user
