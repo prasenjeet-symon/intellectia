@@ -1,3 +1,5 @@
+import { PrismaClientSingleton } from '../utils';
+
 /**
  * Task ( Runs after the article is published successfully ).
  * Create the article story
@@ -29,7 +31,26 @@ export async function AddDislikeActivity(email: string, articleId: number) {}
  * Task ( Runs after the article save is created successfully ).
  * Add save activity to the logged in user
  */
-export async function AddSaveActivity(email: string, articleId: number) {}
+export async function AddSaveActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+
+    const user = await prisma.user.findFirst({
+        where: {
+            email,
+        },
+    });
+
+    const newUserActivities = await prisma.userActivity.create({
+        data: {
+            action: 'save',
+            userId: user?.id!,
+            articleId,
+            updatedAt: new Date(),
+        },
+    });
+
+    return newUserActivities;
+}
 /**
  * Task ( Runs after the article comment is created successfully ).
  * Add comment activity to the logged in user
