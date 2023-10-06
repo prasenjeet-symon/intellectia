@@ -154,3 +154,15 @@ export async function verifyGoogleAuthToken(token: string): Promise<IGoogleAuthT
 
     return { success: true, userId, email, name, profile: picture };
 }
+/**
+ * Create all the necessary topics to be used in the intellectia app
+ */
+export function createIntellectiaTopics() {
+    // Fetch all the previous topics created from the database
+    // Load all the topics to be created from json file located in the assets folder
+    // compare and find the new topics to be created in the database
+    // create that new topics in the database
+    // You are not allowed to delete the topics from the database as well as the json file
+    // JSON file topics : { topics: string[]  }
+    // this function will run on server startup
+}

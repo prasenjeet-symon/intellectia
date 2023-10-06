@@ -1,11 +1,11 @@
 // This is sign-up page
 
-function SignUpPage(): React.ReactElement<SignUpPageProps> {
+function SignUpPage() {
   return (
     <>
       <div className="min-h-screen py-40" id="back">
         <div className="container mx-auto">
-          <div className="flex flex-col lg:flex-row w-10/12 lg:w-8/12 bg-white rounded-xl mx-auto shadow-lg overflow-hidden">
+          <div className="border-2 flex flex-col lg:flex-row w-10/12 lg:w-8/12 bg-background rounded-xl mx-auto shadow-lg overflow-hidden">
             <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-12 bg-no-repeat bg-cover bg-center" id="backImage">
               <h1 className="text-white text-3xl mb-3">Welcome to Intellectia</h1>
               <div>
@@ -35,7 +35,7 @@ function SignUpPage(): React.ReactElement<SignUpPageProps> {
                   <input type="password" placeholder="Confirm Password" className="border rounded border-gray-400 py-1 px-2 w-full" />
                 </div>
                 <div className="mt-5 flex gap-3 items-center">
-                  <input type="checkbox" className="border border-gray-400" />
+                  <input title="I accept" type="checkbox" className="border border-gray-400" />
                   <span>
                     I accept the{" "}
                     <a href="#" className="text-stone-500 font-semibold">
