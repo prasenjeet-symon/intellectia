@@ -79,7 +79,7 @@ export async function AddDislikeActivity(email: string, articleId: number) {
         },
     });
 
-  return updatedUser
+    return updatedUser;
 }
 /**
  * Task ( Runs after the article save is created successfully ).
@@ -87,23 +87,24 @@ export async function AddDislikeActivity(email: string, articleId: number) {
  */
 export async function AddSaveActivity(email: string, articleId: number) {
     const prisma = PrismaClientSingleton.prisma;
-
-    const user = await prisma.user.findFirst({
+    const updatedUser = await prisma.user.update({
         where: {
-            email,
+            email: email,
         },
-    });
-
-    const newUserActivities = await prisma.userActivity.create({
         data: {
-            action: 'save',
-            userId: user?.id!,
-            articleId,
-            updatedAt: new Date(),
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'save',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
         },
     });
 
-    return newUserActivities;
+    return updatedUser;
 }
 /**
  * Task ( Runs after the article comment is created successfully ).
