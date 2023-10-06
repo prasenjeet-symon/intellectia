@@ -42,7 +42,27 @@ export async function AddLikeActivity(email: string, articleId: number) {}
  * Task ( Runs after the article dislike is created successfully ).
  * Add dislike activity to the logged in user
  */
-export async function AddDislikeActivity(email: string, articleId: number) {}
+export async function AddDislikeActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'dislike',
+                        updatedAt: new Date(),
+                    },
+                },
+            },
+        },
+    });
+
+  return updatedUser
+}
 /**
  * Task ( Runs after the article save is created successfully ).
  * Add save activity to the logged in user
