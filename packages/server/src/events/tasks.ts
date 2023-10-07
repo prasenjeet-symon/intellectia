@@ -46,22 +46,27 @@ export async function AddSuggestedUserToFollow(email: string, articleId: number)
         },
     });
 
-    const authorId = article?.user.id!
+    const authorId = article?.user.id!;
 
     const updatedUser = await prisma.user.update({
         where: {
             email,
         },
         data: {
-            followers: {
-                connect: {
-                    id: authorId
-                }
-            }
+            followings: {
+                update: {
+                    where: {
+                        id: authorId,
+                    },
+                    data: {
+                        isSuggested: true,
+                    },
+                },
+            },
         },
     });
 
-    return updatedUser
+    return updatedUser;
 }
 /**
  * Task ( Runs after the article like is created successfully ).
