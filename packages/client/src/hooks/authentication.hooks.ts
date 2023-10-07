@@ -5,9 +5,9 @@
  * file name should be like -> **.hook.ts ( if file holds one hook )
  */
 
-import { signupWithEmailPassword, loginWithEmailPassword } from "@/api/api";
+import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
 import { dispatchAPIError } from "@/lib/appUtils";
-import { APIErrorType, IAuthenticationResult, IHookLoginWithEmailAndPassword, IHookSignUpWithEmailAndPassword } from "@/types/types";
+import { APIErrorType, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import { useMutation } from "react-query";
 import { NavigateFunction } from "react-router-dom";
@@ -73,3 +73,20 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookL
 
   return { login, isLoading: loginMutation.isLoading };
 }
+<<<<<<< HEAD
+=======
+/**
+ * Hook - Authentication
+ * Signup user with Google token
+ */
+export function useSignupWithGoogle(navigate: NavigateFunction): IHookSignupWithGoogle {
+  return;
+}
+/**
+ * Hook - Authentication
+ * Login user with Google token
+ */
+export function useLoginWithGoogle(navigate: NavigateFunction): IHookLoginWithGoogle {
+  return;
+}
+>>>>>>> main
