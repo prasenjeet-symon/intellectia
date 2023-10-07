@@ -32,6 +32,40 @@ export async function DistributeArticleStory(email: string, articleId: number) {
  */
 export async function AddSuggestedUserToFollow(email: string, articleId: number) {
     // email is the email id of logged in user
+    const prisma = PrismaClientSingleton.prisma;
+    const article = await prisma.article.findUnique({
+        where: {
+            id: articleId,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                },
+            },
+        },
+    });
+
+    const authorId = article?.user.id!;
+
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            followings: {
+                create: {
+                    followed: {
+                        connect: {
+                            id: authorId,
+                        },
+                    },
+                    isSuggested: true,
+                },
+            },
+        },
+    });
+    return updatedUser;
 }
 /**
  * Task ( Runs after the article like is created successfully ).
@@ -49,7 +83,6 @@ export async function AddLikeActivity(email: string, articleId: number) {
                     data: {
                         articleId: articleId,
                         action: 'like',
-                        updatedAt: new Date(),
                     },
                 },
             },
@@ -72,7 +105,30 @@ export async function AddDislikeActivity(email: string, articleId: number) {
                     data: {
                         articleId: articleId,
                         action: 'dislike',
-                        updatedAt: new Date(),
+                    },
+                },
+            },
+        },
+    });
+
+      return updatedUser;;
+}
+/**
+ * Task ( Runs after the article save is created successfully ).
+ * Add save activity to the logged in user
+ */
+export async function AddSaveActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'save',
                     },
                 },
             },
@@ -82,17 +138,50 @@ export async function AddDislikeActivity(email: string, articleId: number) {
     return updatedUser;
 }
 /**
- * Task ( Runs after the article save is created successfully ).
- * Add save activity to the logged in user
- */
-export async function AddSaveActivity(email: string, articleId: number) {}
-/**
  * Task ( Runs after the article comment is created successfully ).
  * Add comment activity to the logged in user
  */
-export async function AddCommentActivity(email: string, articleId: number) {}
+export async function AddCommentActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'comment',
+                    },
+                },
+            },
+        },
+    });
+
+    return updatedUser;
+}
 /**
  * Task ( Runs after the article is created successfully ).
  * Add article created activity to the logged in user
  */
-export async function AddArticleCreatedActivity(email: string, articleId: number) {}
+export async function AddArticleCreatedActivity(email: string, articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const updatedUser = await prisma.user.update({
+        where: {
+            email: email,
+        },
+        data: {
+            articleActivities: {
+                createMany: {
+                    data: {
+                        articleId: articleId,
+                        action: 'create',
+                    },
+                },
+            },
+        },
+    });
+
+    return updatedUser;
+}
