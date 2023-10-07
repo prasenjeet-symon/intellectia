@@ -1,5 +1,6 @@
-import { AxiosResponse } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
 import AxiosClient from "./apiClient";
+import { IAuthenticationResult } from "@/types/types";
 
 /**
  * Registers a new user using email and password.
@@ -8,7 +9,8 @@ import AxiosClient from "./apiClient";
  * @param {string} password - The password for the user.
  * @return {Promise<AxiosResponse<any, any>>} A promise that resolves to the response from the API.
  */
-export async function signupWithEmailPassword(email: string, password: string): Promise<AxiosResponse<any, any>> {
+
+export async function signupWithEmailPassword(email: string, password: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = `/auth/signup`;
 
   const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
@@ -26,12 +28,22 @@ export async function signupWithEmailPassword(email: string, password: string): 
  * @param {string} password - The password of the user.
  * @return {Promise<AxiosResponse<any, any>>} - A promise that resolves to the Axios response.
  */
-export async function loginWithEmailPassword(email: string, password: string): Promise<AxiosResponse<any, any>> {
-  const apiUrl = `/auth/login`;
-  const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
-    email,
-    password,
-  });
+export async function loginWithEmailPassword(email: string, password: string): Promise<AxiosResponse<IAuthenticationResult>> {
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+  try {
+    const response = await axios.post<IAuthenticationResult>("/auth/login", {
+      email,
+      password,
+    });
 
-  return axiosClient;
+    return response;
+  } catch (e) {
+    // TODO Need to customise error according to our project requirements
+    if (e instanceof AxiosError) {
+      const { message } = e;
+      throw new Error(message);
+    }
+    throw new Error();
+  }
 }

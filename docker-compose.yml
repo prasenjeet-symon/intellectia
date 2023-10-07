@@ -10,9 +10,16 @@ services:
     container_name: mysql-db
     env_file:
       - ./packages/server/.env
+        
+    volumes:
+      - mysql-data:/var/lib/mysql
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
+
+volumes:
+  mysql-data:
+    driver: local
