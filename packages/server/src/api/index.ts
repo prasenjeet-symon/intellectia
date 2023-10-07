@@ -2707,22 +2707,23 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
     const prisma = PrismaClientSingleton.prisma;
 
     try {
-        const userActivities = await prisma.userActivity.findMany({
-            take: +size || 10,
-            cursor: {
-                id: +cursor,
-            },
-            orderBy: {
-                id: 'desc',
-            },
-            select: {
-                id: true,
+        const users = await prisma.user.findMany({
+            include: {
+                articleActivities: {
+                    take: +size || 10,
+                    cursor: {
+                        id: +cursor,
+                    },
+                    orderBy: {
+                        id: 'desc',
+                    },
+                },
             },
         });
 
-        if (userActivities.length < 1) return res.status(400).json({ error: 'Entity not found' });
+        if (users.length < 1) return res.status(400).json({ error: 'Entity not found' });
 
-        res.json(userActivities);
+        res.json(users);
     } catch (error) {
         res.status(400).json({ error });
     }
