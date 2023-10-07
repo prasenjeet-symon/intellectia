@@ -7,7 +7,7 @@
 
 import { signupWithEmailPassword } from "@/api/api";
 import { dispatchAPIError } from "@/lib/appUtils";
-import { APIErrorType, IHookSignUpWithEmailAndPassword } from "@/types/types";
+import { APIErrorType, IHookLoginWithEmailAndPassword, IHookSignUpWithEmailAndPassword } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import { useMutation } from "react-query";
 import { NavigateFunction } from "react-router-dom";
@@ -26,7 +26,7 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction): IHook
           message: error,
         });
       },
-      onSuccess: () => {},
+      onSuccess: (data) => {},
     },
   );
 
@@ -42,4 +42,11 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction): IHook
   };
 
   return { signup, isLoading: signupMutation.isLoading };
+}
+/**
+ * Hook - Authentication
+ * Login user with email and password
+ */
+export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookLoginWithEmailAndPassword {
+  return;
 }
