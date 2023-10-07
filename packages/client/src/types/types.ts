@@ -11,7 +11,7 @@ export interface IAuthenticationResult {
 }
 
 export interface IHookSignUpWithEmailAndPassword {
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => void;
   isLoading: boolean;
 }
 

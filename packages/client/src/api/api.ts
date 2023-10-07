@@ -13,12 +13,24 @@ import { IAuthenticationResult } from "@/types/types";
 export async function signupWithEmailPassword(email: string, password: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = `/auth/signup`;
 
-  const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
-    email,
-    password,
-  });
+  try {
+    const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
+      email,
+      password,
+    });
 
-  return axiosClient;
+    return axiosClient;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      const { response } = error;
+
+      throw {
+        message: response?.data.error,
+      };
+    }
+
+    throw new Error(error as string);
+  }
 }
 
 /**

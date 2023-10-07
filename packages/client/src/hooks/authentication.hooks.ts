@@ -5,40 +5,39 @@
  * file name should be like -> **.hook.ts ( if file holds one hook )
  */
 
-import { signupWithEmailPassword,loginWithEmailPassword } from "@/api/api";
+import { signupWithEmailPassword, loginWithEmailPassword } from "@/api/api";
 import { dispatchAPIError } from "@/lib/appUtils";
-import { APIErrorType, IHookLoginWithEmailAndPassword, IHookSignUpWithEmailAndPassword } from "@/types/types";
+import { APIErrorType, IAuthenticationResult, IHookLoginWithEmailAndPassword, IHookSignUpWithEmailAndPassword } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import { useMutation } from "react-query";
 import { NavigateFunction } from "react-router-dom";
+
+interface IError {
+  message: string;
+}
 
 /**
  * Hook - Authentication
  * Signup user with email and password
  */
 export function useSignUpWithEmailAndPassword(navigate: NavigateFunction): IHookSignUpWithEmailAndPassword {
-  const signupMutation = useMutation<AxiosResponse<any, any>, AxiosError, { email: string; password: string }, unknown>(
+  const signupMutation = useMutation<AxiosResponse<IAuthenticationResult>, IError, { email: string; password: string }>(
     (inputData) => signupWithEmailPassword(inputData.email, inputData.password),
     {
       onError: (error) => {
         dispatchAPIError({
           errorType: APIErrorType.EmailPasswordSignup,
-          message: error,
+          message: error.message,
         });
       },
-      onSuccess: (data) => {},
+      onSuccess: () => {
+        navigate("/");
+      },
     },
   );
 
-  const signup = async (email: string, password: string) => {
-    try {
-      await signupMutation.mutateAsync({ email, password });
-    } catch (error: any) {
-      dispatchAPIError({
-        errorType: APIErrorType.EmailPasswordSignup,
-        message: error,
-      });
-    }
+  const signup = (email: string, password: string) => {
+    signupMutation.mutate({ email, password });
   };
 
   return { signup, isLoading: signupMutation.isLoading };
@@ -57,8 +56,7 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookL
           message: error,
         });
       },
-      onSuccess: (data) => {
-      },
+      onSuccess: (data) => {},
     },
   );
 
@@ -75,4 +73,3 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookL
 
   return { login, isLoading: loginMutation.isLoading };
 }
-
