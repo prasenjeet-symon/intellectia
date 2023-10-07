@@ -2700,6 +2700,34 @@ router.get('/user/read-later/unread/:size/:cursor', async (req, res) => {
  * Get user activities of the logged in user with pagination ( latest first )
  */
 router.get('/user/article-activities/:size/:cursor', async (req, res) => {
+    const { size, cursor } = req.params;
+
+    if (+cursor <= 0 || +size <= 1) return res.status(400).json({ error: 'cursor cannot be less than 0 and/or size cannot be less than 1' });
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    try {
+        const userActivities = await prisma.userActivity.findMany({
+            skip: 1,
+            take: +size || 10,
+            cursor: {
+                id: +cursor,
+            },
+            orderBy: {
+                id: 'desc',
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (userActivities.length < 1) return res.status(400).json({ error: 'Entity not found' });
+
+        res.json(userActivities);
+    } catch (error) {
+        res.status(400).json({ error });
+    }
+
     // size is required, cursor is required
     // both size and cursor is integer
     // size >= 1 and cursor >= 0
