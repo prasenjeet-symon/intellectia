@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import axios, { all } from 'axios';
+import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
 import topicsJson from "../assets/topics.json";
 
