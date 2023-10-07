@@ -1,8 +1,13 @@
 import LoginWithGoogle from "@/components/shared/LoginWithGoogle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSignUpWithEmailAndPassword } from "@/hooks/authentication.hooks";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
+  const navigation = useNavigate();
+  const { signup } = useSignUpWithEmailAndPassword(navigation);
+
   return (
     <div className="h-screen flex items-center justify-center bg-background">
       {/* Left Side (Background Image and Text) */}
@@ -23,7 +28,7 @@ function LoginPage() {
               <Input placeholder="Enter your password" type="password" />
             </div>
             <div className="pt-5">
-              <Button className="w-full" size={"sm"} type="submit" variant={"default"}>
+              <Button onClick={()=>{ signup('', '') }} className="w-full" size={"sm"} type="button" variant={"default"}>
                 Login
               </Button>
             </div>

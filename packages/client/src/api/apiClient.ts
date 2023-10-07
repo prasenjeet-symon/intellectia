@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import { ApiErrorManager } from "./apiErrorManager";
 
 export class AxiosClient {
   private static instance: AxiosClient;
@@ -15,6 +16,7 @@ export class AxiosClient {
     if (!AxiosClient.instance) {
       AxiosClient.instance = new AxiosClient();
       AxiosClient.instance.setBearerToken();
+      ApiErrorManager.getInstance();
     }
 
     return AxiosClient.instance;

@@ -1,4 +1,7 @@
 export const API_ERROR = "API_ERROR";
+export const API_SUCCESS = "API_SUCCESS";
+export const API_ERROR_VIEW= "API_ERROR_VIEW";
+export const API_SUCCESS_VIEW = "API_SUCCESS_VIEW";
 
 export interface IAuthenticationResult {
   token: string; // Assuming 'token' is a string, update the type accordingly
@@ -20,12 +23,8 @@ export interface IHookLoginWithEmailAndPassword {
 export enum APIErrorType {
   // email and password signup
   EmailPasswordSignup = "EmailPasswordSignup",
-  // email and password signup for view error
-  EmailPasswordSignupView = "EmailPasswordSignupView",
   // email and password login
   EmailPasswordLogin = "EmailPasswordLogin",
-  // email and password login for view error
-  EmailPasswordLoginView = "EmailPasswordLoginView",
 }
 
 export interface APIErrorEventData {
