@@ -2708,7 +2708,6 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
 
     try {
         const userActivities = await prisma.userActivity.findMany({
-            skip: 1,
             take: +size || 10,
             cursor: {
                 id: +cursor,
