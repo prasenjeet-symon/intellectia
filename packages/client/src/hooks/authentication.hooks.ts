@@ -5,7 +5,7 @@
  * file name should be like -> **.hook.ts ( if file holds one hook )
  */
 
-import { signupWithEmailPassword } from "@/api/api";
+import { signupWithEmailPassword,loginWithEmailPassword } from "@/api/api";
 import { dispatchAPIError } from "@/lib/appUtils";
 import { APIErrorType, IHookLoginWithEmailAndPassword, IHookSignUpWithEmailAndPassword } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
@@ -48,5 +48,34 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction): IHook
  * Login user with email and password
  */
 export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookLoginWithEmailAndPassword {
-  return;
+  const loginMutation = useMutation<AxiosResponse<any, any>, AxiosError, { email: string; password: string }, unknown>(
+    (inputData) => loginWithEmailPassword(inputData.email, inputData.password),
+    {
+      onError: (error) => {
+        dispatchAPIError({
+          errorType: APIErrorType.EmailPasswordLogin,
+          message: error,
+        });
+      },
+      onSuccess: (data) => {
+        // Handle successful login, e.g., store user data in context or local storage
+        // You can also navigate to a different page upon successful login
+        navigate('/dashboard');
+      },
+    },
+  );
+
+  const login = async (email: string, password: string) => {
+    try {
+      await loginMutation.mutateAsync({ email, password });
+    } catch (error: any) {
+      dispatchAPIError({
+        errorType: APIErrorType.EmailPasswordLogin,
+        message: error,
+      });
+    }
+  };
+
+  return { login, isLoading: loginMutation.isLoading };
 }
+
