@@ -1,13 +1,9 @@
-import LoginWithGoogle from "@/components/shared/LoginWithGoogle";
+import ContinueWithGoogle from "@/components/shared/ContinueWithGoogle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSignUpWithEmailAndPassword } from "@/hooks/authentication.hooks";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function LoginPage() {
-  const navigation = useNavigate();
-  const { signup } = useSignUpWithEmailAndPassword(navigation);
-
   return (
     <div className="h-screen flex items-center justify-center bg-background">
       {/* Left Side (Background Image and Text) */}
@@ -28,18 +24,18 @@ function LoginPage() {
               <Input placeholder="Enter your password" type="password" />
             </div>
             <div className="pt-5">
-              <Button onClick={()=>{ signup('', '') }} className="w-full" size={"sm"} type="button" variant={"default"}>
+              <Button className="w-full" size={"sm"} type="button" variant={"default"}>
                 Login
               </Button>
             </div>
           </form>
-          <LoginWithGoogle />
+          <ContinueWithGoogle onClick={() => {}} buttonText="Sign in with Google" />
           <div className="mt-10 text-center text-gray-600">
             <p>
               Don't have an account?{" "}
-              <a href="/signup" className="text-primary">
+              <Link to="/auth/sign-up" className="text-primary">
                 Sign up
-              </a>
+              </Link>
             </p>
           </div>
         </div>
