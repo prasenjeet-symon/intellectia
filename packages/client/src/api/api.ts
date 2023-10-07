@@ -28,5 +28,10 @@ export async function signupWithEmailPassword(email: string, password: string): 
  */
 export async function loginWithEmailPassword(email: string, password: string): Promise<AxiosResponse<any, any>> {
   const apiUrl = `/auth/login`;
-  return;
+  const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
+    email,
+    password,
+  });
+
+  return axiosClient;
 }
