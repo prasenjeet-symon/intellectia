@@ -50,22 +50,21 @@ export async function AddSuggestedUserToFollow(email: string, articleId: number)
 
     const updatedUser = await prisma.user.update({
         where: {
-            email,
+            email: email,
         },
         data: {
             followings: {
-                update: {
-                    where: {
-                        id: authorId,
+                create: {
+                    followed: {
+                        connect: {
+                            id: authorId,
+                        },
                     },
-                    data: {
-                        isSuggested: true,
-                    },
+                    isSuggested: true,
                 },
             },
         },
     });
-
     return updatedUser;
 }
 /**
