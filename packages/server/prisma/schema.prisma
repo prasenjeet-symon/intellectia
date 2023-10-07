@@ -62,8 +62,8 @@ model MagicLink {
 model Topic {
   id          Int       @id @default(autoincrement())
   title       String    @unique
-  description String
-  logo        String
+  description String    @default("")
+  logo        String    @default("")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   users       User[]
