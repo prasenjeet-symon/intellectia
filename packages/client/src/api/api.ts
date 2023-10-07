@@ -39,6 +39,7 @@ export async function loginWithEmailPassword(email: string, password: string): P
 
     return response;
   } catch (e) {
+    // TODO Need to customise error according to our project requirements
     if (e instanceof AxiosError) {
       const { message } = e;
       throw new Error(message);
