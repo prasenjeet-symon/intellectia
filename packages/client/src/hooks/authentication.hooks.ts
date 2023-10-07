@@ -58,9 +58,6 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookL
         });
       },
       onSuccess: (data) => {
-        // Handle successful login, e.g., store user data in context or local storage
-        // You can also navigate to a different page upon successful login
-        navigate('/dashboard');
       },
     },
   );

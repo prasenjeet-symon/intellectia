@@ -20,8 +20,12 @@ export interface IHookLoginWithEmailAndPassword {
 export enum APIErrorType {
   // email and password signup
   EmailPasswordSignup = "EmailPasswordSignup",
+  // email and password signup for view error
+  EmailPasswordSignupView = "EmailPasswordSignupView",
   // email and password login
   EmailPasswordLogin = "EmailPasswordLogin",
+  // email and password login for view error
+  EmailPasswordLoginView = "EmailPasswordLoginView",
 }
 
 export interface APIErrorEventData {

@@ -13,8 +13,6 @@ router.get('/', (req, res) => {
  * Authenticate user with email and password
  */
 router.post('/login', async (req, res) => {
-    
-
     if (!('email' in req.body) || !('password' in req.body)) {
         res.status(400).send({ error: 'Email and password are required' });
         return;
@@ -40,19 +38,25 @@ router.post('/login', async (req, res) => {
     });
 
     if (!oldUser) {
-        res.status(401).send({ error: 'Invalid email or password' });
+        // no such user exit
+        // status code 404 means that the resource was not found ( no user exist with this email id )
+        res.status(404).send({ error: 'User not found. Please signup' });
         return;
     }
 
     // check if the password is correct
     if (oldUser.password !== password) {
-        res.status(401).send({ error: 'Invalid email or password' });
+        // status code 401 means that the user is unauthorized
+        // wrong password
+        res.status(401).send({ error: 'Wrong password. Please try again with correct password.' });
         return;
     }
 
     // check for number of sessions
     if (oldUser.numberOfSessions === oldUser.sessions.length) {
-        res.status(401).send({ error: 'Too many sessions' });
+        // status code 429 means that the user is rate limited
+        // too many sessions
+        res.status(429).send({ error: 'Too many sessions. Please try again later.' });
         return;
     }
 
