@@ -84,7 +84,6 @@ export async function AddLikeActivity(email: string, articleId: number) {
                     data: {
                         articleId: articleId,
                         action: 'like',
-                        updatedAt: new Date(),
                     },
                 },
             },
@@ -107,7 +106,6 @@ export async function AddDislikeActivity(email: string, articleId: number) {
                     data: {
                         articleId: articleId,
                         action: 'dislike',
-                        updatedAt: new Date(),
                     },
                 },
             },
@@ -132,7 +130,6 @@ export async function AddSaveActivity(email: string, articleId: number) {
                     data: {
                         articleId: articleId,
                         action: 'save',
-                        updatedAt: new Date(),
                     },
                 },
             },
@@ -157,7 +154,6 @@ export async function AddCommentActivity(email: string, articleId: number) {
                     data: {
                         articleId: articleId,
                         action: 'comment',
-                        updatedAt: new Date(),
                     },
                 },
             },
@@ -182,7 +178,6 @@ export async function AddArticleCreatedActivity(email: string, articleId: number
                     data: {
                         articleId: articleId,
                         action: 'create',
-                        updatedAt: new Date(),
                     },
                 },
             },
