@@ -5,6 +5,9 @@
  * file name should be like -> **.hook.ts ( if file holds one hook )
  */
 
+import { signupWithEmailPassword, loginWithEmailPassword } from "@/api/api";
+import { dispatchAPIError } from "@/lib/appUtils";
+import { APIErrorType, IAuthenticationResult, IHookLoginWithEmailAndPassword, IHookSignUpWithEmailAndPassword } from "@/types/types";
 import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
 import { dispatchAPIError } from "@/lib/appUtils";
 import { APIErrorType, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle } from "@/types/types";
@@ -73,8 +76,6 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookL
 
   return { login, isLoading: loginMutation.isLoading };
 }
-<<<<<<< HEAD
-=======
 /**
  * Hook - Authentication
  * Signup user with Google token
@@ -89,4 +90,3 @@ export function useSignupWithGoogle(navigate: NavigateFunction): IHookSignupWith
 export function useLoginWithGoogle(navigate: NavigateFunction): IHookLoginWithGoogle {
   return;
 }
->>>>>>> main
