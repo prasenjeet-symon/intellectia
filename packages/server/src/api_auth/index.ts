@@ -116,7 +116,7 @@ router.post('/signup', async (req, res) => {
     });
 
     if (oldUser) {
-        res.status(409).send({ error: 'User already exists' });
+        res.status(409).send({ error: 'A account already exists with this email.'});
         return;
     }
 
@@ -327,7 +327,7 @@ router.post('/google', async (req, res) => {
     });
 
     if (oldUser) {
-        res.status(409).send({ error: 'User already exists' });
+        res.status(409).send({ error: 'User with this email already exists' });
         return;
     }
 

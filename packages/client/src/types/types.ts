@@ -19,6 +19,17 @@ export interface IHookLoginWithEmailAndPassword {
   login: (email: string, password: string) => Promise<void>;
   isLoading: boolean;
 }
+// useSignupWithGoogle
+export interface IHookSignupWithGoogle {
+  signup: (token: string) => Promise<void>;
+  isLoading: boolean;
+}
+
+// IHookLoginWithGoogle
+export interface IHookLoginWithGoogle {
+  login: (token: string) => Promise<void>;
+  isLoading: boolean;
+}
 
 export enum APIErrorType {
   // email and password signup

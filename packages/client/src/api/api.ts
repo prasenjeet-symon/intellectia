@@ -1,6 +1,6 @@
+import { IAuthenticationResult } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import AxiosClient from "./apiClient";
-import { IAuthenticationResult } from "@/types/types";
 
 /**
  * Registers a new user using email and password.
@@ -46,4 +46,27 @@ export async function loginWithEmailPassword(email: string, password: string): P
     }
     throw new Error();
   }
+}
+
+
+/**
+ * Signs up a user using their Google token.
+ *
+ * @param {string} token - The Google token for authentication.
+ * @return {Promise<AxiosResponse<IAuthenticationResult>>} - A promise that resolves to the authentication result.
+ */
+export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
+  const apiUrl = "/auth/google";
+  return;
+}
+
+/**
+ * Logs in the user with a Google token.
+ *
+ * @param {string} token - The Google token used for authentication.
+ * @return {Promise<AxiosResponse<IAuthenticationResult>>} A Promise that resolves to the authentication result.
+ */
+export async function loginWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
+  const apiUrl = "/auth/google_login";
+  return;
 }
