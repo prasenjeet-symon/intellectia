@@ -9,7 +9,7 @@ services:
       - 3306:3306
     container_name: mysql-db
     env_file:
-      - ./.env
+      - ./packages/server/.env
 
   adminer:
     image: adminer
