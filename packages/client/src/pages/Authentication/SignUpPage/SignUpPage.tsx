@@ -10,7 +10,7 @@ function LoginPage() {
       {/* Left Side (Background Image and Text) */}
       <div className="hidden lg:block w-1/2 h-full flex flex-col justify-center items-center bg-foreground">
         <div className="h-full flex flex-col justify-center items-center">
-          <img className="w-1/2" src={Coverimage} alt="Human Thought" />
+          <img className="w-1/2 bg-blend-difference" src={Coverimage} alt="Human Thought" />
           <h3 className="w-1/2 font-young-serif text-center text-3xl text-secondary font-bold mt-10">For the Human By the Human With Artificial Intelligence</h3>
         </div>
       </div>
