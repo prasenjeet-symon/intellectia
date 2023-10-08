@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
-import { emailValidator } from '../validators';
+import { emailPasswordValidator, emailValidator } from '../validators';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -105,19 +105,20 @@ router.post('/login', async (req, res) => {
  * Signup user with email and password
  */
 router.post('/signup', async (req, res) => {
-    if (!('email' in req.body) || !('password' in req.body)) {
-        res.status(400).send({ error: 'Email and password are required' });
+    try {
+        await emailPasswordValidator.parseAsync(req.body);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
         return;
     }
 
-    if (!(req.body.email && req.body.password)) {
-        res.status(400).send({ error: 'Email and password are required' });
-        return;
-    }
-
-    const email = req.body.email;
-    const password = req.body.password;
-
+    // run the validators
+    const parsedBody = emailPasswordValidator.parse(req.body);
+    const email = parsedBody.email;
+    const password = parsedBody.password;
     // check if the user already exit in the database
     const prisma = PrismaClientSingleton.prisma;
     const oldUser = await prisma.user.findUnique({
