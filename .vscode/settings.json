@@ -1,5 +1,5 @@
 {
-    "editor.fontFamily": "'Inconsolata', monospace",
+    "editor.fontFamily": "\"OperatorMonoLig Nerd Font\",'Inconsolata', monospace",
     "editor.fontSize": 16,
     "editor.fontWeight": "600",
     "cSpell.words": [

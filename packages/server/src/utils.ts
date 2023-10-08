@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
+import topicsJson from "../assets/topics.json";
 
 // Interfaces
 interface IGoogleAuthTokenResponse {
@@ -157,12 +158,39 @@ export async function verifyGoogleAuthToken(token: string): Promise<IGoogleAuthT
 /**
  * Create all the necessary topics to be used in the intellectia app
  */
-export function createIntellectiaTopics() {
-    // Fetch all the previous topics created from the database
-    // Load all the topics to be created from json file located in the assets folder
-    // compare and find the new topics to be created in the database
-    // create that new topics in the database
-    // You are not allowed to delete the topics from the database as well as the json file
-    // JSON file topics : { topics: string[]  }
-    // this function will run on server startup
+export async function createIntellectiaTopics() {
+    const prisma = PrismaClientSingleton.prisma;
+    //find the existing topics present
+    const previousTopics = await prisma.topic.findMany({
+        select: {
+        title: true,
+      },
+      distinct: ['title']});
+
+    const previousTopicsTitles:Array<string> = previousTopics?.map((topic)=>topic.title)
+    const allTopics:Array<string> = topicsJson.topics;
+    const topicsToBeCreated:Array<string> = [];
+
+    //find the new topics to be created
+    allTopics.forEach((topic:string)=> {
+        if(!previousTopicsTitles?.includes(topic)){
+            topicsToBeCreated.push(topic)
+    } })
+
+   if(topicsToBeCreated?.length){
+    for(const topic of topicsToBeCreated){
+        const result =  await prisma.topic.create({
+            data: {
+                title: topic,
+                description: '',
+                logo: '',   
+              },
+            select:{
+                title:true
+            }
+        })
+        //TODO: remove log in production environment
+        console.log(`[INFO] ${result.title} NEW Topic Created`)
+    }
+   }
 }
