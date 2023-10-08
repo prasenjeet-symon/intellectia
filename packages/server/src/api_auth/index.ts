@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
+import { emailValidator } from '../validators';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -152,17 +153,20 @@ router.post('/signup', async (req, res) => {
  * Magic URL creation
  */
 router.post('/magic', async (req, res) => {
-    if (!('email' in req.body)) {
-        res.status(400).send({ error: 'Email is required' });
+    try {
+        await emailValidator.parseAsync(req.body);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
         return;
     }
 
-    if (!req.body.email) {
-        res.status(400).send({ error: 'Email is required' });
-        return;
-    }
+    // run the validators
+    const parsedBody = emailValidator.parse(req.body);
+    const email = parsedBody.email;
 
-    const email = req.body.email;
     const magicLinkToken = v4();
     const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
 
