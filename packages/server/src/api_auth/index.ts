@@ -106,7 +106,7 @@ router.post('/login', async (req, res) => {
  */
 router.post('/signup', async (req, res) => {
     try {
-        emailPasswordValidator.parseAsync(req.body);
+        await emailPasswordValidator.parseAsync(req.body);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: error.issues[0].message });
