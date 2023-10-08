@@ -31,21 +31,12 @@ export async function signupWithEmailPassword(email: string, password: string): 
 export async function loginWithEmailPassword(email: string, password: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const axiosClient = AxiosClient.getInstance();
   const axios = axiosClient.axiosInstance;
-  try {
-    const response = await axios.post<IAuthenticationResult>("/auth/login", {
-      email,
-      password,
-    });
+  const response = await axios.post<IAuthenticationResult>("/auth/login", {
+    email,
+    password,
+  });
 
-    return response;
-  } catch (e) {
-    // TODO Need to customise error according to our project requirements
-    if (e instanceof AxiosError) {
-      const { message } = e;
-      throw new Error(message);
-    }
-    throw new Error();
-  }
+  return response;
 }
 
 
@@ -57,7 +48,7 @@ export async function loginWithEmailPassword(email: string, password: string): P
  */
 export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = "/auth/google";
-  return;
+  return {} as any;
 }
 
 /**
@@ -68,5 +59,5 @@ export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAu
  */
 export async function loginWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = "/auth/google_login";
-  return;
+  return {} as any;
 }

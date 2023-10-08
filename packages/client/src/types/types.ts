@@ -1,7 +1,11 @@
 export const API_ERROR = "API_ERROR";
 export const API_SUCCESS = "API_SUCCESS";
-export const API_ERROR_VIEW= "API_ERROR_VIEW";
+export const API_ERROR_VIEW = "API_ERROR_VIEW";
 export const API_SUCCESS_VIEW = "API_SUCCESS_VIEW";
+
+export interface IAxiosError {
+   error: string;
+}
 
 export interface IAuthenticationResult {
   token: string; // Assuming 'token' is a string, update the type accordingly
@@ -31,14 +35,20 @@ export interface IHookLoginWithGoogle {
   isLoading: boolean;
 }
 
-export enum APIErrorType {
+export enum APIHookType {
   // email and password signup
   EmailPasswordSignup = "EmailPasswordSignup",
   // email and password login
   EmailPasswordLogin = "EmailPasswordLogin",
 }
 
-export interface APIErrorEventData {
-  errorType: APIErrorType;
+export interface APIEventData {
+  hookCtx: APIHookType;
   message: any;
+}
+
+export interface IHookContext {
+  showErrors: boolean;
+  showSuccess: boolean;
+  [key: string]: any;
 }

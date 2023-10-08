@@ -1,9 +1,26 @@
 import ContinueWithGoogle from "@/components/shared/ContinueWithGoogle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link } from "react-router-dom";
+import { useLoginWithEmailAndPassword } from "@/hooks/authentication.hooks";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigation = useNavigate();
+  const { login, isLoading } = useLoginWithEmailAndPassword(navigation);
+
+  // Handle input change
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, name: "email" | "password") => {
+    const value = event.target.value;
+    if (name === "email") {
+      setEmail(value);
+    } else if (name === "password") {
+      setPassword(value);
+    }
+  };
+
   return (
     <div className="h-screen flex items-center justify-center bg-background">
       {/* Left Side (Background Image and Text) */}
@@ -20,11 +37,11 @@ function LoginPage() {
           <h2 className="text-2xl font-semibold mb-10 text-center">Welcome back!</h2>
           <form className="space-y-4">
             <div className="flex flex-col space-y-2">
-              <Input placeholder="Enter your email" type="email" />
-              <Input placeholder="Enter your password" type="password" />
+              <Input onChange={(e) => handleInputChange(e, "email")} placeholder="Enter your email" type="email" />
+              <Input onChange={(e) => handleInputChange(e, "password")} placeholder="Enter your password" type="password" />
             </div>
             <div className="pt-5">
-              <Button className="w-full" size={"sm"} type="button" variant={"default"}>
+              <Button disabled={isLoading} onClick={() => login(email, password)} className="w-full" size={"sm"} type="button" variant={"default"}>
                 Login
               </Button>
             </div>

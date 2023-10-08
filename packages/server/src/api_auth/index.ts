@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { v4 } from 'uuid';
-import { Constants, PrismaClientSingleton, authenticateUser, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
+import { z, ZodError } from 'zod';
+import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -13,18 +14,27 @@ router.get('/', (req, res) => {
  * Authenticate user with email and password
  */
 router.post('/login', async (req, res) => {
-    if (!('email' in req.body) || !('password' in req.body)) {
-        res.status(400).send({ error: 'Email and password are required' });
+    const loginSchema = z.object({
+        email: z.string().email(),
+        password: z.string().refine(validatorPassword, {
+            message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&) and be at least 8 characters long.',
+        }),
+    });
+
+    try {
+        loginSchema.parse(req.body);
+    } catch (error: any) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
         return;
     }
 
-    if (!(req.body.email && req.body.password)) {
-        res.status(400).send({ error: 'Email and password are required' });
-        return;
-    }
-
-    const email = req.body.email;
-    const password = req.body.password;
+    // run the validators
+    const parsedBody = loginSchema.parse(req.body);
+    const email = parsedBody.email;
+    const password = parsedBody.password;
 
     // check if the user already exit in the database
     const prisma = PrismaClientSingleton.prisma;
@@ -116,7 +126,7 @@ router.post('/signup', async (req, res) => {
     });
 
     if (oldUser) {
-        res.status(409).send({ error: 'A account already exists with this email.'});
+        res.status(409).send({ error: 'A account already exists with this email.' });
         return;
     }
 

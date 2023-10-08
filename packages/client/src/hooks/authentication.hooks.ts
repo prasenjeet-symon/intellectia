@@ -6,8 +6,8 @@
  */
 
 import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
-import { dispatchAPIError } from "@/lib/appUtils";
-import { APIErrorType, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle } from "@/types/types";
+import { dispatchAPIError, dispatchAPIViewError, dispatchAPIViewSuccess } from "@/lib/appUtils";
+import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import { useMutation } from "react-query";
 import { NavigateFunction } from "react-router-dom";
@@ -16,26 +16,39 @@ import { NavigateFunction } from "react-router-dom";
  * Hook - Authentication
  * Signup user with email and password
  */
-export function useSignUpWithEmailAndPassword(navigate: NavigateFunction): IHookSignUpWithEmailAndPassword {
-  const signupMutation = useMutation<AxiosResponse<any, any>, AxiosError, { email: string; password: string }, unknown>(
-    (inputData) => signupWithEmailPassword(inputData.email, inputData.password),
-    {
-      onError: (error) => {
-        dispatchAPIError({
-          errorType: APIErrorType.EmailPasswordSignup,
-          message: error,
+export function useSignUpWithEmailAndPassword(navigate: NavigateFunction, ctx?: IHookContext): IHookSignUpWithEmailAndPassword {
+  const signupMutation = useMutation<AxiosResponse<IAuthenticationResult>, AxiosError<IAxiosError>, { email: string; password: string }, unknown>((inputData) => signupWithEmailPassword(inputData.email, inputData.password), {
+    onError: (error) => {
+      dispatchAPIError({
+        hookCtx: APIHookType.EmailPasswordLogin,
+        message: error,
+      });
+
+      if (!ctx || (ctx && ctx.showErrors)) {
+        dispatchAPIViewError({
+          hookCtx: APIHookType.EmailPasswordLogin,
+          message: error.response?.data.error,
         });
-      },
-      onSuccess: (data) => {},
+      }
     },
-  );
+    onSuccess: () => {
+      if (!ctx || (ctx && ctx.showSuccess)) {
+        dispatchAPIViewSuccess({
+          hookCtx: APIHookType.EmailPasswordLogin,
+          message: "Your account crated successfully.",
+        });
+      }
+
+      navigate("/auth/choose-topics");
+    },
+  });
 
   const signup = async (email: string, password: string) => {
     try {
       await signupMutation.mutateAsync({ email, password });
     } catch (error: any) {
       dispatchAPIError({
-        errorType: APIErrorType.EmailPasswordSignup,
+        hookCtx: APIHookType.EmailPasswordSignup,
         message: error,
       });
     }
@@ -47,26 +60,39 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction): IHook
  * Hook - Authentication
  * Login user with email and password
  */
-export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookLoginWithEmailAndPassword {
-  const loginMutation = useMutation<AxiosResponse<any, any>, AxiosError, { email: string; password: string }, unknown>(
-    (inputData) => loginWithEmailPassword(inputData.email, inputData.password),
-    {
-      onError: (error) => {
-        dispatchAPIError({
-          errorType: APIErrorType.EmailPasswordLogin,
-          message: error,
+export function useLoginWithEmailAndPassword(navigate: NavigateFunction, ctx?: IHookContext): IHookLoginWithEmailAndPassword {
+  const loginMutation = useMutation<AxiosResponse<IAuthenticationResult>, AxiosError<IAxiosError>, { email: string; password: string }, unknown>((inputData) => loginWithEmailPassword(inputData.email, inputData.password), {
+    onError: (error) => {
+      dispatchAPIError({
+        hookCtx: APIHookType.EmailPasswordLogin,
+        message: error,
+      });
+
+      if (!ctx || (ctx && ctx.showErrors)) {
+        dispatchAPIViewError({
+          hookCtx: APIHookType.EmailPasswordLogin,
+          message: error.response?.data.error,
         });
-      },
-      onSuccess: (data) => {},
+      }
     },
-  );
+    onSuccess: () => {
+      if (!ctx || (ctx && ctx.showSuccess)) {
+        dispatchAPIViewSuccess({
+          hookCtx: APIHookType.EmailPasswordLogin,
+          message: "You have successfully logged in.",
+        });
+      }
+
+      navigate("/dashboard");
+    },
+  });
 
   const login = async (email: string, password: string) => {
     try {
       await loginMutation.mutateAsync({ email, password });
     } catch (error: any) {
       dispatchAPIError({
-        errorType: APIErrorType.EmailPasswordLogin,
+        hookCtx: APIHookType.EmailPasswordLogin,
         message: error,
       });
     }
@@ -78,13 +104,13 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction): IHookL
  * Hook - Authentication
  * Signup user with Google token
  */
-export function useSignupWithGoogle(navigate: NavigateFunction): IHookSignupWithGoogle {
-  return;
+export function useSignupWithGoogle(navigate: NavigateFunction, ctx?: IHookContext): IHookSignupWithGoogle {
+  return {} as any;
 }
 /**
  * Hook - Authentication
  * Login user with Google token
  */
-export function useLoginWithGoogle(navigate: NavigateFunction): IHookLoginWithGoogle {
-  return;
+export function useLoginWithGoogle(navigate: NavigateFunction, ctx?: IHookContext): IHookLoginWithGoogle {
+  return {} as any;
 }

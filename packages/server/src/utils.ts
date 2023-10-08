@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
-import topicsJson from "../assets/topics.json";
+import * as topicsJson from './assets/topics.json';
 
 // Interfaces
 interface IGoogleAuthTokenResponse {
@@ -163,34 +163,39 @@ export async function createIntellectiaTopics() {
     //find the existing topics present
     const previousTopics = await prisma.topic.findMany({
         select: {
-        title: true,
-      },
-      distinct: ['title']});
+            title: true,
+        },
+        distinct: ['title'],
+    });
 
-    const previousTopicsTitles:Array<string> = previousTopics?.map((topic)=>topic.title)
-    const allTopics:Array<string> = topicsJson.topics;
-    const topicsToBeCreated:Array<string> = [];
+    const previousTopicsTitles: Array<string> = previousTopics.map((topic) => topic.title);
+    const allTopics: string[] = topicsJson.topics;
+    const topicsToBeCreated: string[] = [];
 
     //find the new topics to be created
-    allTopics.forEach((topic:string)=> {
-        if(!previousTopicsTitles?.includes(topic)){
-            topicsToBeCreated.push(topic)
-    } })
+    allTopics.forEach((topic: string) => {
+        if (!previousTopicsTitles.map((p) => p.toLowerCase()).includes(topic.toLowerCase())) {
+            topicsToBeCreated.push(topic);
+        }
+    });
 
-   if(topicsToBeCreated?.length){
-    for(const topic of topicsToBeCreated){
-        const result =  await prisma.topic.create({
+    for (const topic of topicsToBeCreated) {
+        const result = await prisma.topic.create({
             data: {
                 title: topic,
-                description: '',
-                logo: '',   
-              },
-            select:{
-                title:true
-            }
-        })
-        //TODO: remove log in production environment
-        console.log(`[INFO] ${result.title} NEW Topic Created`)
+            },
+            select: {
+                title: true,
+            },
+        });
+
+        console.log(`[INFO] ${result.title} NEW Topic Created`);
     }
-   }
+}
+/**
+ * Password validator
+ */
+export function validatorPassword(password: string) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
 }
