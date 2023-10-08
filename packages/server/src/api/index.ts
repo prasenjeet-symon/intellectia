@@ -2774,7 +2774,7 @@ router.put('/user/article-story/:id', async (req, res) => {
 
         return res.json({ message: 'Story distribution status updated successfully' });
     } catch (error) {
-        return res.json({ message: 'Story distribution status updated failed', error });
+        return res.status(400).json({ message: 'Story distribution status updated failed', error });
     }
 });
 
