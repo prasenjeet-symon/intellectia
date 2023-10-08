@@ -2762,16 +2762,20 @@ router.put('/user/article-story/:id', async (req, res) => {
 
     if (!id) return res.status(400).json({ error: 'Story distribution id is missing' });
 
-    const updatedStoryArticle = await prisma.articleStoryDistribution.update({
-        where: {
-            id: +id,
-        },
-        data: {
-            isSeen: true,
-        },
-    });
+    try {
+        await prisma.articleStoryDistribution.update({
+            where: {
+                id: +id,
+            },
+            data: {
+                isSeen: true,
+            },
+        });
 
-    return res.json({ updatedStoryArticle });
+        return res.json({ message: 'Story distribution status updated successfully' });
+    } catch (error) {
+        return res.json({ message: 'Story distribution status updated failed', error });
+    }
 });
 
 export default router;
