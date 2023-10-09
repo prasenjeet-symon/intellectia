@@ -6,6 +6,11 @@ import { emailPasswordValidator, emailValidator } from '../validators';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
+const logoutAllSchema = z.object({
+    token: z.string().min(1), // Ensure the token property is a non-empty string
+    email: z.string().min(1), // Ensure the email property is a non-empty string
+});
+
 
 router.get('/', (req, res) => {
     res.send({ message: 'Hello from Authentication' });
@@ -507,6 +512,15 @@ router.post('/logout', authenticateUser, async (req, res) => {
  *
  */
 router.post('/logout_all', authenticateUser, async (req, res) => {
+     try {
+        // Validate the request body using the Zod schema
+        logoutAllSchema.parse(req.locals);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: "Token and email are required and must be non-empt" });
+            return;
+        }
+    }
     // res.locals should contain email and token
     if (!('token' in res.locals) || !('email' in res.locals)) {
         res.status(400).send({ error: 'Token and email are required' });
@@ -517,7 +531,6 @@ router.post('/logout_all', authenticateUser, async (req, res) => {
         res.status(400).send({ error: 'Token and email are required' });
         return;
     }
-
     const email = res.locals.email;
     const token = res.locals.token;
 
