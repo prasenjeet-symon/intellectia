@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
-import { emailPasswordValidator, emailValidator, logoutAllSchema } from '../validators';
+import { emailPasswordValidator, emailValidator, logoutAllSchema, logoutSchema } from '../validators';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -448,15 +448,14 @@ router.post('/google_login', async (req, res) => {
  * Logout the user
  */
 router.post('/logout', authenticateUser, async (req, res) => {
-    // res.locals should contain email and token
-    if (!('token' in res.locals) || !('email' in res.locals)) {
-        res.status(400).send({ error: 'Token and email are required' });
-        return;
-    }
-
-    if (!res.locals.token || !res.locals.email) {
-        res.status(400).send({ error: 'Token and email are required' });
-        return;
+    try {
+        // Validate res.locals using the Zod schema
+        logoutSchema.parse(res.locals);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+            return;
+        }
     }
 
     const email = res.locals.email;

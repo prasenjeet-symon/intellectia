@@ -10,6 +10,11 @@ export const logoutAllSchema = z.object({
   email: z.string().email()
 });
 
+export const logoutSchema = z.object({
+  token: z.string().min(1),
+  email: z.string().email()
+});
+
 export const emailPasswordValidator = z.object({
     email: z.string().email(),
     password: z.string().refine(validatorPassword, {
