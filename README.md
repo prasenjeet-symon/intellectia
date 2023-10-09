@@ -19,7 +19,8 @@ Intellectia Client Development focuses on enhancing the client-side features of 
 | Page Name               | Features                        | Status     |
 |-------------------------|---------------------------------|------------|
 | Authentication/LoginPage | Email, Password, Google Login   | ✔️ Functional |
-| Authentication/SignUpPage | Email, Password, Google SignUp  | 🚧 Under Development |
+| Authentication/SignUpPage | Email, Password, Google SignUp  | ✔️ Functional |
+| Dashboard/ChooseTopics | `Dashboard/ChooseTopics` is a page that empowers users to personalize their dashboard experience by selecting their preferred topics and interests, ensuring they receive relevant content and updates.  | ✔️ Functional |
 
 
 
