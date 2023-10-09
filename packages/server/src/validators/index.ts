@@ -5,6 +5,10 @@ export const emailValidator = z.object({
   email: z.string().email()
 })
 
+export const logoutAllSchema = z.object({
+  token: z.string().min(1),
+  email: z.string().email()
+});
 
 export const emailPasswordValidator = z.object({
     email: z.string().email(),
