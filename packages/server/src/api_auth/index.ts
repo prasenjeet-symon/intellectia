@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
+import { emailPasswordValidator, emailValidator, logoutAllSchema, logoutSchema } from '../validators';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -108,19 +109,20 @@ router.post('/login', async (req, res) => {
  * Signup user with email and password
  */
 router.post('/signup', async (req, res) => {
-    if (!('email' in req.body) || !('password' in req.body)) {
-        res.status(400).send({ error: 'Email and password are required' });
+    try {
+        await emailPasswordValidator.parseAsync(req.body);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
         return;
     }
 
-    if (!(req.body.email && req.body.password)) {
-        res.status(400).send({ error: 'Email and password are required' });
-        return;
-    }
-
-    const email = req.body.email;
-    const password = req.body.password;
-
+    // run the validators
+    const parsedBody = emailPasswordValidator.parse(req.body);
+    const email = parsedBody.email;
+    const password = parsedBody.password;
     // check if the user already exit in the database
     const prisma = PrismaClientSingleton.prisma;
     const oldUser = await prisma.user.findUnique({
@@ -156,17 +158,20 @@ router.post('/signup', async (req, res) => {
  * Magic URL creation
  */
 router.post('/magic', async (req, res) => {
-    if (!('email' in req.body)) {
-        res.status(400).send({ error: 'Email is required' });
+    try {
+        await emailValidator.parseAsync(req.body);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
         return;
     }
 
-    if (!req.body.email) {
-        res.status(400).send({ error: 'Email is required' });
-        return;
-    }
+    // run the validators
+    const parsedBody = emailValidator.parse(req.body);
+    const email = parsedBody.email;
 
-    const email = req.body.email;
     const magicLinkToken = v4();
     const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
 
@@ -447,15 +452,14 @@ router.post('/google_login', async (req, res) => {
  * Logout the user
  */
 router.post('/logout', authenticateUser, async (req, res) => {
-    // res.locals should contain email and token
-    if (!('token' in res.locals) || !('email' in res.locals)) {
-        res.status(400).send({ error: 'Token and email are required' });
-        return;
-    }
-
-    if (!res.locals.token || !res.locals.email) {
-        res.status(400).send({ error: 'Token and email are required' });
-        return;
+    try {
+        // Validate res.locals using the Zod schema
+        logoutSchema.parse(res.locals);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+            return;
+        }
     }
 
     const email = res.locals.email;
@@ -506,15 +510,14 @@ router.post('/logout', authenticateUser, async (req, res) => {
  *
  */
 router.post('/logout_all', authenticateUser, async (req, res) => {
-    // res.locals should contain email and token
-    if (!('token' in res.locals) || !('email' in res.locals)) {
-        res.status(400).send({ error: 'Token and email are required' });
-        return;
-    }
-
-    if (!res.locals.token || !res.locals.email) {
-        res.status(400).send({ error: 'Token and email are required' });
-        return;
+    try {
+        // Validate res.locals using the Zod schema
+        logoutAllSchema.parse(res.locals);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+            return;
+        }
     }
 
     const email = res.locals.email;

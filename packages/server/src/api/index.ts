@@ -2779,6 +2779,26 @@ router.put('/user/article-story/:id', async (req, res) => {
     // only the isSeen property can be updated for the article distribution
     // update the isSeen property to true ( even if already updated )
     // return the meaning full message to the user
+    //
+    const prisma = PrismaClientSingleton.prisma;
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json({ error: 'Story distribution id is missing' });
+
+    try {
+        await prisma.articleStoryDistribution.update({
+            where: {
+                id: +id,
+            },
+            data: {
+                isSeen: true,
+            },
+        });
+
+        return res.json({ message: 'Story distribution status updated successfully' });
+    } catch (error) {
+        return res.status(400).json({ message: 'Story distribution status updated failed', error });
+    }
 });
 
 export default router;
