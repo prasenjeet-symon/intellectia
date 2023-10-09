@@ -35,10 +35,27 @@ export class AxiosClient {
   }
 
   /**
+   * Is logged in
+   */
+  public async isUserLoggedIn() {
+    // use axios to check if the user is logged in
+    const isAuthenticated = this.axiosInstance.defaults.headers.common["Authorization"];
+    return isAuthenticated ? true : false;
+  }
+
+  /**
    * Add token to local storage
    */
   public addToken(token: string) {
     localStorage.setItem("token", token);
+    this.setBearerToken();
+  }
+
+  /**
+   * Remove the token
+   */
+  public removeToken() {
+    localStorage.removeItem("token");
     this.setBearerToken();
   }
 }

@@ -8,10 +8,54 @@
 import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
 import AxiosClient from "@/api/apiClient";
 import { dispatchAPIError, dispatchAPIViewError, dispatchAPIViewSuccess } from "@/lib/appUtils";
-import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle } from "@/types/types";
+import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle, ReactQueryKey } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { NavigateFunction } from "react-router-dom";
+
+/**
+ * Hook - Authentication
+ * Is the user logged in?
+ */
+export function useIsLoggedIn(ctx?: IHookContext) {
+  const fetchQuery = useQuery<unknown, AxiosError<IAxiosError>, boolean, string[]>([ReactQueryKey.IsUserLoggedIn()], () => AxiosClient.getInstance().isUserLoggedIn(), {
+    onError: (err) => {
+      dispatchAPIError({
+        hookCtx: APIHookType.IsUserLoggedIn,
+        message: err,
+      });
+
+      if (!ctx || (ctx && ctx.showErrors)) {
+        dispatchAPIViewError({
+          hookCtx: APIHookType.IsUserLoggedIn,
+          message: err.response?.data.error,
+        });
+      }
+    },
+    onSuccess: (data) => {
+      console.log(data, 'AUTH');
+      if (!ctx || (ctx && ctx.showSuccess)) {
+        dispatchAPIViewSuccess({
+          hookCtx: APIHookType.IsUserLoggedIn,
+          message: "User is authenticated.",
+        });
+      }
+    },
+  });
+
+  const refetch = async () => {
+    try {
+      await fetchQuery.refetch();
+    } catch (error: any) {
+      dispatchAPIError({
+        hookCtx: APIHookType.IsUserLoggedIn,
+        message: error,
+      });
+    }
+  };
+
+  return { refetch, isAuthenticated: !!fetchQuery.data, isLoading: fetchQuery.isLoading, isError: fetchQuery.isError };
+}
 
 /**
  * Hook - Authentication
@@ -43,7 +87,7 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction, ctx?: 
         });
       }
 
-      navigate("/auth/choose-topics");
+      navigate("/dashboard/choose-topics");
     },
   });
 

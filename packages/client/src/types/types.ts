@@ -59,6 +59,8 @@ export enum APIHookType {
   AssignTopic = "AssignTopic",
   // Delete a single topic from the user
   DeleteTopic = "DeleteTopic",
+  // Is user logged in 
+  IsUserLoggedIn = "IsUserLoggedIn",
 }
 
 // For the fetch query of react query
@@ -71,6 +73,11 @@ export class ReactQueryKey {
   public static GetTopicsByUser = (...keys: string[] | number[]) => {
     return `get-topics-by-user-${keys.join("-")}`;
   };
+
+  // fetch is user is logged in or not
+  public static IsUserLoggedIn = (...keys: string[] | number[]) => {
+    return `is-user-logged-in-${keys.join("-")}`;
+  }
 }
 
 export interface APIEventData {

@@ -3,19 +3,27 @@ import { useEffect } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./components/shared/ThemeProvider";
 import { Toaster } from "./components/ui/toaster";
+import AuthenticationPage from "./pages/Authentication/AuthenticationPage/AuthenticationPage";
 import ChooseInterestPage from "./pages/Authentication/ChooseInterestPage/ChooseInterestPage";
 import LoginPage from "./pages/Authentication/LoginPage/LoginPage";
 import SignUpPage from "./pages/Authentication/SignUpPage/SignUpPage";
+import { DashboardPage } from "./pages/Dashboard/DashboardPage/DashboardPage";
+import FeedPage from "./pages/Dashboard/FeedPage/FeedPage";
 import { APIEventData, API_ERROR_VIEW } from "./types/types";
 
 const routes = createBrowserRouter([
   {
     path: "/",
-    element: <LoginPage />,
+    element: <SignUpPage />,
   },
   {
     path: "auth",
+    element: <AuthenticationPage />,
     children: [
+      {
+        path: "",
+        element: <SignUpPage />,
+      },
       {
         path: "sign-up",
         element: <SignUpPage />,
@@ -23,6 +31,16 @@ const routes = createBrowserRouter([
       {
         path: "sign-in",
         element: <LoginPage />,
+      },
+    ],
+  },
+  {
+    path: "dashboard",
+    element: <DashboardPage />,
+    children: [
+      {
+        path: "",
+        element: <FeedPage />,
       },
       {
         path: "choose-topics",
