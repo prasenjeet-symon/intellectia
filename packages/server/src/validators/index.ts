@@ -1,18 +1,18 @@
-import { z } from "zod";
+import { z } from 'zod';
 import { validatorPassword } from '../utils';
 
 export const emailValidator = z.object({
-  email: z.string().email()
-})
+    email: z.string().email(),
+});
 
 export const logoutAllSchema = z.object({
-  token: z.string().min(1),
-  email: z.string().email()
+    token: z.string().min(1),
+    email: z.string().email(),
 });
 
 export const logoutSchema = z.object({
-  token: z.string().min(1),
-  email: z.string().email()
+    token: z.string().min(1),
+    email: z.string().email(),
 });
 
 export const emailPasswordValidator = z.object({
@@ -23,6 +23,6 @@ export const emailPasswordValidator = z.object({
 });
 
 export const tokenEmailValidator = z.object({
-  token: z.string().min(1),
-  email: z.string().email()
-})
+    token: z.string().min(1),
+    email: z.string().email(),
+});
