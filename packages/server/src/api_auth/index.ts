@@ -517,7 +517,7 @@ router.post('/logout_all', authenticateUser, async (req, res) => {
         logoutAllSchema.parse(req.locals);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: "Token and email are required and must be non-empt" });
+            res.status(400).send({ error: "Token and email are required and must be non-empty" });
             return;
         }
     }
