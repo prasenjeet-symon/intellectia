@@ -1,3 +1,7 @@
+/**
+ * Note that error response structure is  : { error: string }
+ */
+
 import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';

@@ -1,5 +1,5 @@
-import { IAuthenticationResult } from "@/types/types";
-import { AxiosError, AxiosResponse } from "axios";
+import { IAuthenticationResult, ITopicResult } from "@/types/types";
+import { AxiosResponse } from "axios";
 import AxiosClient from "./apiClient";
 
 /**
@@ -39,7 +39,6 @@ export async function loginWithEmailPassword(email: string, password: string): P
   return response;
 }
 
-
 /**
  * Signs up a user using their Google token.
  *
@@ -60,4 +59,64 @@ export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAu
 export async function loginWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = "/auth/google_login";
   return {} as any;
+}
+
+/**
+ * Fetch all the application topics
+ */
+export async function getTopics(): Promise<ITopicResult[]> {
+  const apiUrl = "/api/topics";
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+
+  const response = await axios.get<ITopicResult[]>(apiUrl);
+  return response.data;
+}
+
+/**
+ * Fetch all the assigned topics of the user
+ */
+export async function getAssignedTopics(): Promise<ITopicResult[]> {
+  const apiUrl = "/api/user/topics";
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+
+  const response = await axios.get<ITopicResult[]>(apiUrl);
+  return response.data;
+}
+
+/**
+ * Assign multiple topics to the user
+ */
+export async function assignTopics(topicIds: number[]): Promise<string> {
+  const apiUrl = "/api/user/topics";
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+
+  const response = await axios.put<string>(apiUrl, { topics: topicIds });
+  return response.data;
+}
+
+/**
+ * Assign single topic to the user
+ */
+export async function assignTopic(topicId: number): Promise<string> {
+  const apiUrl = "/api/user/topic";
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+
+  const response = await axios.put<string>(apiUrl, { id: topicId });
+  return response.data;
+}
+
+/**
+ * Delete a topic from the user
+ */
+export async function deleteTopic(topicId: number): Promise<string> {
+  const apiUrl = `/api/user/topic/${topicId}`;
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+
+  const response = await axios.delete<string>(apiUrl);
+  return response.data;
 }

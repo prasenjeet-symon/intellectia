@@ -25,7 +25,7 @@ const routes = createBrowserRouter([
         element: <LoginPage />,
       },
       {
-        path: "choose-interests",
+        path: "choose-topics",
         element: <ChooseInterestPage />,
       },
     ],

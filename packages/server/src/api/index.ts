@@ -142,6 +142,29 @@ router.get('/topics', async (req, res) => {
     const topics = await prisma.topic.findMany();
     res.send(topics);
 });
+
+/**
+ * Fetch all the assigned topics of the user
+ */
+router.get('/user/topics', async (req, res) => {
+    const prisma = PrismaClientSingleton.prisma;
+    // get all the topics of user
+    const topics = await prisma.user.findUnique({
+        where: {
+            email: res.locals.email,
+        },
+        select: {
+            topics: true,
+        },
+    });
+
+    if (!topics) {
+        res.status(404).send({ error: 'No such user' });
+        return;
+    }
+
+    res.send(topics.topics);
+});
 /**
  * Get the single topic by id
  */

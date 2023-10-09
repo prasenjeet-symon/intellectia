@@ -39,6 +39,7 @@ export class AxiosClient {
    */
   public addToken(token: string) {
     localStorage.setItem("token", token);
+    this.setBearerToken();
   }
 }
 

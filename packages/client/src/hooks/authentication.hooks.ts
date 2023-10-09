@@ -6,6 +6,7 @@
  */
 
 import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
+import AxiosClient from "@/api/apiClient";
 import { dispatchAPIError, dispatchAPIViewError, dispatchAPIViewSuccess } from "@/lib/appUtils";
 import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
@@ -31,7 +32,10 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction, ctx?: 
         });
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // set the local storage
+      AxiosClient.getInstance().addToken(data.data.token);
+
       if (!ctx || (ctx && ctx.showSuccess)) {
         dispatchAPIViewSuccess({
           hookCtx: APIHookType.EmailPasswordLogin,
@@ -75,7 +79,10 @@ export function useLoginWithEmailAndPassword(navigate: NavigateFunction, ctx?: I
         });
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // set the local storage
+      AxiosClient.getInstance().addToken(data.data.token);
+
       if (!ctx || (ctx && ctx.showSuccess)) {
         dispatchAPIViewSuccess({
           hookCtx: APIHookType.EmailPasswordLogin,
