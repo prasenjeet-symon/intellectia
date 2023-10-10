@@ -11,6 +11,7 @@ export async function markdownToJSON() {
     // read that markdown and generate the JSON
     // JSON :  { title: string; subTitle: string; coverImage: string; markdownContent: string, htmlContent: string }
     // cover image should be asset file location ( relative url ) , please check the server.ts file for the media path
+    
     // use the function markdownToHTML to get the HTML
 }
 
