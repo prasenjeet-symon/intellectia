@@ -11,6 +11,7 @@ export async function markdownToJSON() {
     // read that markdown and generate the JSON
     // JSON :  { title: string; subTitle: string; coverImage: string; markdownContent: string, htmlContent: string }
     // cover image should be asset file location ( relative url ) , please check the server.ts file for the media path
+    
     // use the function markdownToHTML to get the HTML
 }
 
@@ -34,15 +35,28 @@ export async function markdownToHTML(inputPath: string) {
  * Generate the fake article for the seeding
  */
 export async function generateFakeArticle() {
-    // generate the fake article
-    // generate title using faker library
-    // generate subtitle using the faker library
-    // generate htmlContent using markdownToJSON function
-    // generate markdownContent using markdownToJSON function
-    // generate coverImage using the faker library
-    // generate readTimeMinutes using the faker library ( decimal number )
-    // return your response accordingly
+    
+    // Generate fake data using faker library
+    const title = faker.lorem.sentence();
+    const subtitle = faker.lorem.sentence();
+    const htmlContent = markdownToJSON(faker.lorem.paragraphs());
+    const markdownContent = markdownToJSON(faker.lorem.paragraphs());
+    const coverImage = faker.image.imageUrl();
+    const readTimeMinutes = faker.random.number({ min: 1, max: 30, precision: 0.1 });
+
+    // Construct the article object to return 
+    const article = {
+        title: title,
+        subtitle: subtitle,
+        htmlContent: htmlContent,
+        markdownContent: markdownContent,
+        coverImage: coverImage,
+        readTimeMinutes: readTimeMinutes.toFixed(1) // Fixing the decimal precision to one
+    };
+
+    return article;
 }
+
 
 /**
  * Generate the fake user for the seeding
