@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 /**
  * Parse the Markdown file to JSON
  */
@@ -40,11 +41,14 @@ export async function generateFakeArticle() {
  * Generate the fake user for the seeding
  */
 export async function generateFakeUser() {
-    // generate the fake user
-    // generate email using faker library
-    // generate password using faker library
-    // generate username using faker library
-    // generate userId using ( UUID ) using the faker library
-    // generate fullName using faker library
-    // return your response accordingly
+    return {
+        email: faker.internet.email({
+            firstName: faker.person.firstName(),
+            lastName: faker.person.lastName()
+        }),
+        password: faker.internet.password(),
+        username: faker.internet.userName(),
+        userId: faker.string.uuid(),
+        fullname: `${faker.person.firstName()} ${faker.person.lastName()} `
+    }
 }
