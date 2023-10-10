@@ -1,4 +1,7 @@
 import { faker } from '@faker-js/faker';
+import * as readFileFs from 'fs';
+const showdown  = require('showdown')
+
 /**
  * Parse the Markdown file to JSON
  */
@@ -14,13 +17,17 @@ export async function markdownToJSON() {
 /**
  * Parse the Markdown to HTML
  */
-export async function markdownToHTML() {
-    // Markdown file is located in the assets folder
-    // markdown file is a article about the cat journey to the moon.
-    // read the markdown and convert it to HTML
-    // return the actual HTML string as { HTML: string }
-    // comment the library used for this purpose in the related issue on GitHub
-    // if you can write the pure TypeScript function for this purpose then awesome . :) You are really awesome !
+// used showdown (https://www.npmjs.com/package/showdown)
+export async function markdownToHTML(inputPath: string) {
+    try {
+        const data: string = readFileFs.readFileSync(inputPath, 'utf8');
+        const converter = new showdown.Converter();
+        const result = converter.makeHtml(data);
+        return { HTML: result };
+    } catch(error: any) {
+        console.error(error.message);
+        process.exit(-1);
+    }
 }
 
 /**
