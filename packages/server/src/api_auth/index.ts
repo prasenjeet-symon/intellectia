@@ -6,7 +6,7 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
-import { emailPasswordValidator, emailValidator, logoutAllSchema, logoutSchema, googleLoginSchema } from '../validators';
+import { emailPasswordValidator, emailValidator, logoutAllSchema, logoutSchema, googleLoginSchema, googleSchema } from '../validators';
 const rateLimit = require('express-rate-limit');
 
 const router = Router();
@@ -318,19 +318,20 @@ router.post(
  */
 router.post('/google', async (req, res) => {
     // token is required
-    if (!('token' in req.body)) {
-        res.status(400).send({ error: 'Token is required' });
-        return;
-    }
-
-    if (!req.body.token) {
-        res.status(400).send({ error: 'Token is required' });
-        return;
+    try {
+        // Validate the request body using the Zod schema
+        googleSchema.parse(req.body);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: 'Token is required and must be non-empty' });
+            return;
+        }
     }
 
     const token = req.body.token;
 
     const tokenPayload = await verifyGoogleAuthToken(token);
+
     if (!tokenPayload.success) {
         res.status(401).send({ error: 'Invalid token' });
         return;
@@ -389,7 +390,7 @@ router.post('/google_login', async (req, res) => {
 
     const token = req.body.token;
     const tokenPayload = await verifyGoogleAuthToken(token);
-    
+
     if (!tokenPayload.success) {
         res.status(401).send({ error: 'Invalid token' });
         return;
