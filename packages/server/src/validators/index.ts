@@ -9,6 +9,10 @@ export const googleLoginSchema = z.object({
     token: z.string().min(1),
 });
 
+export const googleSchema = z.object({
+    token: z.string().min(1),
+});
+
 export const logoutAllSchema = z.object({
     token: z.string().min(1),
     email: z.string().email(),
