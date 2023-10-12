@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PrismaClientSingleton } from '../utils';
-import { idValidator } from '../validators';
+import { emailValidator, idValidator } from '../validators';
 import { ZodError } from 'zod';
 
 const router = Router();
@@ -390,79 +390,69 @@ router.delete('/user/topics', async (req, res) => {
  * Add an article to the article series
  */
 router.put('/user/article_series/:id/article', async (req, res) => {
-    // id is required
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    try {
+        const parsedBody = await idValidator.parseAsync(req.body);
+        const parsedParams = await idValidator.parseAsync(req.params);
+        const parsedLocals = await emailValidator.parseAsync(res.locals);
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+        const id = parsedParams.id; // article series id
+        const articleId = parsedBody.id; // article id
 
-    if (!('id' in req.body)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    if (!req.body.id) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const id = +req.params.id; // article series id
-    const articleId = +req.body.id; // article id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // remove old article from the article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: {
-                                id: articleId,
+        const prisma = PrismaClientSingleton.prisma;
+        // remove old article from the article series
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: {
+                                    id: articleId,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    // add new article to the article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            connect: {
-                                id: articleId,
+        // add new article to the article series
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                connect: {
+                                    id: articleId,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Article added to series');
+        res.send('Article added to series');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 /**
  * Delete an article from the article series
