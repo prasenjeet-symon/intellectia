@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { UniqueEnforcer } from 'enforce-unique';
 import * as readFileFs from 'fs';
+import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
-import showdown from 'showdown'
 /**
  * Parse the Markdown file to JSON
  */
@@ -119,20 +119,20 @@ export async function generateFakeArticle(): Promise<
  * Generate the fake user for the seeding
  */
 export async function generateFakeUser(): Promise<{
-          email: string;
-          password: string;
-          username: string;
-          userId: string;
-          fullName: string;
-      }
-> {
+    email: string;
+    password: string;
+    username: string;
+    userId: string;
+    fullName: string;
+}> {
+    
     const uniqueEnforcer = new UniqueEnforcer();
     return {
         email: uniqueEnforcer.enforce(() =>
-        faker.internet.email({
-            firstName: faker.person.firstName(),
-            lastName: faker.person.lastName(),
-        }),
+            faker.internet.email({
+                firstName: faker.person.firstName(),
+                lastName: faker.person.lastName(),
+            }),
         ),
         password: faker.internet.password(),
         username: uniqueEnforcer.enforce(() => faker.internet.userName()),
@@ -180,7 +180,7 @@ export async function assignTopicsToArticles(email: string): Promise<void> {
  */
 export async function createMultipleUsers(numberOfUser: number) {
     const prisma = PrismaClientSingleton.prisma;
-    const newFakeUsers = new Array(numberOfUser).fill(0).map(() => generateFakeUser());
+    const newFakeUsers = await Promise.all(new Array(numberOfUser).fill(0).map( async () => await generateFakeUser()));
     const newUsers = await prisma.user.createMany({
         data: newFakeUsers,
     });
@@ -191,8 +191,6 @@ export async function createMultipleUsers(numberOfUser: number) {
     // run your task in parallel also print the status to the console clearly
     // like : Created user :: [user email ]
 }
-
-
 
 /**
  * Assign topics to the users
@@ -226,19 +224,36 @@ export async function commentOnArticle(email: string, articleId: number, min: nu
     // save the comments in parallel ( Promise.all() )
 }
 /**
+ * Add multiple comments to the articles
+ */
+export async function addMultipleCommentsToArticles(min: number, max: number): Promise<void> {
+    // add comments to the every article
+    // fetch all the articles from the database
+    // fetch all the users from the database
+    // each user will comments on randomly chosen 40% of the articles
+    // use the function commentOnArticle to comment on the article
+    // repeat this process for every user fetched from the database and save the result in parallel ( Promise.all() )
+    // loop through all the user and perform the above task
+}
+/**
  * Add replies to the comments
  */
-export async function addRepliesToComments(): Promise<void> {
-
-    
+export async function addRepliesToComments(min: number, max: number): Promise<void> {
+    // add replies to the every comment
+    // fetch all the comments from the database
+    // fetch all the users from the database
+    // each comments will have n number of reply where n belong to the [ min , max ] and min, max and n  belong to positive Integer
+    // that n number of reply per comment will belong the random user n that is randomly chosen from the users list
+    // loop on the comments and perform the above task and save the result ( reply ) to database in parallel ( Promise.all() )
 }
 /**
  * Perform positive actions for the main user
  */
-export async function performPositiveActions(email: string): Promise<void> {
+export async function performPositiveActions(email: string): Promise<number[]> {
     // email is the user in focus
     // fetch all the articles from the database
     // randomly select 50% of the articles to perform positive actions on
     // from that 50% , perform, comment on 25% of the articles and like 25% of the articles choose randomly
+    // return the remaining 50% of the articles that will be used to add connection between authors and target user
+    return [];
 }
-
