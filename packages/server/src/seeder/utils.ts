@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { UniqueEnforcer } from 'enforce-unique';
 import * as readFileFs from 'fs';
-const showdown = require('showdown');
-
+import { PrismaClientSingleton } from '../utils';
+import showdown from 'showdown'
 /**
  * Parse the Markdown file to JSON
  */
@@ -117,23 +118,24 @@ export async function generateFakeArticle(): Promise<
 /**
  * Generate the fake user for the seeding
  */
-export async function generateFakeUser(): Promise<
-    | {
+export async function generateFakeUser(): Promise<{
           email: string;
           password: string;
           username: string;
           userId: string;
           fullName: string;
       }
-    | undefined
 > {
+    const uniqueEnforcer = new UniqueEnforcer();
     return {
-        email: faker.internet.email({
+        email: uniqueEnforcer.enforce(() =>
+        faker.internet.email({
             firstName: faker.person.firstName(),
             lastName: faker.person.lastName(),
         }),
+        ),
         password: faker.internet.password(),
-        username: faker.internet.userName(),
+        username: uniqueEnforcer.enforce(() => faker.internet.userName()),
         userId: faker.string.uuid(),
         fullName: `${faker.person.firstName()} ${faker.person.lastName()} `,
     };
@@ -176,12 +178,21 @@ export async function assignTopicsToArticles(email: string): Promise<void> {
 /**
  * Create multiple users to the database
  */
-export async function createMultipleUsers(numberOfUser: number): Promise<void> {
+export async function createMultipleUsers(numberOfUser: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const newFakeUsers = new Array(numberOfUser).fill(0).map(() => generateFakeUser());
+    const newUsers = await prisma.user.createMany({
+        data: newFakeUsers,
+    });
+
+    return newUsers;
     // Create multiple user to the database
     // use the function generateFakeUser to generate fake user
     // run your task in parallel also print the status to the console clearly
     // like : Created user :: [user email ]
 }
+
+
 
 /**
  * Assign topics to the users
@@ -218,7 +229,7 @@ export async function commentOnArticle(email: string, articleId: number, min: nu
  * Add replies to the comments
  */
 export async function addRepliesToComments(): Promise<void> {
-    
+
     
 }
 /**
@@ -230,3 +241,4 @@ export async function performPositiveActions(email: string): Promise<void> {
     // randomly select 50% of the articles to perform positive actions on
     // from that 50% , perform, comment on 25% of the articles and like 25% of the articles choose randomly
 }
+
