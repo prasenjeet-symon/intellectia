@@ -44,6 +44,12 @@ export interface IHookLoginWithGoogle {
   isLoading: boolean;
 }
 
+// IHookLogout
+export interface IHookLogout {
+  logout: () => void;
+  isLoading: boolean;
+}
+
 export enum APIHookType {
   // email and password signup
   EmailPasswordSignup = "EmailPasswordSignup",
@@ -61,6 +67,8 @@ export enum APIHookType {
   DeleteTopic = "DeleteTopic",
   // Is user logged in 
   IsUserLoggedIn = "IsUserLoggedIn",
+  // logout the user
+  Logout = "Logout",
 }
 
 // For the fetch query of react query

@@ -8,7 +8,7 @@
 import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
 import AxiosClient from "@/api/apiClient";
 import { dispatchAPIError, dispatchAPIViewError, dispatchAPIViewSuccess } from "@/lib/appUtils";
-import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle, ReactQueryKey } from "@/types/types";
+import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookLogout, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle, ReactQueryKey } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import { useMutation, useQuery } from "react-query";
 import { NavigateFunction } from "react-router-dom";
@@ -33,7 +33,7 @@ export function useIsLoggedIn(ctx?: IHookContext) {
       }
     },
     onSuccess: (data) => {
-      console.log(data, 'AUTH');
+      console.log(data, "AUTH");
       if (!ctx || (ctx && ctx.showSuccess)) {
         dispatchAPIViewSuccess({
           hookCtx: APIHookType.IsUserLoggedIn,
@@ -163,5 +163,17 @@ export function useSignupWithGoogle(navigate: NavigateFunction, ctx?: IHookConte
  * Login user with Google token
  */
 export function useLoginWithGoogle(navigate: NavigateFunction, ctx?: IHookContext): IHookLoginWithGoogle {
+  return {} as any;
+}
+
+/**
+ * Hook - Authentication
+ * Logout user
+ */
+export function useLogout(ctx?: IHookContext): IHookLogout {
+  // mutation
+  // revalidate the ReactQueryKey.IsUserLoggedIn() query
+  // this will navigate the user to login page
+  // use removeToken of the ApiClient ( from the api/apiClient.ts )
   return {} as any;
 }

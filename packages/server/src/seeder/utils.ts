@@ -5,20 +5,31 @@ const showdown = require('showdown');
 /**
  * Parse the Markdown file to JSON
  */
-export async function markdownToJSON() {
+export async function markdownToJSON(): Promise<
+    | {
+          title: string;
+          subTitle: string;
+          coverImage: string;
+          markdownContent: string;
+          htmlContent: string;
+      }
+    | undefined
+> {
     // Markdown file is located in the assets folder
     // markdown file is a article about the cat journey to the moon.
     // read that markdown and generate the JSON
     // JSON :  { title: string; subTitle: string; coverImage: string; markdownContent: string, htmlContent: string }
     // cover image should be asset file location ( relative url ) , please check the server.ts file for the media path
-
     // use the function markdownToHTML to get the HTML
-
-    /* extracting HTML content using specified function markdownToHTML */
-    let htmlContent = await markdownToHTML('../assets/catOnTheMoon.md');
 
     /* try block for reading and extracting metadata from markdown file */
     try {
+        /* extracting HTML content using specified function markdownToHTML */
+        let htmlContent = await markdownToHTML('../assets/catOnTheMoon.md');
+        if (!htmlContent) {
+            return;
+        }
+
         /* read selected file synchronously */
         const data = readFileFs.readFileSync('../assets/catOnTheMoon.md', 'utf8');
 
@@ -40,7 +51,7 @@ export async function markdownToJSON() {
             subTitle,
             coverImage: `/server/media/${image}`,
             markdownContent,
-            htmlContent: htmlContent ? htmlContent.HTML : '',
+            htmlContent: htmlContent.HTML,
         };
     } catch (error: any) {
         /* catch any errors that might occur */
@@ -52,7 +63,7 @@ export async function markdownToJSON() {
  * Parse the Markdown to HTML
  */
 // used showdown (https://www.npmjs.com/package/showdown)
-export async function markdownToHTML(inputPath: string) {
+export async function markdownToHTML(inputPath: string): Promise<{ HTML: string } | undefined> {
     try {
         const data: string = readFileFs.readFileSync(inputPath, 'utf8');
         const converter = new showdown.Converter();
@@ -66,13 +77,27 @@ export async function markdownToHTML(inputPath: string) {
 /**
  * Generate the fake article for the seeding
  */
-export async function generateFakeArticle() {
+export async function generateFakeArticle(): Promise<
+    | {
+          title: string;
+          subtitle: string;
+          htmlContent: string;
+          markdownContent: string;
+          coverImage: string;
+          readTimeMinutes: number;
+      }
+    | undefined
+> {
     const JSONData = await markdownToJSON();
+    if (!JSONData) {
+        return;
+    }
+
     // Generate fake data using faker library
     const title = faker.lorem.sentence();
     const subtitle = faker.lorem.sentence();
-    const htmlContent = JSONData?.htmlContent;
-    const markdownContent = JSONData?.markdownContent;
+    const htmlContent = JSONData.htmlContent;
+    const markdownContent = JSONData.markdownContent;
     const coverImage = faker.image.imageUrl();
     const readTimeMinutes = faker.datatype.number({ min: 1, max: 10, precision: 1 });
 
@@ -92,7 +117,16 @@ export async function generateFakeArticle() {
 /**
  * Generate the fake user for the seeding
  */
-export async function generateFakeUser() {
+export async function generateFakeUser(): Promise<
+    | {
+          email: string;
+          password: string;
+          username: string;
+          userId: string;
+          fullName: string;
+      }
+    | undefined
+> {
     return {
         email: faker.internet.email({
             firstName: faker.person.firstName(),
@@ -107,7 +141,7 @@ export async function generateFakeUser() {
 /**
  * Create articles to the database
  */
-export async function createArticlesPerUser(email: string, numberOfArticles: number) {
+export async function createArticlesPerUser(email: string, numberOfArticles: number): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // Create articles to the database
     // use the function generateFakeArticle to generate fake article
@@ -117,7 +151,7 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
  * Create multiple articles to the database for every user
  *
  */
-export async function createMultipleArticles(min: number, max: number) {
+export async function createMultipleArticles(min: number, max: number): Promise<void> {
     // Fetch all the created users from the database
     // created n number of article per user using createArticlesPerUser function
     // choose n randomly where n = [min, max] // both min and max are integer
@@ -126,7 +160,7 @@ export async function createMultipleArticles(min: number, max: number) {
 /**
  * Assign topics to the articles
  */
-export async function assignTopicsToArticles(email: string) {
+export async function assignTopicsToArticles(email: string): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // fetch user topics from the database
     // fetch all the topics of application from the database
@@ -142,9 +176,57 @@ export async function assignTopicsToArticles(email: string) {
 /**
  * Create multiple users to the database
  */
-export async function createMultipleUsers(numberOfUser: number) {
+export async function createMultipleUsers(numberOfUser: number): Promise<void> {
     // Create multiple user to the database
     // use the function generateFakeUser to generate fake user
     // run your task in parallel also print the status to the console clearly
     // like : Created user :: [user email ]
+}
+
+/**
+ * Assign topics to the users
+ */
+export async function assignTopicsToUsers(email: string): Promise<void> {
+    // Assign topics to the created user except the main user ( incoming email )
+    // fetch all the topics of application from the database
+    // choose aftmost 3 topics for the user
+    // topics should be randomly chosen from the application topics list
+    // use faker random library
+    // assign the topics in parallel ( Promise.all() )
+}
+
+/**
+ * Save articles for the users
+ */
+export async function saveArticlesForUsers(): Promise<void> {
+    // fetch all the articles from the database
+    // fetch all the users from the database
+    // loop through all the user and select the articles to save for each user randomly ( 20% articles to save only  )
+    // save the articles in parallel ( Promise.all() )
+}
+
+/**
+ * Given the article and user , comment on the article
+ */
+export async function commentOnArticle(email: string, articleId: number, min: number, max: number): Promise<void> {
+    // email is the commenter's email id
+    // comment on article with given article id
+    // create n number of fake comments for the article where n belong to [ min , max ] and min, max and n  belong to positive Integer
+    // save the comments in parallel ( Promise.all() )
+}
+/**
+ * Add replies to the comments
+ */
+export async function addRepliesToComments(): Promise<void> {
+    
+    
+}
+/**
+ * Perform positive actions for the main user
+ */
+export async function performPositiveActions(email: string): Promise<void> {
+    // email is the user in focus
+    // fetch all the articles from the database
+    // randomly select 50% of the articles to perform positive actions on
+    // from that 50% , perform, comment on 25% of the articles and like 25% of the articles choose randomly
 }
