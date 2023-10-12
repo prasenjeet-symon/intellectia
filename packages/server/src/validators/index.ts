@@ -21,4 +21,8 @@ export const tokenValidator = z.object({
 
 export const emailPasswordValidator = emailValidator.merge(passwordValidator);
 
-export const tokenEmailValidator = emailValidator.merge(tokenValidator)
+export const tokenEmailValidator = emailValidator.merge(tokenValidator);
+
+export const userTopicsValidator = z.object({
+    topics: z.array(z.number()),
+});
