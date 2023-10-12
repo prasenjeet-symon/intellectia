@@ -34,3 +34,7 @@ export const tokenEmailValidator = z.object({
     token: z.string().min(1),
     email: z.string().email(),
 });
+
+export const idValidator = z.object({
+    id: z.number(),
+});
