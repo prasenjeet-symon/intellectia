@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { PrismaClientSingleton } from '../utils';
+import { idValidator } from '../validators';
+import { ZodError } from 'zod';
 
 const router = Router();
 
@@ -466,30 +468,22 @@ router.put('/user/article_series/:id/article', async (req, res) => {
  * Delete an article from the article series
  */
 router.delete('/user/article_series/:id/article', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+    try {
+        await idValidator.parseAsync(req.body);
+        await idValidator.parseAsync(req.params);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
         return;
     }
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    const parsedBody = idValidator.parse(req.body);
+    const parsedParams = idValidator.parse(req.params);
 
-    // id is required
-    if (!('id' in req.body)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    if (!req.body.id) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const id = +req.params.id; // article series id
-    const articleId = +req.body.id; // article id
+    const id = parsedParams.id; // article series id
+    const articleId = parsedBody.id; // article id
 
     const prisma = PrismaClientSingleton.prisma;
     // disconnect the article from the article series
