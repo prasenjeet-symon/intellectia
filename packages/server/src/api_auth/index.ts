@@ -6,8 +6,8 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { z, ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
-import { emailPasswordValidator, emailValidator, logoutAllSchema, logoutSchema, googleLoginSchema, googleSchema } from '../validators';
-const rateLimit = require('express-rate-limit');
+import { emailPasswordValidator, emailValidator, tokenEmailValidator, tokenValidator } from '../validators';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
@@ -320,7 +320,7 @@ router.post('/google', async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        googleSchema.parse(req.body);
+        await tokenValidator.parseAsync(req.body);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token is required and must be non-empty' });
@@ -328,7 +328,7 @@ router.post('/google', async (req, res) => {
         }
     }
 
-    const token = req.body.token;
+    const token = tokenValidator.parse(req.body).token;
 
     const tokenPayload = await verifyGoogleAuthToken(token);
 
@@ -380,7 +380,7 @@ router.post('/google_login', async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        googleLoginSchema.parse(req.body);
+        await tokenValidator.parseAsync(req.body);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token is required and must be non-empty' });
@@ -388,7 +388,7 @@ router.post('/google_login', async (req, res) => {
         }
     }
 
-    const token = req.body.token;
+    const token = tokenValidator.parse(req.body).token;
     const tokenPayload = await verifyGoogleAuthToken(token);
 
     if (!tokenPayload.success) {
@@ -456,7 +456,7 @@ router.post('/google_login', async (req, res) => {
 router.post('/logout', authenticateUser, async (req, res) => {
     try {
         // Validate res.locals using the Zod schema
-        logoutSchema.parse(res.locals);
+        await tokenEmailValidator.parseAsync(res.locals);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token and email are required and must be non-empty' });
@@ -464,8 +464,8 @@ router.post('/logout', authenticateUser, async (req, res) => {
         }
     }
 
-    const email = res.locals.email;
-    const token = res.locals.token;
+    const email = tokenEmailValidator.parse(res.locals).email;
+    const token = tokenEmailValidator.parse(res.locals).token;
 
     // check if the user is already associated with the email
     const prisma = PrismaClientSingleton.prisma;
@@ -514,7 +514,7 @@ router.post('/logout', authenticateUser, async (req, res) => {
 router.post('/logout_all', authenticateUser, async (req, res) => {
     try {
         // Validate res.locals using the Zod schema
-        logoutAllSchema.parse(res.locals);
+        await tokenEmailValidator.parseAsync(res.locals);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token and email are required and must be non-empty' });
@@ -522,8 +522,8 @@ router.post('/logout_all', authenticateUser, async (req, res) => {
         }
     }
 
-    const email = res.locals.email;
-    const token = res.locals.token;
+    const email = tokenEmailValidator.parse(res.locals).email;
+    const token = tokenEmailValidator.parse(res.locals).token;
 
     // check if the user is already associated with the email
     const prisma = PrismaClientSingleton.prisma;
