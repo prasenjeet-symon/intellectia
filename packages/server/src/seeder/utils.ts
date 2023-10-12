@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
+import { UniqueEnforcer } from 'enforce-unique';
 import * as readFileFs from 'fs';
-const showdown = require('showdown');
-
+import { PrismaClientSingleton } from '../utils';
+import showdown from 'showdown'
 /**
  * Parse the Markdown file to JSON
  */
@@ -92,14 +93,17 @@ export async function generateFakeArticle() {
 /**
  * Generate the fake user for the seeding
  */
-export async function generateFakeUser() {
+export function generateFakeUser() {
+    const uniqueEnforcer = new UniqueEnforcer();
     return {
-        email: faker.internet.email({
-            firstName: faker.person.firstName(),
-            lastName: faker.person.lastName(),
-        }),
+        email: uniqueEnforcer.enforce(() =>
+            faker.internet.email({
+                firstName: faker.person.firstName(),
+                lastName: faker.person.lastName(),
+            }),
+        ),
         password: faker.internet.password(),
-        username: faker.internet.userName(),
+        username: uniqueEnforcer.enforce(() => faker.internet.userName()),
         userId: faker.string.uuid(),
         fullName: `${faker.person.firstName()} ${faker.person.lastName()} `,
     };
@@ -143,6 +147,13 @@ export async function assignTopicsToArticles(email: string) {
  * Create multiple users to the database
  */
 export async function createMultipleUsers(numberOfUser: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const newFakeUsers = new Array(numberOfUser).fill(0).map(() => generateFakeUser());
+    const newUsers = await prisma.user.createMany({
+        data: newFakeUsers,
+    });
+
+    return newUsers;
     // Create multiple user to the database
     // use the function generateFakeUser to generate fake user
     // run your task in parallel also print the status to the console clearly
