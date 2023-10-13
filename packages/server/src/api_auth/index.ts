@@ -4,10 +4,10 @@
 
 import { Router } from 'express';
 import { v4 } from 'uuid';
-import { z, ZodError } from 'zod';
-import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, validatorPassword, verifyGoogleAuthToken } from '../utils';
-import { emailPasswordValidator, emailValidator, logoutAllSchema, logoutSchema, googleLoginSchema, googleSchema } from '../validators';
-const rateLimit = require('express-rate-limit');
+import { ZodError } from 'zod';
+import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
+import { emailPasswordValidator, emailValidator, tokenEmailValidator, tokenValidator } from '../validators';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
@@ -19,90 +19,81 @@ router.get('/', (req, res) => {
  * Authenticate user with email and password
  */
 router.post('/login', async (req, res) => {
-    const loginSchema = z.object({
-        email: z.string().email(),
-        password: z.string().refine(validatorPassword, {
-            message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&) and be at least 8 characters long.',
-        }),
-    });
-
     try {
-        loginSchema.parse(req.body);
-    } catch (error: any) {
-        if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
+        const parsedBody = await emailPasswordValidator.parseAsync(req.body);
+        const email = parsedBody.email;
+        const password = parsedBody.password;
+
+        // check if the user already exit in the database
+        const prisma = PrismaClientSingleton.prisma;
+        const oldUser = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+            include: {
+                sessions: true,
+            },
+        });
+
+        if (!oldUser) {
+            // no such user exit
+            // status code 404 means that the resource was not found ( no user exist with this email id )
+            res.status(404).send({ error: 'User not found. Please signup' });
+            return;
         }
 
-        return;
-    }
+        // check if the password is correct
+        if (oldUser.password !== password) {
+            // status code 401 means that the user is unauthorized
+            // wrong password
+            res.status(401).send({ error: 'Wrong password. Please try again with correct password.' });
+            return;
+        }
 
-    // run the validators
-    const parsedBody = loginSchema.parse(req.body);
-    const email = parsedBody.email;
-    const password = parsedBody.password;
+        // check for number of sessions
+        if (oldUser.numberOfSessions === oldUser.sessions.length) {
+            // status code 429 means that the user is rate limited
+            // too many sessions
+            res.status(429).send({ error: 'Too many sessions. Please try again later.' });
+            return;
+        }
 
-    // check if the user already exit in the database
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-        include: {
-            sessions: true,
-        },
-    });
+        // generate the JWT token
+        const token = generateToken(email, oldUser.userId, false);
 
-    if (!oldUser) {
-        // no such user exit
-        // status code 404 means that the resource was not found ( no user exist with this email id )
-        res.status(404).send({ error: 'User not found. Please signup' });
-        return;
-    }
-
-    // check if the password is correct
-    if (oldUser.password !== password) {
-        // status code 401 means that the user is unauthorized
-        // wrong password
-        res.status(401).send({ error: 'Wrong password. Please try again with correct password.' });
-        return;
-    }
-
-    // check for number of sessions
-    if (oldUser.numberOfSessions === oldUser.sessions.length) {
-        // status code 429 means that the user is rate limited
-        // too many sessions
-        res.status(429).send({ error: 'Too many sessions. Please try again later.' });
-        return;
-    }
-
-    // generate the JWT token
-    const token = generateToken(email, oldUser.userId, false);
-
-    // update the number of sessions
-    await prisma.user.update({
-        where: {
-            email: email,
-        },
-        data: {
-            sessions: {
-                createMany: {
-                    data: [
-                        {
-                            expiresAt: jwtExpireDate(),
-                            ipAddress: req.ip,
-                            token: token,
-                            userAgent: req.headers['user-agent'] || '',
-                        },
-                    ],
+        // update the number of sessions
+        await prisma.user.update({
+            where: {
+                email: email,
+            },
+            data: {
+                sessions: {
+                    createMany: {
+                        data: [
+                            {
+                                expiresAt: jwtExpireDate(),
+                                ipAddress: req.ip,
+                                token: token,
+                                userAgent: req.headers['user-agent'] || '',
+                            },
+                        ],
+                    },
+                },
+                numberOfSessions: {
+                    increment: 1,
                 },
             },
-            numberOfSessions: {
-                increment: 1,
-            },
-        },
-    });
+        });
 
-    res.send({ token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        res.send({ token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
+    // run the validators
 });
 
 /**
@@ -110,48 +101,45 @@ router.post('/login', async (req, res) => {
  */
 router.post('/signup', async (req, res) => {
     try {
-        await emailPasswordValidator.parseAsync(req.body);
-    } catch (error) {
-        if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
+        const parsedBody = await emailPasswordValidator.parseAsync(req.body);
+        const email = parsedBody.email;
+        const password = parsedBody.password;
+        // check if the user already exit in the database
+        const prisma = PrismaClientSingleton.prisma;
+        const oldUser = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+        });
+
+        if (oldUser) {
+            res.status(409).send({ error: 'A account already exists with this email.' });
+            return;
         }
 
-        return;
+        // create the new user
+        const newUser = await prisma.user.create({
+            data: {
+                email: email,
+                password: password,
+                userId: v4(),
+            },
+            select: {
+                userId: true,
+                email: true,
+            },
+        });
+
+        // generate the JWT token
+        const token = generateToken(email, newUser.userId, false);
+        res.send({ token, isAdmin: false, userId: newUser.userId, email: newUser.email });
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
     }
-
-    // run the validators
-    const parsedBody = emailPasswordValidator.parse(req.body);
-    const email = parsedBody.email;
-    const password = parsedBody.password;
-    // check if the user already exit in the database
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-    });
-
-    if (oldUser) {
-        res.status(409).send({ error: 'A account already exists with this email.' });
-        return;
-    }
-
-    // create the new user
-    const newUser = await prisma.user.create({
-        data: {
-            email: email,
-            password: password,
-            userId: v4(),
-        },
-        select: {
-            userId: true,
-            email: true,
-        },
-    });
-
-    // generate the JWT token
-    const token = generateToken(email, newUser.userId, false);
-    res.send({ token, isAdmin: false, userId: newUser.userId, email: newUser.email });
 });
 
 /**
@@ -159,67 +147,64 @@ router.post('/signup', async (req, res) => {
  */
 router.post('/magic', async (req, res) => {
     try {
-        await emailValidator.parseAsync(req.body);
-    } catch (error) {
-        if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
-        }
+        const parsedBody = await emailValidator.parseAsync(req.body);
+        const email = parsedBody.email;
 
-        return;
-    }
+        const magicLinkToken = v4();
+        const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
 
-    // run the validators
-    const parsedBody = emailValidator.parse(req.body);
-    const email = parsedBody.email;
-
-    const magicLinkToken = v4();
-    const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
-
-    // check if the user is already associated with the email
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-    });
-
-    if (!oldUser) {
-        // we need to create a new user
-        await prisma.user.create({
-            data: {
-                email: email,
-                userId: v4(),
-                password: v4(),
-                magicLink: {
-                    create: {
-                        linkToken: magicLinkToken,
-                    },
-                },
-            },
-            select: {
-                userId: true,
-                email: true,
-            },
-        });
-    } else {
-        // user already exists
-        // create the new magic link
-        await prisma.user.update({
+        // check if the user is already associated with the email
+        const prisma = PrismaClientSingleton.prisma;
+        const oldUser = await prisma.user.findUnique({
             where: {
                 email: email,
             },
-            data: {
-                magicLink: {
-                    create: {
-                        linkToken: magicLinkToken,
+        });
+
+        if (!oldUser) {
+            // we need to create a new user
+            await prisma.user.create({
+                data: {
+                    email: email,
+                    userId: v4(),
+                    password: v4(),
+                    magicLink: {
+                        create: {
+                            linkToken: magicLinkToken,
+                        },
                     },
                 },
-            },
-        });
-    }
+                select: {
+                    userId: true,
+                    email: true,
+                },
+            });
+        } else {
+            // user already exists
+            // create the new magic link
+            await prisma.user.update({
+                where: {
+                    email: email,
+                },
+                data: {
+                    magicLink: {
+                        create: {
+                            linkToken: magicLinkToken,
+                        },
+                    },
+                },
+            });
+        }
 
-    // TODO : In production mode, send the magic link to the user via email and don't return anything
-    res.send({ magicLink });
+        // TODO : In production mode, send the magic link to the user via email and don't return anything
+        res.send({ magicLink });
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 
 /**
@@ -233,46 +218,188 @@ router.post(
         message: 'Too many requests',
     }),
     async (req, res) => {
-        // token and email are required
-        if (!(req.body.token && req.body.email)) {
-            res.status(400).send({ error: 'Token and email are required' });
+        try {
+            // Validate res.locals using the Zod schema
+            const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
+            const email = parsedLocals.email;
+            const token = parsedLocals.token;
+
+            // check if the user is already associated with the email
+            const prisma = PrismaClientSingleton.prisma;
+            const oldUser = await prisma.user.findUnique({
+                where: {
+                    email: email,
+                },
+                include: {
+                    magicLink: true,
+                    sessions: true,
+                },
+            });
+
+            if (!oldUser) {
+                res.status(401).send({ error: 'Invalid token or email' });
+                return;
+            }
+
+            const tokenFound = oldUser.magicLink.find((link) => link.linkToken === token);
+            if (!tokenFound) {
+                res.status(401).send({ error: 'Invalid token or email' });
+                return;
+            }
+
+            const tokenExpirationTimeInMinutes = +(Constants.MAGIC_LINK_TOKEN_EXPIRATION_TIME || 15); // Set your desired expiration time in minutes
+            const tokenCreationTime = tokenFound.createdAt; // Assuming `createdAt` is the token creation time in your model
+            const isTokenValid = isMagicTokenValid(tokenCreationTime, tokenExpirationTimeInMinutes);
+
+            if (!isTokenValid) {
+                res.status(401).send({ error: 'Invalid token or email' });
+                return;
+            }
+
+            // check for the number of active sessions
+            if (oldUser.numberOfSessions === oldUser.sessions.length) {
+                res.status(401).send({ error: 'Too many sessions' });
+                return;
+            }
+
+            // generate the JWT token
+            const tokenJWT = generateToken(email, oldUser.userId, true);
+            const expirationTime = jwtExpireDate();
+            // update the user sessions
+            await prisma.user.update({
+                where: {
+                    email: email,
+                },
+                data: {
+                    sessions: {
+                        createMany: {
+                            data: [
+                                {
+                                    token: tokenJWT,
+                                    expiresAt: expirationTime,
+                                    ipAddress: req.ip,
+                                    userAgent: req.headers['user-agent'] || '',
+                                },
+                            ],
+                        },
+                    },
+                    numberOfSessions: {
+                        increment: 1,
+                    },
+                },
+            });
+
+            res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        } catch (error) {
+            if (error instanceof ZodError && !error.isEmpty) {
+                res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+                return;
+            }
+
+            return res.status(400).json({ error });
+        }
+    },
+);
+
+/**
+ *
+ * Signup with google
+ *
+ */
+router.post('/google', async (req, res) => {
+    // token is required
+    try {
+        // Validate the request body using the Zod schema
+        const parsedBody = await tokenValidator.parseAsync(req.body);
+        const token = parsedBody.token;
+
+        const tokenPayload = await verifyGoogleAuthToken(token);
+
+        if (!tokenPayload.success) {
+            res.status(401).send({ error: 'Invalid token' });
             return;
         }
 
-        const token = req.body.token;
-        const email = req.body.email;
+        const email = tokenPayload.email;
+        // check if user already exit in the database
+        const prisma = PrismaClientSingleton.prisma;
+        const oldUser = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+        });
 
-        // check if the user is already associated with the email
+        if (oldUser) {
+            res.status(409).send({ error: 'User with this email already exists' });
+            return;
+        }
+
+        // create the new user
+        const userId = tokenPayload.userId;
+        const password = v4();
+
+        const newUser = await prisma.user.create({
+            data: {
+                email: email,
+                userId: userId,
+                password: password,
+            },
+            select: {
+                userId: true,
+                email: true,
+            },
+        });
+
+        // generate the JWT token
+        const tokenJWT = generateToken(email, newUser.userId, false);
+        res.send({ token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email });
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: 'Token is required and must be non-empty' });
+            return;
+        }
+
+        return res.status(400).json({ error });
+    }
+});
+
+/**
+ * Sign-in with google
+ *
+ */
+router.post('/google_login', async (req, res) => {
+    // token is required
+    try {
+        // Validate the request body using the Zod schema
+        const parsedBody = await tokenValidator.parseAsync(req.body);
+        const token = parsedBody.token;
+        const tokenPayload = await verifyGoogleAuthToken(token);
+
+        if (!tokenPayload.success) {
+            res.status(401).send({ error: 'Invalid token' });
+            return;
+        }
+
+        const email = tokenPayload.email;
+
+        // check if user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
             where: {
                 email: email,
             },
             include: {
-                magicLink: true,
                 sessions: true,
             },
         });
 
         if (!oldUser) {
-            res.status(401).send({ error: 'Invalid token or email' });
+            res.status(401).send({ error: 'Invalid token' });
             return;
         }
 
-        const tokenFound = oldUser.magicLink.find((link) => link.linkToken === token);
-        if (!tokenFound) {
-            res.status(401).send({ error: 'Invalid token or email' });
-            return;
-        }
-
-        const tokenExpirationTimeInMinutes = +(Constants.MAGIC_LINK_TOKEN_EXPIRATION_TIME || 15); // Set your desired expiration time in minutes
-        const tokenCreationTime = tokenFound.createdAt; // Assuming `createdAt` is the token creation time in your model
-        const isTokenValid = isMagicTokenValid(tokenCreationTime, tokenExpirationTimeInMinutes);
-
-        if (!isTokenValid) {
-            res.status(401).send({ error: 'Invalid token or email' });
-            return;
-        }
+        // generate the JWT token
+        const tokenJWT = generateToken(email, oldUser.userId, false);
 
         // check for the number of active sessions
         if (oldUser.numberOfSessions === oldUser.sessions.length) {
@@ -280,9 +407,6 @@ router.post(
             return;
         }
 
-        // generate the JWT token
-        const tokenJWT = generateToken(email, oldUser.userId, true);
-        const expirationTime = jwtExpireDate();
         // update the user sessions
         await prisma.user.update({
             where: {
@@ -294,7 +418,7 @@ router.post(
                         data: [
                             {
                                 token: tokenJWT,
-                                expiresAt: expirationTime,
+                                expiresAt: jwtExpireDate(),
                                 ipAddress: req.ip,
                                 userAgent: req.headers['user-agent'] || '',
                             },
@@ -308,146 +432,14 @@ router.post(
         });
 
         res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
-    },
-);
-
-/**
- *
- * Signup with google
- *
- */
-router.post('/google', async (req, res) => {
-    // token is required
-    try {
-        // Validate the request body using the Zod schema
-        googleSchema.parse(req.body);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token is required and must be non-empty' });
             return;
         }
+
+        return res.status(400).json({ error });
     }
-
-    const token = req.body.token;
-
-    const tokenPayload = await verifyGoogleAuthToken(token);
-
-    if (!tokenPayload.success) {
-        res.status(401).send({ error: 'Invalid token' });
-        return;
-    }
-
-    const email = tokenPayload.email;
-    // check if user already exit in the database
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-    });
-
-    if (oldUser) {
-        res.status(409).send({ error: 'User with this email already exists' });
-        return;
-    }
-
-    // create the new user
-    const userId = tokenPayload.userId;
-    const password = v4();
-
-    const newUser = await prisma.user.create({
-        data: {
-            email: email,
-            userId: userId,
-            password: password,
-        },
-        select: {
-            userId: true,
-            email: true,
-        },
-    });
-
-    // generate the JWT token
-    const tokenJWT = generateToken(email, newUser.userId, false);
-    res.send({ token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email });
-});
-
-/**
- * Sign-in with google
- *
- */
-router.post('/google_login', async (req, res) => {
-    // token is required
-    try {
-        // Validate the request body using the Zod schema
-        googleLoginSchema.parse(req.body);
-    } catch (error) {
-        if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: 'Token is required and must be non-empty' });
-            return;
-        }
-    }
-
-    const token = req.body.token;
-    const tokenPayload = await verifyGoogleAuthToken(token);
-
-    if (!tokenPayload.success) {
-        res.status(401).send({ error: 'Invalid token' });
-        return;
-    }
-
-    const email = tokenPayload.email;
-
-    // check if user already exit in the database
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-        include: {
-            sessions: true,
-        },
-    });
-
-    if (!oldUser) {
-        res.status(401).send({ error: 'Invalid token' });
-        return;
-    }
-
-    // generate the JWT token
-    const tokenJWT = generateToken(email, oldUser.userId, false);
-
-    // check for the number of active sessions
-    if (oldUser.numberOfSessions === oldUser.sessions.length) {
-        res.status(401).send({ error: 'Too many sessions' });
-        return;
-    }
-
-    // update the user sessions
-    await prisma.user.update({
-        where: {
-            email: email,
-        },
-        data: {
-            sessions: {
-                createMany: {
-                    data: [
-                        {
-                            token: tokenJWT,
-                            expiresAt: jwtExpireDate(),
-                            ipAddress: req.ip,
-                            userAgent: req.headers['user-agent'] || '',
-                        },
-                    ],
-                },
-            },
-            numberOfSessions: {
-                increment: 1,
-            },
-        },
-    });
-
-    res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
 });
 
 /**
@@ -456,54 +448,55 @@ router.post('/google_login', async (req, res) => {
 router.post('/logout', authenticateUser, async (req, res) => {
     try {
         // Validate res.locals using the Zod schema
-        logoutSchema.parse(res.locals);
+        const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
+        const email = parsedLocals.email;
+        const token = parsedLocals.token;
+
+        // check if the user is already associated with the email
+        const prisma = PrismaClientSingleton.prisma;
+        const oldUser = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+            include: {
+                sessions: true,
+            },
+        });
+
+        if (!oldUser) {
+            res.status(401).send({ error: 'Invalid token or email' });
+            return;
+        }
+
+        const isSessionExists = oldUser.sessions.find((session) => session.token === token);
+        if (!isSessionExists) {
+            res.status(401).send({ error: 'Invalid token or email' });
+            return;
+        }
+
+        // delete the session
+        await prisma.user.update({
+            where: {
+                email: email,
+            },
+            data: {
+                sessions: {
+                    delete: {
+                        token: token,
+                    },
+                },
+            },
+        });
+
+        res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token and email are required and must be non-empty' });
             return;
         }
+
+        return res.status(400).json({ error });
     }
-
-    const email = res.locals.email;
-    const token = res.locals.token;
-
-    // check if the user is already associated with the email
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-        include: {
-            sessions: true,
-        },
-    });
-
-    if (!oldUser) {
-        res.status(401).send({ error: 'Invalid token or email' });
-        return;
-    }
-
-    const isSessionExists = oldUser.sessions.find((session) => session.token === token);
-    if (!isSessionExists) {
-        res.status(401).send({ error: 'Invalid token or email' });
-        return;
-    }
-
-    // delete the session
-    await prisma.user.update({
-        where: {
-            email: email,
-        },
-        data: {
-            sessions: {
-                delete: {
-                    token: token,
-                },
-            },
-        },
-    });
-
-    res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
 });
 
 /**
@@ -514,46 +507,47 @@ router.post('/logout', authenticateUser, async (req, res) => {
 router.post('/logout_all', authenticateUser, async (req, res) => {
     try {
         // Validate res.locals using the Zod schema
-        logoutAllSchema.parse(res.locals);
+        const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
+        const email = parsedLocals.email;
+        const token = parsedLocals.token;
+
+        // check if the user is already associated with the email
+        const prisma = PrismaClientSingleton.prisma;
+        const oldUser = await prisma.user.findUnique({
+            where: {
+                email: email,
+            },
+            include: {
+                sessions: true,
+            },
+        });
+
+        if (!oldUser) {
+            res.status(401).send({ error: 'Invalid token or email' });
+            return;
+        }
+
+        // delete the session
+        await prisma.user.update({
+            where: {
+                email: email,
+            },
+            data: {
+                sessions: {
+                    deleteMany: {},
+                },
+            },
+        });
+
+        res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token and email are required and must be non-empty' });
             return;
         }
+
+        return res.status(400).json({ error });
     }
-
-    const email = res.locals.email;
-    const token = res.locals.token;
-
-    // check if the user is already associated with the email
-    const prisma = PrismaClientSingleton.prisma;
-    const oldUser = await prisma.user.findUnique({
-        where: {
-            email: email,
-        },
-        include: {
-            sessions: true,
-        },
-    });
-
-    if (!oldUser) {
-        res.status(401).send({ error: 'Invalid token or email' });
-        return;
-    }
-
-    // delete the session
-    await prisma.user.update({
-        where: {
-            email: email,
-        },
-        data: {
-            sessions: {
-                deleteMany: {},
-            },
-        },
-    });
-
-    res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
 });
 
 export default router;

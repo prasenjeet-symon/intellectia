@@ -21,34 +21,8 @@ export const tokenValidator = z.object({
 
 export const emailPasswordValidator = emailValidator.merge(passwordValidator);
 
-export const tokenEmailValidator = emailValidator.merge(tokenValidator)
+export const tokenEmailValidator = emailValidator.merge(tokenValidator);
 
-export const googleLoginSchema = z.object({
-    token: z.string().min(1),
+export const userTopicsValidator = z.object({
+    topics: z.array(z.number()),
 });
-
-export const googleSchema = z.object({
-    token: z.string().min(1),
-});
-
-export const logoutAllSchema = z.object({
-    token: z.string().min(1),
-    email: z.string().email(),
-});
-
-export const logoutSchema = z.object({
-    token: z.string().min(1),
-    email: z.string().email(),
-});
-
-// export const emailPasswordValidator = z.object({
-//     email: z.string().email(),
-//     password: z.string().refine(validatorPassword, {
-//         message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&) and be at least 8 characters long.',
-//     }),
-// });
-
-// export const tokenEmailValidator = z.object({
-//     token: z.string().min(1),
-//     email: z.string().email(),
-// });

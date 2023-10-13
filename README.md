@@ -69,7 +69,7 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
       
       - Ensure you have XAMPP installed and running.
 
-      - Create a MySQL database for your project in XAMPP. Note down the database name, username, and password.
+      - Create a MySQL database named "intellectia" for your project in XAMPP. Note down the database name, username, and password.
 
       - Copy the `.env.example` file to a new file named `.env` in the `packages/server` directory.
 
@@ -79,9 +79,9 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
 
       - Ensure you have [Docker](https://docs.docker.com/engine/install/), [Docker Compose](https://docs.docker.com/compose/install/), and [Docker Desktop setup](https://docs.docker.com/desktop/) installed
         
-      - Create `.env` file in the root directory using the template from `.env.example` file
+      - Create `.env` file in the `./packages/server` directory using the template from `.env.example` file present there
         
-      - Start docker deamon using the below mentioned command. This command will steup `mysql` at port 3306 and a basic admin gui at `localhost:8080`
+      - Start docker deamon using the below mentioned command. This command will steup `mysql` at port 3307 and a basic admin gui at `localhost:8080`
       ```bash
       docker-compose up -d
       ```
@@ -128,8 +128,4 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
       ```bash
       npm dev
       ```
-5. **Environment setup**
-
-   - There is a `env.example` file available in the corresponding folder. Create a `.env` file and copy environmnet variables from `.env.example` file
-
 By following these setup instructions, you'll have your Express project located at 'packages/server' connected to a MySQL database using XAMPP, with database migration capabilities using Prisma, and environment variables properly configured. Make sure to adapt the configuration and environment variables to your specific project requirements.

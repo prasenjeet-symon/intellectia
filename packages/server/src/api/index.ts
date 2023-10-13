@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PrismaClientSingleton } from '../utils';
-import { idValidator } from '../validators';
+import { emailValidator, idValidator, userTopicsValidator } from '../validators';
 import { ZodError } from 'zod';
 
 const router = Router();
@@ -200,56 +200,47 @@ router.get('/topic/:id', async (req, res) => {
  *
  */
 router.put('/user/topics', async (req, res) => {
-    if (!('topics' in req.body)) {
-        res.status(400).send({ error: 'Topics are required' });
-        return;
+    try {
+        const parsedBody = await userTopicsValidator.parseAsync(req.body.topics);
+        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+
+        const topics = parsedBody.topics;
+        const prisma = PrismaClientSingleton.prisma;
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
+            },
+            data: {
+                topics: {
+                    set: [],
+                },
+            },
+        });
+
+        // connect the topics
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
+            },
+            data: {
+                topics: {
+                    connect: topics.map((topicId) => ({
+                        id: topicId,
+                    })),
+                },
+            },
+        });
+
+        res.send('Topics added');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
     }
-
-    const topics = req.body.topics as number[];
-
-    if (!Array.isArray(topics)) {
-        res.status(400).send({ error: 'Topics are required' });
-        return;
-    }
-
-    const isTopicIdsValid = topics.every((topicId) => {
-        return typeof topicId === 'number';
-    });
-
-    if (!isTopicIdsValid) {
-        res.status(400).send({ error: 'Topics are required' });
-        return;
-    }
-
-    const prisma = PrismaClientSingleton.prisma;
 
     // disconnect all the topics, before adding new topics
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            topics: {
-                set: [],
-            },
-        },
-    });
-
-    // connect the topics
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            topics: {
-                connect: topics.map((topicId) => ({
-                    id: topicId,
-                })),
-            },
-        },
-    });
-
-    res.send('Topics added');
 });
 
 /**
@@ -258,48 +249,47 @@ router.put('/user/topics', async (req, res) => {
  *
  */
 router.put('/user/topic', async (req, res) => {
-    if (!('id' in req.body)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    if (!req.body.id) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const topicId = +req.body.id; // topic id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect the topic from the user
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            topics: {
-                disconnect: {
-                    id: topicId,
+    try {
+        const parsedBody = await idValidator.parseAsync(req.body.id);
+        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        const topicId = parsedBody.id;
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect the topic from the user
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
+            },
+            data: {
+                topics: {
+                    disconnect: {
+                        id: topicId,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    // connect the topic
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            topics: {
-                connect: {
-                    id: topicId,
+        // connect the topic
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                topics: {
+                    connect: {
+                        id: topicId,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Topic added');
+        res.send('Topic added');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 
 /**
@@ -308,36 +298,33 @@ router.put('/user/topic', async (req, res) => {
  *
  */
 router.delete('/user/topic/:id', async (req, res) => {
-    // id is required
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const topicId = +req.params.id; // topic id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect the topic from the user
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            topics: {
-                disconnect: {
-                    id: topicId,
+    try {
+        const parsedParams = await idValidator.parseAsync(req.params.id);
+        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        const topicId = parsedParams.id;
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect the topic from the user
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
+            },
+            data: {
+                topics: {
+                    disconnect: {
+                        id: topicId,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Topic deleted');
+        res.send('Topic deleted');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 /**
  *
@@ -345,124 +332,103 @@ router.delete('/user/topic/:id', async (req, res) => {
  *
  */
 router.delete('/user/topics', async (req, res) => {
-    // topics is required
-    if (!('topics' in req.body)) {
-        res.status(400).send({ error: 'Topics are required' });
-        return;
-    }
+    try {
+        const parsedBody = await userTopicsValidator.parseAsync(req.body.topics);
+        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
 
-    // topics is array of topic ids that is numbers
-    if (!Array.isArray(req.body.topics)) {
-        res.status(400).send({ error: 'Topics are required' });
-        return;
-    }
+        const topics = parsedBody.topics;
 
-    const topics = req.body.topics as number[];
-
-    // check if all the topics are valid
-    const isTopicIdsValid = topics.every((topicId) => {
-        return typeof topicId === 'number';
-    });
-
-    if (!isTopicIdsValid) {
-        res.status(400).send({ error: 'Topics are required' });
-        return;
-    }
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect all the topics
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            topics: {
-                disconnect: topics.map((topicId) => ({
-                    id: topicId,
-                })),
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect all the topics
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
             },
-        },
-    });
+            data: {
+                topics: {
+                    disconnect: topics.map((topicId) => ({
+                        id: topicId,
+                    })),
+                },
+            },
+        });
 
-    res.send('Topics deleted');
+        res.send('Topics deleted');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 /**
  * Add an article to the article series
  */
 router.put('/user/article_series/:id/article', async (req, res) => {
-    // id is required
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    try {
+        const parsedBody = await idValidator.parseAsync(req.body);
+        const parsedParams = await idValidator.parseAsync(req.params);
+        const parsedLocals = await emailValidator.parseAsync(res.locals);
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+        const id = parsedParams.id; // article series id
+        const articleId = parsedBody.id; // article id
 
-    if (!('id' in req.body)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    if (!req.body.id) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const id = +req.params.id; // article series id
-    const articleId = +req.body.id; // article id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // remove old article from the article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: {
-                                id: articleId,
+        const prisma = PrismaClientSingleton.prisma;
+        // remove old article from the article series
+        await prisma.user.update({
+            where: {
+                email: parsedLocals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: {
+                                    id: articleId,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    // add new article to the article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            connect: {
-                                id: articleId,
+        // add new article to the article series
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                connect: {
+                                    id: articleId,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Article added to series');
+        res.send('Article added to series');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            res.status(400).send({ error: error.issues[0].message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 /**
  * Delete an article from the article series
