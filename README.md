@@ -81,7 +81,7 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
         
       - Create `.env` file in the `./packages/server` directory using the template from `.env.example` file present there
         
-      - Start docker deamon using the below mentioned command. This command will steup `mysql` at port 3306 and a basic admin gui at `localhost:8080`
+      - Start docker deamon using the below mentioned command. This command will steup `mysql` at port 3307 and a basic admin gui at `localhost:8080`
       ```bash
       docker-compose up -d
       ```
