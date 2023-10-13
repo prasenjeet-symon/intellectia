@@ -69,7 +69,7 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
       
       - Ensure you have XAMPP installed and running.
 
-      - Create a MySQL database for your project in XAMPP. Note down the database name, username, and password.
+      - Create a MySQL database named "intellectia" for your project in XAMPP. Note down the database name, username, and password.
 
       - Copy the `.env.example` file to a new file named `.env` in the `packages/server` directory.
 
@@ -128,8 +128,4 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
       ```bash
       npm dev
       ```
-5. **Environment setup**
-
-   - There is a `env.example` file available in the corresponding folder. Create a `.env` file and copy environmnet variables from `.env.example` file
-
 By following these setup instructions, you'll have your Express project located at 'packages/server' connected to a MySQL database using XAMPP, with database migration capabilities using Prisma, and environment variables properly configured. Make sure to adapt the configuration and environment variables to your specific project requirements.
