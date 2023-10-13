@@ -5,7 +5,7 @@ services:
   db:
     image: mysql
     ports:
-      - 3306:3306
+      - 3307:3306
     container_name: mysql-db
     env_file:
       - ./packages/server/.env
