@@ -56,66 +56,69 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
 
 ## Setup
 
-### Clone the Repository
+ **Clone the Repository**
    ```
    git clone git@github.com:prasenjeet-symon/intellectia.git
    ```
+**Database Configuration Guide**
 
-### Database Configuration Guide
+Setting up your database for Intellectia is a breeze, and we offer two simple methods to do so: XAMPP and Docker.
 
-At Intellectia, we provide you with two simple and efficient methods to set up your database for our project:
+**Using XAMPP (Cross-Platform, Apache, MariaDB, PHP, and Perl):**
 
-**1. XAMPP (Cross-Platform, Apache, MariaDB, PHP, and Perl):**
+1. Start by downloading XAMPP from the [official download link](https://www.apachefriends.org/download.html).
 
-If you prefer using XAMPP for database configuration, follow these straightforward steps:
+2. Once the download is complete, follow the setup instructions to install XAMPP.
 
-- Start by downloading XAMPP from this [official download link](https://www.apachefriends.org/download.html). Once the download is complete, proceed with the installation by following the setup instructions.
+3. After the installation, open XAMPP and start all the services one by one.
 
-- After the installation is successfully completed, open XAMPP. Initiate all the services one by one.
+4. Now, open your web browser and go to [http://localhost](http://localhost). Look for "phpMyAdmin" in the header and click on it.
 
-- Once all services are up and running, open your web browser and navigate to [http://localhost](http://localhost). You'll find "phpMyAdmin" in the header; click on it.
+5. Create a new database named 'intellectia.' Your database setup is now complete!
 
-- Create a new database and name it 'intellectia.' That's it! Your database setup for Intellectia is now complete.
+**Using Docker:**
 
-**2. Docker:**
+1. Ensure you have Docker installed on your operating system. If you're unsure about Docker installation, feel free to ask CHATGPT for guidance.
 
-If you opt for Docker, ensure you have Docker installed for your operating system. If you're unsure about the Docker installation process for your specific OS, don't hesitate to reach out to CHATGPT for guidance.
+2. After Docker is installed and running, follow these steps:
 
-Once Docker is installed and operational, follow these steps:
+3. Navigate to Intellectia's root folder using your terminal.
 
-- Navigate to the root folder of Intellectia using your terminal.
+4. Execute the command `docker-compose up -d`. This command orchestrates the setup, and all necessary components will be initiated.
 
-- Execute the command `docker-compose up -d`. This command orchestrates the setup, and all the necessary components will be initiated.
+5. Check that port 3306 is available on your local machine. If not, please stop any processes using this port. This may be due to another MySQL server running on your computer.
 
-- Please make sure that port 3306 is available on your local machine. If not, kindly halt any processes utilizing this port. In most cases, this might be due to another MySQL server running on your computer.
+With these straightforward methods, your database setup for Intellectia is complete. Whether you chose XAMPP or Docker, you're now ready to dive into Intellectia's world and start contributing. If you have questions or need further assistance, don't hesitate to ask. Happy coding!
 
-With these simple and effective methods, your database configuration for Intellectia is now successfully accomplished. Whether you choose XAMPP or Docker, you're ready to dive into the world of Intellectia and contribute to our exciting project. If you have any questions or need further assistance, feel free to ask. Happy coding!
+**Finalizing the Setup**
 
-### Finalizing the Setup
+After cloning the project, there are a few simple steps to get it up and running, including installing necessary dependencies and creating required environment files. Let's finalize the setup:
 
-If you've just cloned the project, there are a few steps to get it up and running, including installing necessary dependencies and creating the required environment files. Let's go through the final setup:
+**1. Create an .env File:**
 
-**1. Create an `.env` File:**
+- Navigate to the server folder by running `cd packages/server` from the project's root directory.
 
-- Navigate to the server folder. You can do this by opening your terminal and running `cd packages/server` from the root directory of the project.
-  
-- Once inside the server folder, create the `.env` file. You have two options for this:
-  
-    - You can use the command `copy .env.example .env`.
-    - Alternatively, you can manually create a new file at the same level where the `.env.example` file is located. Copy all the content from `.env.example` to the newly created `.env` file. That's it. Your environment file is set up.
+- Inside the server folder, create the .env file using one of these methods:
 
-**2. Ensure `pnpm` is Installed:**
+    - Use the command: `copy .env.example .env`.
+    - Manually create a new file at the same level as .env.example and copy the content from .env.example into it. That's it; your environment file is ready.
 
-- Go back to the root folder of the project and run the following command: `npm install -g pnpm`. This command will install `pnpm` globally on your local machine.
+**2. Ensure pnpm is Installed:**
+
+- Return to the project's root folder and run: `npm install -g pnpm`. This command installs pnpm globally on your machine.
 
 **3. Install All Project Dependencies:**
 
-- Once you have `pnpm` available, make sure you're at the root of the project and run `pnpm run app-setup`. Please be patient, as this command performs the initial setup, and it may take a few minutes.
+- With pnpm installed, go back to the project's root and run: `pnpm run app-setup`. This initial setup may take a few minutes.
 
-- After this process completes, your project will be up and running, ready for development. You can make any necessary changes and see the results in real-time. Keep in mind that the server typically runs on `http://localhost:3001`, while the client is on `http://localhost:5173/`.
+- Once it's done, your project is up and running, ready for development. You can make changes and see real-time results. The server usually runs on `http://localhost:3001`, and the client is on `http://localhost:5173/`.
 
 **4. Restart the Project for Development:**
 
-- If you ever need to restart the development project, use the command `pnpm run app-dev`. This will initiate the project again for development.
+- To restart the development project, run: `pnpm run app-dev`.
 
-That's it! Your project is configured and ready for action. You can now dive into development, make your contributions, and enjoy the Intellectia experience. If you have any questions or need assistance, please feel free to reach out. Happy coding!
+That's it! Your project is configured and ready for action. Now you can dive into development, contribute to Intellectia, and enjoy the experience. If you have any questions or need help, feel free to ask. Happy coding!
+
+**Additional Information:**
+
+- For Docker users, the MySQL GUI runs on [http://localhost:8080](http://localhost:8080), and the server's home is located at [http://localhost:3001/server](http://localhost:3001/server).
