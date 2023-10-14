@@ -56,8 +56,6 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
 
 ## Setup
 
-***We are using `pnpm` as package manager for this project. Please make sure you [pnpm](https://pnpm.io/installation) installed in your device***
-
 ### Clone the Repository
    ```
    git clone git@github.com:prasenjeet-symon/intellectia.git
