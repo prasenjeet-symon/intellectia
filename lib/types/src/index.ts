@@ -1,0 +1,1 @@
+export { IUser } from './interfaces';

@@ -1,13 +1,37 @@
 {
   "name": "intellectia",
   "version": "1.0.0",
-  "description": "Empowering human thought in the age of AI",
-  "main": "index.js",
+  "description": "Empowering the world through AI",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "graph": "nx graph"
+    "graph": "nx graph",
+    "app-test": "nx exec -- pnpm run _test ",
+    "app-install": "pnpm recursive install",
+    "app-migrate": "nx run-many --target=migrate --all --maxParallel=10",
+    "app-dev": "nx run-many --target=dev --all --maxParallel=10",
+    "app-build": "nx run-many --target=build --all --maxParallel=10",
+    "app-setup": "pnpm run app-setup && pnpm run app-migrate && pnpm run app-dev"
   },
+  "keywords": [],
   "author": "",
-  "license": "MIT",
-  "dependencies": {}
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "lib/*"
+    ],
+    "nohoist": []
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "nx": "16.10.0",
+    "nx-cloud": "latest"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/dist"
+        ]
+      }
+    }
+  }
 }

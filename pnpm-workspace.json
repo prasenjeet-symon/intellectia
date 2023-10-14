@@ -1,0 +1,9 @@
+{
+    "packages": [
+        "packages/*",
+        "lib/*"
+    ],
+    "useNx": true,
+    "hoist": true,
+    "useWorkspace": true
+}
