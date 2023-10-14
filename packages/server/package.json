@@ -6,9 +6,14 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "migrate": "prisma migrate dev",
+    "migrate": "pnpx prisma migrate dev",
     "prisma-generate": "pnpx prisma generate",
+    "studio": "pnpm run prisma studio",
+    "seed": "pnpx prisma db seed",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "author": "",
   "license": "MIT",
