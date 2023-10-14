@@ -94,14 +94,49 @@ With these straightforward methods, your database setup for Intellectia is compl
 
 After cloning the project, there are a few simple steps to get it up and running, including installing necessary dependencies and creating required environment files. Let's finalize the setup:
 
-**1. Create an .env File:**
+**Creating .env Files for Server and Client**
 
-- Navigate to the server folder by running `cd packages/server` from the project's root directory.
+To configure the environment for both the server and client in your project, you need to create .env files for each. Follow these steps to set up the environment files:
 
-- Inside the server folder, create the .env file using one of these methods:
+**For the Server:**
 
-    - Use the command: `copy .env.example .env`.
-    - Manually create a new file at the same level as .env.example and copy the content from .env.example into it. That's it; your environment file is ready.
+1. Navigate to the server folder by running the following command in your terminal from the project's root directory:
+
+   ```bash
+   cd packages/server
+   ```
+
+2. Inside the server folder, create the .env file. You have two options to do this:
+
+   a. Using the command:
+
+      ```bash
+      copy .env.example .env
+      ```
+
+   b. Manually creating a new file at the same level as .env.example. Copy the content from .env.example into the newly created .env file.
+
+   That's it! Your environment file for the server is now set up.
+
+**For the Client:**
+
+1. Navigate to the client folder by running this command from the project's root directory:
+
+   ```bash
+   cd packages/client
+   ```
+
+2. Inside the client folder, create a new .env file. You can use one of the following methods:
+
+   a. Using the command:
+
+      ```bash
+      copy env.local.example .env
+      ```
+
+   b. Manually create a new file at the same level as env.local.example. Copy the content from env.local.example into the newly created .env file.
+
+By following these steps, you've successfully added .env files for both the server and client, ensuring that each part of your project has its environment configuration. This setup is essential for managing environment-specific variables and settings in your server and client applications.
 
 **2. Ensure pnpm is Installed:**
 
