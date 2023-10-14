@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PrismaClientSingleton } from '../utils';
 import { emailValidator, idValidator, userTopicsValidator } from '../validators';
-import { ZodError } from 'zod';
+import { ZodError, z } from 'zod';
 
 const router = Router();
 
@@ -171,16 +171,22 @@ router.get('/user/topics', async (req, res) => {
  * Get the single topic by id
  */
 router.get('/topic/:id', async (req, res) => {
-    // id is required
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    const idSchema = z
+        .number({
+            required_error: 'id is required',
+            invalid_type_error: 'id must be a number'
+        })
+        .refine((value) => value !== 0, {
+            message: 'id must not be equal to 0',
+        });
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
+    try {
+        idSchema.parse(+req.params.id);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+        return res.status(400).json({ error });
     }
 
     const id = +req.params.id;
