@@ -8,7 +8,7 @@
     "app-migrate": "nx run-many --target=migrate --all --maxParallel=10",
     "app-dev": "nx run-many --target=dev --all --maxParallel=10",
     "app-build": "nx run-many --target=build --all --maxParallel=10",
-    "app-setup": "pnpm run app-setup && pnpm run app-migrate && pnpm run app-dev"
+    "app-setup": "pnpm run app-install && pnpm run app-migrate && pnpm run app-dev"
   },
   "keywords": [],
   "author": "",
