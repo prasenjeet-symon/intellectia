@@ -3,5 +3,7 @@
         "packages/*",
         "lib/*"
     ],
-    "useWorkspaces": true
+    "useNx": true,
+    "hoist": true,
+    "useWorkspace": true
 }

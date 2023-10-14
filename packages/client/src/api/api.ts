@@ -12,7 +12,7 @@ import AxiosClient from "./apiClient";
 
 export async function signupWithEmailPassword(email: string, password: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = `/auth/signup`;
-
+  
   const axiosClient = await AxiosClient.getInstance().axiosInstance.post(apiUrl, {
     email,
     password,

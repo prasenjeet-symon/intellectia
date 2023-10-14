@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import path from 'path';
-import router from './api';
+import router from './api'; 
 import routerAuth from './api_auth';
 import routerPublic from './api_public';
 import { authenticateUser } from './utils';
@@ -18,7 +18,7 @@ export function createServer() {
     app.use('/server/api', authenticateUser, router);
 
     app.get('/server/', (req, res) => {
-        res.send({ message: 'Hello World' });
+        res.send({ message: 'Hello World!' });
     });
 
     return app;

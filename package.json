@@ -1,12 +1,37 @@
 {
   "name": "intellectia",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Empowering the world through AI",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "app-test": "nx exec -- pnpm run _test ",
+    "app-setup": "pnpm recursive install",
+    "app-migrate": "nx run-many --target=migrate --all --maxParallel=10",
+    "app-dev": "nx run-many --target=dev --all --maxParallel=10",
+    "app-build": "nx run-many --target=build --all --maxParallel=10",
+    "app-init": "pnpm run app-setup && pnpm run app-migrate && pnpm run app-dev",
+    "_test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "lib/*"
+    ],
+    "nohoist": []
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "nx": "16.10.0",
+    "nx-cloud": "latest"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/dist"
+        ]
+      }
+    }
+  }
 }

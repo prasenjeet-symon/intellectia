@@ -88,7 +88,7 @@ export class PrismaClientSingleton {
     static get prisma() {
         if (!PrismaClientSingleton.#instance) {
             PrismaClientSingleton.#instance = new PrismaClient({
-                log: ['info', 'warn', 'query', 'error'],
+                log: ['error'],
             });
         }
         return PrismaClientSingleton.#instance;
