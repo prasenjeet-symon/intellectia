@@ -5,9 +5,10 @@
  * file name should be like -> **.hook.ts ( if file holds one hook )
  */
 
-import { loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
+import { logoutUser, loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
 import AxiosClient from "@/api/apiClient";
 import { dispatchAPIError, dispatchAPIViewError, dispatchAPIViewSuccess } from "@/lib/appUtils";
+import { queryClient } from "@/react-query";
 import { APIHookType, IAuthenticationResult, IAxiosError, IHookContext, IHookLoginWithEmailAndPassword, IHookLoginWithGoogle, IHookLogout, IHookSignUpWithEmailAndPassword, IHookSignupWithGoogle, ReactQueryKey } from "@/types/types";
 import { AxiosError, AxiosResponse } from "axios";
 import { useMutation, useQuery } from "react-query";
@@ -170,10 +171,27 @@ export function useLoginWithGoogle(navigate: NavigateFunction, ctx?: IHookContex
  * Hook - Authentication
  * Logout user
  */
-export function useLogout(ctx?: IHookContext): IHookLogout {
-  // mutation
-  // revalidate the ReactQueryKey.IsUserLoggedIn() query
-  // this will navigate the user to login page
-  // use removeToken of the ApiClient ( from the api/apiClient.ts )
-  return {} as any;
+export function useLogout(navigate: NavigateFunction, ctx?: IHookContext): IHookLogout {
+  const logoutMutation = useMutation<unknown, AxiosError<IAxiosError>>(logoutUser, {
+    onSuccess: async () => {
+      // set the local storage
+      AxiosClient.getInstance().removeToken();
+      await queryClient.invalidateQueries({queryKey: [ReactQueryKey.IsUserLoggedIn()]})
+      navigate('/auth/sign-in')
+    }
+  });
+
+  const logout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+    }
+    catch (error: any) {
+      dispatchAPIError({
+        hookCtx: APIHookType.Logout,
+        message: error,
+      });
+    }
+  }
+  
+  return { logout, isLoading: logoutMutation.isLoading };
 }
