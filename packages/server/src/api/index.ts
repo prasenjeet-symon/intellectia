@@ -577,14 +577,12 @@ router.put('/user/article_series/:id', async (req, res) => {
  */
 router.delete('/user/article_series/:id', async (req, res) => {
 
-    const idFromParams = z.coerce.number().int().positive();
-
-    const response = idFromParams.safeParse(req.params.id);
+    const response = idValidator.safeParse({id : req.params.id});
 
     if (!response.success) {
         res.status(400).send({ error: response.error.errors[0].message });
         return;
-    }
+    }   
 
     const id = +req.params.id; // article series id
 

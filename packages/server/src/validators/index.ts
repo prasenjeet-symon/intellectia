@@ -3,12 +3,13 @@ import { validatorPassword } from '../utils';
 
 export const idValidator = z.object({
     id: z
+        .coerce
         .number({
             required_error: 'id is required',
             invalid_type_error: 'id must be a number',
         })
-        .refine((value) => value !== 0, {
-            message: 'id must not be equal to 0',
+        .positive({
+            message: 'id must be higher than 0',
         }),
 });
 
@@ -33,3 +34,5 @@ export const tokenEmailValidator = emailValidator.merge(tokenValidator);
 export const userTopicsValidator = z.object({
     topics: z.array(z.number()),
 });
+
+
