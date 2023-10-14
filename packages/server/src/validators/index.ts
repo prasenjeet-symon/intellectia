@@ -2,7 +2,14 @@ import { z } from 'zod';
 import { validatorPassword } from '../utils';
 
 export const idValidator = z.object({
-    id: z.number(),
+    id: z
+        .number({
+            required_error: 'id is required',
+            invalid_type_error: 'id must be a number',
+        })
+        .refine((value) => value !== 0, {
+            message: 'id must not be equal to 0',
+        }),
 });
 
 export const emailValidator = z.object({

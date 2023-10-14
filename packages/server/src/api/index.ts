@@ -44,28 +44,23 @@ router.get('/user/topics', async (req, res) => {
  * Get the single topic by id
  */
 router.get('/topic/:id', async (req, res) => {
-    // id is required
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
+    try {
+        const parsedParam = await idValidator.parseAsync({ id: +req.params.id });
+        const id = parsedParam.id;
+        const prisma = PrismaClientSingleton.prisma;
+        const topic = await prisma.topic.findUnique({
+            where: {
+                id: id,
+            },
+        });
+
+        res.send(topic);
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+        return res.status(400).json({ error });
     }
-
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const id = +req.params.id;
-
-    const prisma = PrismaClientSingleton.prisma;
-    const topic = await prisma.topic.findUnique({
-        where: {
-            id: id,
-        },
-    });
-
-    res.send(topic);
 });
 /**
  *
