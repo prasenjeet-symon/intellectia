@@ -7,6 +7,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "migrate": "prisma migrate dev",
+    "prisma-generate": "pnpx prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

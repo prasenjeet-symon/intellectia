@@ -1,0 +1,42 @@
+{
+  "name": "intellectia",
+  "version": "1.0.0",
+  "description": "Empowering the world through AI",
+  "scripts": {
+    "app-graph": "nx graph",
+    "app-test": "nx exec -- pnpm run _test ",
+    "app-install": "pnpm recursive install",
+    "app-migrate": "nx run-many --target=migrate --name=dev --all --maxParallel=10",
+    "app-prisma-generate": "nx run-many --target=prisma-generate --all --maxParallel=10",
+    "app-dev": "nx run-many --target=dev --all --maxParallel=10",
+    "app-build": "nx run-many --target=build --all --maxParallel=10",
+    "app-setup": "pnpm run app-install && pnpm run app-prisma-generate && pnpm run app-migrate && pnpm run app-dev"
+  },
+  "keywords": [],
+  "author": "",
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "lib/*"
+    ],
+    "nohoist": []
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.51.0",
+    "eslint-plugin-react": "^7.33.2",
+    "nx": "16.10.0",
+    "nx-cloud": "latest"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/dist"
+        ]
+      }
+    }
+  }
+}
