@@ -125,7 +125,6 @@ export async function generateFakeUser(): Promise<{
     userId: string;
     fullName: string;
 }> {
-    
     const uniqueEnforcer = new UniqueEnforcer();
     return {
         email: uniqueEnforcer.enforce(() =>
@@ -180,7 +179,7 @@ export async function assignTopicsToArticles(email: string): Promise<void> {
  */
 export async function createMultipleUsers(numberOfUser: number) {
     const prisma = PrismaClientSingleton.prisma;
-    const newFakeUsers = await Promise.all(new Array(numberOfUser).fill(0).map( async () => await generateFakeUser()));
+    const newFakeUsers = await Promise.all(new Array(numberOfUser).fill(0).map(async () => await generateFakeUser()));
     const newUsers = await prisma.user.createMany({
         data: newFakeUsers,
     });
@@ -247,13 +246,15 @@ export async function addRepliesToComments(min: number, max: number): Promise<vo
     // loop on the comments and perform the above task and save the result ( reply ) to database in parallel ( Promise.all() )
 }
 /**
- * Perform positive actions for the main user
+ * Add likes/dislikes to the articles by users
  */
-export async function performPositiveActions(email: string): Promise<number[]> {
-    // email is the user in focus
-    // fetch all the articles from the database
-    // randomly select 50% of the articles to perform positive actions on
-    // from that 50% , perform, comment on 25% of the articles and like 25% of the articles choose randomly
-    // return the remaining 50% of the articles that will be used to add connection between authors and target user
-    return [];
+export async function addLikesToArticles(min: number, max: number): Promise<void> {
+    // How to add likes and dislike to the article: See below
+    // 1. fetch all the articles from the database
+    // 2. fetch all the users from the database
+    // 3. choose 60% of the articles from articles list randomly
+    // 4. from that chosen 60% split the articles list into half
+    // 5. first half of articles will be like by a user
+    // 6. remaining half of articles will be dislike by a user
+    // Perform the above task in parallel ( Promise.all() ) for each and every user
 }
