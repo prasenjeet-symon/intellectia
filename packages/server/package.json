@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "migrate": "prisma migrate dev",
+    "migrate": "pnpx prisma migrate deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
