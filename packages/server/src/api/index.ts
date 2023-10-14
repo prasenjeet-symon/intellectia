@@ -2594,11 +2594,6 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
 router.get('/user/article-stories', async (req, res) => {
     try {
       const prisma = PrismaClientSingleton.prisma;
-      const { size, cursor } = req.query; 
-  
-      // Define the default page size and cursor if not provided
-      const pageSize = size ? size : 10; // Default to 10 items per page
-      const cursorId = cursor ? cursor : 0; 
   
       const articleStories = await prisma.articleStoryDistribution.findMany({
         where: {
@@ -2606,11 +2601,7 @@ router.get('/user/article-stories', async (req, res) => {
           expiresAt: {
             gte: new Date(),
           },
-          id: {
-            gt: +cursorId,
-          },
         },
-        take: +pageSize, 
         select: {
           id: true,
           isSeen: true,
