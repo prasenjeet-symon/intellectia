@@ -2592,12 +2592,64 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
  * Get all active article stories of the logged in user to see
  */
 router.get('/user/article-stories', async (req, res) => {
-    // fetch all active article stories from the database for the logged in user
-    // fetched stories should not contain full article
-    // fetched stories should not be expired
-    // sort the stories by the createdAt ( desc ) to get the latest stories first
-    // stories should contain author minimal information like name, email, profile picture etc
-});
+    try {
+      const prisma = PrismaClientSingleton.prisma;
+      const { size, cursor } = req.query; 
+  
+      // Define the default page size and cursor if not provided
+      const pageSize = size ? size : 10; // Default to 10 items per page
+      const cursorId = cursor ? cursor : 0; 
+  
+      const articleStories = await prisma.articleStoryDistribution.findMany({
+        where: {
+          userId: res.locals.userId, // Filter by the logged-in user's ID
+          expiresAt: {
+            gte: new Date(),
+          },
+          id: {
+            gt: +cursorId,
+          },
+        },
+        take: +pageSize, 
+        select: {
+          id: true,
+          isSeen: true,
+          story: {
+            select: {
+              id: true,
+              story: true,
+              article: {
+                select: {
+                  user: {
+                    select: {
+                      username: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc', 
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        message: "Successfully fetched",
+        data: articleStories,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to get article stories",
+        error,
+      });
+    }
+  });
+  
+  
 /**
  * Mark the story as seen by the logged in user given the story distribution id
  */
