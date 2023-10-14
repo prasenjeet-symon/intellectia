@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ZodError } from 'zod';
+import { ZodError, z } from 'zod';
 import { PrismaClientSingleton } from '../utils';
 import { emailValidator, idValidator, userTopicsValidator } from '../validators';
 
@@ -576,14 +576,13 @@ router.put('/user/article_series/:id', async (req, res) => {
  * Delete article series
  */
 router.delete('/user/article_series/:id', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+    const idFromParams = z.coerce.number().int().positive();
+
+    const response = idFromParams.safeParse(req.params.id);
+
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0].message });
         return;
     }
 
