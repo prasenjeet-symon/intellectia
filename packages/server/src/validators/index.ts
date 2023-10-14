@@ -35,4 +35,14 @@ export const userTopicsValidator = z.object({
     topics: z.array(z.number()),
 });
 
+export const idArrayValidator = z.array(
+    z
+        .number({
+            required_error: 'ids are required',
+            invalid_type_error: 'ids must be number',
+        })
+        .refine((value) => value !== 0, {
+            message: 'ids must not be equal to 0',
+        }),
+);
 

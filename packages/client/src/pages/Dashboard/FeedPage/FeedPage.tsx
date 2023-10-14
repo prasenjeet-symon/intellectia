@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import "./FeedPage.css";
-import AxiosClient from "@/api/apiClient";
+import { useNavigate } from "react-router-dom";
+import { useLogout } from "@/hooks/authentication.hooks";
 
 export default function FeedPage() {
-  const logOut= ()=>{
-    AxiosClient.getInstance().removeToken();
-  }
+  const navigation = useNavigate();
+  const { logout } = useLogout(navigation)
 
   return <section className="">Welcome to Authenticated Feed Page
-  <Button onClick={() => {logOut()}}>Logout</Button>
+  <Button onClick={logout}>Logout</Button>
   </section>;
 }
