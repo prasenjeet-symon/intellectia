@@ -4,7 +4,8 @@
   "description": "Empowering human thought in the age of AI",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "graph": "nx graph"
   },
   "author": "",
   "license": "MIT",
