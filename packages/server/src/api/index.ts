@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idValidator, userTopicsValidator } from '../validators';
+import { emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
 
 const router = Router();
 
@@ -433,60 +433,43 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
  * Delete multiple articles from the article series
  */
 router.delete('/user/article_series/:id/articles', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    try {
+        const parsedParam = await idValidator.parseAsync({id: +req.params.id})
+ 
+        const articleIds = await idArrayValidator.parseAsync(req.body.articles);
+        const id = parsedParam.id; // article series id
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    // articles is array of article ids that is numbers
-    if (!Array.isArray(req.body.articles)) {
-        res.status(400).send({ error: 'Articles is required' });
-        return;
-    }
-
-    const articleIds = req.body.articles as number[];
-    const id = +req.params.id; // article series id
-
-    const isArticleIdsValid = articleIds.every((articleId) => {
-        return typeof articleId === 'number';
-    });
-
-    if (!isArticleIdsValid) {
-        res.status(400).send({ error: 'Articles are required' });
-        return;
-    }
-
-    const prisma = PrismaClientSingleton.prisma;
-
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: articleIds.map((articleId) => ({
-                                id: articleId,
-                            })),
+        const prisma = PrismaClientSingleton.prisma;
+    
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: articleIds.map((articleId) => ({
+                                    id: articleId,
+                                })),
+                            },
                         },
                     },
                 },
             },
-        },
-    });
-
-    res.send('Articles deleted from series');
+        });
+    
+        res.send('Articles deleted from series');
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0].message });
+        }
+        return res.status(400).json({ error });
+    } 
 });
 /**
  * Add article series
