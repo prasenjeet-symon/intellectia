@@ -56,6 +56,8 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
 
 ## Setup
 
+***We are using `pnpm` as package manager for this project. Please make sure you [pnpm](https://pnpm.io/installation) installed in your device***
+
 **Project Setup Instructions**
 
 1. **Clone the Repository**:
