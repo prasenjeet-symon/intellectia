@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { ZodError, z } from 'zod';
+import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
+import { idArrayValidator, userTopicsValidator, idValidator, emailValidator } from '../validators';
 
 const router = Router();
 
@@ -434,13 +434,13 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
  */
 router.delete('/user/article_series/:id/articles', async (req, res) => {
     try {
-        const parsedParam = await idValidator.parseAsync({id: +req.params.id})
- 
+        const parsedParam = await idValidator.parseAsync({ id: +req.params.id });
+
         const articleIds = await idArrayValidator.parseAsync(req.body.articles);
         const id = parsedParam.id; // article series id
 
         const prisma = PrismaClientSingleton.prisma;
-    
+
         await prisma.user.update({
             where: {
                 email: res.locals.email,
@@ -462,14 +462,14 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
                 },
             },
         });
-    
+
         res.send('Articles deleted from series');
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             return res.status(400).send({ error: error.issues[0].message });
         }
         return res.status(400).json({ error });
-    } 
+    }
 });
 /**
  * Add article series
@@ -559,13 +559,12 @@ router.put('/user/article_series/:id', async (req, res) => {
  * Delete article series
  */
 router.delete('/user/article_series/:id', async (req, res) => {
-
-    const response = idValidator.safeParse({id : req.params.id});
+    const response = idValidator.safeParse({ id: req.params.id });
 
     if (!response.success) {
         res.status(400).send({ error: response.error.errors[0].message });
         return;
-    }   
+    }
 
     const id = +req.params.id; // article series id
 

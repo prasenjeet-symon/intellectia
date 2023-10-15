@@ -6,8 +6,8 @@ import { Router } from 'express';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-import { emailPasswordValidator, emailValidator, tokenEmailValidator, tokenValidator } from '../validators';
 import rateLimit from 'express-rate-limit';
+import { emailPasswordValidator, emailValidator, tokenValidator, tokenEmailValidator } from '../validators';
 
 const router = Router();
 

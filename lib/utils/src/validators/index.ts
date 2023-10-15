@@ -33,3 +33,5 @@ export const tokenEmailValidator = emailValidator.merge(tokenValidator);
 export const userTopicsValidator = z.object({
     topics: z.array(z.number()),
 });
+
+
