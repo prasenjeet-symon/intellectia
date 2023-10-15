@@ -5,8 +5,12 @@ import router from './api';
 import routerAuth from './api_auth';
 import routerPublic from './api_public';
 import { authenticateUser } from './utils';
+import { createArticlesPerUser } from './seeder/utils';
 
 export function createServer() {
+
+    createArticlesPerUser("aga", 2);
+
     const app = express();
 
     app.use(cors());

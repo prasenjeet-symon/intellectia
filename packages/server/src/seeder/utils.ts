@@ -3,6 +3,8 @@ import { UniqueEnforcer } from 'enforce-unique';
 import * as readFileFs from 'fs';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
+import { response } from 'express';
+import path from "path"
 /**
  * Parse the Markdown file to JSON
  */
@@ -26,24 +28,33 @@ export async function markdownToJSON(): Promise<
     /* try block for reading and extracting metadata from markdown file */
     try {
         /* extracting HTML content using specified function markdownToHTML */
-        let htmlContent = await markdownToHTML('../assets/catOnTheMoon.md');
+        const catFile = path.join(__dirname, "..", "/assets/catOnTheMoon.md")
+        let htmlContent = await markdownToHTML(catFile);
         if (!htmlContent) {
             return;
         }
 
         /* read selected file synchronously */
-        const data = readFileFs.readFileSync('../assets/catOnTheMoon.md', 'utf8');
+        const data = readFileFs.readFileSync(catFile, 'utf8');   
+        
+        // Regex that to get YAML data from markdown
+        const charsBetweenHyphens = /^---([\s\S]*?)---/;
 
-        //grab yaml metadata at start of page
-        //split metadata at '\r\n' to get strings containing title, subtitle etc.
-        const metadata = data.split('---')[1].split('\r\n');
+        // If file has metadata it will be extracted
+        const metadataMatched = data.match(charsBetweenHyphens);
+
+        // Extracted metadata
+        const metadata = metadataMatched![1];
+
+        // split metadata into lines by '\n' getting strings containing the metadata
+        const metadataLines = metadata.split("\n");
 
         /* metadata is now an array consisting of strings containing yaml front matter */
         /* Title, subtitle and coverImage can be extracted from metadata array by calling their respective indexes in metadata array and splitting corresponding strings at ':' */
-        /* trimStart() to removed whitespace at start of strings */
-        let title = metadata[1].split(':')[1].trimStart();
-        let subTitle = metadata[2].split(':')[1].trimStart();
-        let image = metadata[3].split(':')[1].trimStart();
+        /* trim() to removed whitespace at start and end of strings */
+        let title = metadataLines[1].split(":")[1].trim();
+        let subTitle = metadataLines[2].split(":")[1].trim();
+        let image = metadataLines[3].split(":")[1].trim();
         let markdownContent = data.split('---')[2];
 
         //return data in JSON format
@@ -112,6 +123,7 @@ export async function generateFakeArticle(): Promise<
         readTimeMinutes: readTimeMinutes,
     };
 
+
     return article;
 }
 
@@ -147,6 +159,12 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
     // Create articles to the database
     // use the function generateFakeArticle to generate fake article
     // initially article should be created in draft form ( isPublished status set to false )
+
+    
+    const fakeArticle = generateFakeArticle()
+        .then((article) => console.log(article!.htmlContent))
+
+
 }
 /**
  * Create multiple articles to the database for every user

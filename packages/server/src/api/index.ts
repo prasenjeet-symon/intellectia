@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
 import { emailValidator, idValidator, userTopicsValidator } from '../validators';
+import { generateFakeArticle } from '../seeder/utils';
 
 const router = Router();
 
@@ -629,6 +630,11 @@ router.delete('/user/article_series/:id', async (req, res) => {
  * Get all the article series
  */
 router.get('/user/article_series', async (req, res) => {
+
+    const article = await generateFakeArticle();
+
+    console.log(article)
+
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {
