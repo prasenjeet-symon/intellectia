@@ -5,10 +5,8 @@ import router from './api';
 import routerAuth from './api_auth';
 import routerPublic from './api_public';
 import { authenticateUser } from './utils';
-import { addNumbers } from '@intellectia/utils';
 
 export function createServer(): express.Express {
-    console.log(addNumbers(1,2));
     const app = express();
     app.use(cors());
     app.use(express.json());

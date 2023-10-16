@@ -620,6 +620,7 @@ router.delete('/user/article_series/:id', async (req, res) => {
 /**
  * Get all the article series
  */
+
 router.get('/user/article_series', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
