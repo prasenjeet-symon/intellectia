@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
+import { emailValidator, idArrayValidator, idValidator, titleValidator, userTopicsValidator } from '../validators';
 
 const router:Router = Router();
 
@@ -488,13 +488,11 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
  */
 router.post('/user/article_series', async (req, res) => {
     // title is required
-    if (!('title' in req.body)) {
-        res.status(400).send({ error: 'Title is required' });
-        return;
-    }
 
-    if (!req.body.title) {
-        res.status(400).send({ error: 'Title is required' });
+    const response = titleValidator.safeParse(req.body);
+
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0]?.message  });
         return;
     }
 
@@ -622,6 +620,7 @@ router.delete('/user/article_series/:id', async (req, res) => {
  */
 
 router.get('/user/article_series', async (_req, res) => {
+
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {

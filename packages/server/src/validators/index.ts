@@ -13,6 +13,17 @@ export const idValidator = z.object({
         }),
 });
 
+export const titleValidator = z.object({
+    title: z
+        .string({
+            required_error: "Title is required",
+            invalid_type_error: "Title must be a string"
+        })
+        .min(1)
+});
+
+
+
 export const emailValidator = z.object({
     email: z.string().email(),
 });

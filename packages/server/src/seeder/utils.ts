@@ -4,8 +4,6 @@ import * as fs from 'fs';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
 import path from "path"
-import  {load} from 'js-yaml';
-
 /**
  * Parse the Markdown file to JSON
  */
@@ -15,7 +13,7 @@ export async function markdownToJSON(): Promise<{
     coverImage: string;
     markdownContent: string;
     htmlContent: string;
-  }> {
+  } | undefined> {
     try {
         /* extracting HTML content using specified function markdownToHTML */
         const catFile = path.join(__dirname, "..", "/assets/catOnTheMoon.md")
@@ -25,7 +23,7 @@ export async function markdownToJSON(): Promise<{
         }
 
         /* read selected file synchronously */
-        const data = readFileFs.readFileSync(catFile, 'utf8');   
+        const data = fs.readFileSync(catFile, 'utf8');   
         
         // Regex that to get YAML data from markdown
         const charsBetweenHyphens = /^---([\s\S]*?)---/;
@@ -36,16 +34,21 @@ export async function markdownToJSON(): Promise<{
         // Extracted metadata
         const metadata = metadataMatched![1];
 
+        if(!metadata) {
+            return;
+        }
+
         // split metadata into lines by '\n' getting strings containing the metadata
         const metadataLines = metadata.split("\n");
-
+        
+        
         /* metadata is now an array consisting of strings containing yaml front matter */
         /* Title, subtitle and coverImage can be extracted from metadata array by calling their respective indexes in metadata array and splitting corresponding strings at ':' */
         /* trim() to removed whitespace at start and end of strings */
-        let title = metadataLines[1].split(":")[1].trim();
-        let subTitle = metadataLines[2].split(":")[1].trim();
-        let image = metadataLines[3].split(":")[1].trim();
-        let markdownContent = data.split('---')[2];
+        let title = metadataLines[1]!.split(":")[1]!.trim();
+        let subTitle = metadataLines[2]!.split(":")[1]!.trim();
+        let image = metadataLines[3]!.split(":")[1]!.trim();
+        let markdownContent = data.split('---')[2]!;
 
         //return data in JSON format
         return {
@@ -58,8 +61,9 @@ export async function markdownToJSON(): Promise<{
     } catch (error: any) {
         /* catch any errors that might occur */
         console.log(error.message);
+        return
     }
-  }
+}
 
 /**
  * Parse the Markdown to HTML
@@ -114,6 +118,10 @@ export async function generateFakeArticle(): Promise<
         readTimeMinutes: readTimeMinutes,
     };
 
+    console.log("IN ARTICLE");
+
+    console.log(article.title)
+
 
     return article;
 }
@@ -145,7 +153,7 @@ export async function generateFakeUser(): Promise<{
 /**
  * Create articles to the database
  */
-export async function createArticlesPerUser(_email: string, _numberOfArticles: number): Promise<void> {
+export async function createArticlesPerUser(email: string, numberOfArticles: number): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // Create articles to the database
     // use the function generateFakeArticle to generate fake article
@@ -166,6 +174,11 @@ export async function createArticlesPerUser(_email: string, _numberOfArticles: n
 
     for (let i = 0; i < numberOfArticles; i++) {
         const fakeArticle = await generateFakeArticle();
+
+        Promise.resolve(fakeArticle).then((article) => {
+            console.log("TITTLE")
+            console.log(article!.title)
+        })
 
         const title = fakeArticle!.title;
         const subTitle = fakeArticle!.subtitle;
