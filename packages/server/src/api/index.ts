@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idArrayValidator, idValidator, titleValidator, updateArticleSeriesValidator, userTopicsValidator } from '../validators';
+import { articleSeriesValidator, emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
 
 const router:Router = Router();
 
@@ -488,11 +488,11 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
  */
 router.post('/user/article_series', async (req, res) => {
     // title is required
-    // const idVaildator = idValidator.safeParse({id : req.params.id});
-    const bodyValidator = titleValidator.safeParse(req.body);
 
-    if (!bodyValidator.success) {
-        res.status(400).send({ error: bodyValidator.error.errors[0]?.message  });
+    const response = articleSeriesValidator.safeParse(req.body);
+
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0]?.message  });
         return;
     }
 
@@ -520,10 +520,17 @@ router.post('/user/article_series', async (req, res) => {
  */
 router.put('/user/article_series/:id', async (req, res) => {
 
-    let response = updateArticleSeriesValidator.safeParse(req.body);
+    const idResponse = idValidator.safeParse({id : req.params.id});
 
-    if (!response.success) {
-        res.status(400).send({ error: response.error.errors[0]?.message});
+    if (!idResponse.success) {
+        res.status(400).send({ error: idResponse.error.errors[0]?.message});
+        return;
+    }
+
+    let bodyResponse = articleSeriesValidator.safeParse(req.body);
+
+    if (!bodyResponse.success) {
+        res.status(400).send({ error: bodyResponse.error.errors[0]?.message});
         return;
     }
 
