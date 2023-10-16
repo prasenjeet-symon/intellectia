@@ -9,7 +9,6 @@ import { createArticlesPerUser } from './seeder/utils';
 
 export function createServer() {
 
-
     const app = express();
 
     app.use(cors());
@@ -23,9 +22,6 @@ export function createServer() {
     app.get('/server/', (req, res) => {
         res.send({ message: 'Hello World!' });
     });
-
-    createArticlesPerUser("aga", 2)
-
 
     return app;
 }
