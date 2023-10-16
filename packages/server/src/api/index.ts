@@ -1,28 +1,29 @@
 import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idValidator, userTopicsValidator } from '../validators';
-import { generateFakeArticle } from '../seeder/utils';
+import { emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
 
-const router = Router();
+const router:Router = Router();
 
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
     res.send({ message: 'Hello World' });
+    return;
 });
 
 /**
  * Get all topics
  */
-router.get('/topics', async (req, res) => {
+router.get('/topics', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const topics = await prisma.topic.findMany();
     res.send(topics);
+    return;
 });
 
 /**
  * Fetch all the assigned topics of the user
  */
-router.get('/user/topics', async (req, res) => {
+router.get('/user/topics', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     // get all the topics of user
     const topics = await prisma.user.findUnique({
@@ -40,6 +41,7 @@ router.get('/user/topics', async (req, res) => {
     }
 
     res.send(topics.topics);
+    return;
 });
 /**
  * Get the single topic by id
@@ -56,10 +58,12 @@ router.get('/topic/:id', async (req, res) => {
         });
 
         res.send(topic);
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
+
         return res.status(400).json({ error });
     }
 });
@@ -101,15 +105,14 @@ router.put('/user/topics', async (req, res) => {
         });
 
         res.send('Topics added');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
 
         return res.status(400).json({ error });
     }
-
-    // disconnect all the topics, before adding new topics
 });
 
 /**
@@ -119,8 +122,8 @@ router.put('/user/topics', async (req, res) => {
  */
 router.put('/user/topic', async (req, res) => {
     try {
-        const parsedBody = await idValidator.parseAsync(req.body.id);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        const parsedBody = await idValidator.parseAsync(req.body);
+        const parsedLocals = await emailValidator.parseAsync(res.locals);
         const topicId = parsedBody.id;
         const prisma = PrismaClientSingleton.prisma;
         // disconnect the topic from the user
@@ -152,12 +155,14 @@ router.put('/user/topic', async (req, res) => {
         });
 
         res.send('Topic added');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
 
-        return res.status(400).json({ error });
+        res.status(400).json({ error });
+        return;
     }
 });
 
@@ -187,9 +192,10 @@ router.delete('/user/topic/:id', async (req, res) => {
         });
 
         res.send('Topic deleted');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
 
         return res.status(400).json({ error });
@@ -223,12 +229,14 @@ router.delete('/user/topics', async (req, res) => {
         });
 
         res.send('Topics deleted');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
 
-        return res.status(400).json({ error });
+        res.status(400).json({ error });
+        return;
     }
 });
 /**
@@ -291,12 +299,14 @@ router.put('/user/article_series/:id/article', async (req, res) => {
         });
 
         res.send('Article added to series');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
+            res.status(400).send({ error: error.issues[0]?.message });
         }
 
-        return res.status(400).json({ error });
+        res.status(400).json({ error });
+        return;
     }
 });
 /**
@@ -308,9 +318,8 @@ router.delete('/user/article_series/:id/article', async (req, res) => {
         await idValidator.parseAsync(req.params);
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
+            res.status(400).send({ error: error.issues[0]?.message });
         }
-
         return;
     }
 
@@ -345,6 +354,7 @@ router.delete('/user/article_series/:id/article', async (req, res) => {
     });
 
     res.send('Article deleted from series');
+    return;
 });
 /**
  * Add multiple articles to the article series
@@ -434,60 +444,44 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
  * Delete multiple articles from the article series
  */
 router.delete('/user/article_series/:id/articles', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    try {
+        const parsedParam = await idValidator.parseAsync({id: +req.params.id})
+ 
+        const articleIds = await idArrayValidator.parseAsync(req.body.articles);
+        const id = parsedParam.id; // article series id
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    // articles is array of article ids that is numbers
-    if (!Array.isArray(req.body.articles)) {
-        res.status(400).send({ error: 'Articles is required' });
-        return;
-    }
-
-    const articleIds = req.body.articles as number[];
-    const id = +req.params.id; // article series id
-
-    const isArticleIdsValid = articleIds.every((articleId) => {
-        return typeof articleId === 'number';
-    });
-
-    if (!isArticleIdsValid) {
-        res.status(400).send({ error: 'Articles are required' });
-        return;
-    }
-
-    const prisma = PrismaClientSingleton.prisma;
-
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: articleIds.map((articleId) => ({
-                                id: articleId,
-                            })),
+        const prisma = PrismaClientSingleton.prisma;
+    
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: articleIds.map((articleId) => ({
+                                    id: articleId,
+                                })),
+                            },
                         },
                     },
                 },
             },
-        },
-    });
-
-    res.send('Articles deleted from series');
+        });
+    
+        res.send('Articles deleted from series');
+        return;
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0]?.message });
+        }
+        return res.status(400).json({ error });
+    } 
 });
 /**
  * Add article series
@@ -577,16 +571,13 @@ router.put('/user/article_series/:id', async (req, res) => {
  * Delete article series
  */
 router.delete('/user/article_series/:id', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+    const response = idValidator.safeParse({id : req.params.id});
+
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0]?.message });
         return;
-    }
+    }   
 
     const id = +req.params.id; // article series id
 
@@ -629,12 +620,8 @@ router.delete('/user/article_series/:id', async (req, res) => {
 /**
  * Get all the article series
  */
-router.get('/user/article_series', async (req, res) => {
 
-    const article = await generateFakeArticle();
-
-    console.log(article)
-
+router.get('/user/article_series', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {
@@ -744,7 +731,7 @@ router.get('/user/article_series/:id/articles', async (req, res) => {
     }
 
     // only return articles
-    res.send(articles.articleSeries[0].articles);
+    res.send(articles.articleSeries[0]?.articles);
 });
 /**
  * Add article
@@ -1487,7 +1474,7 @@ router.delete('/user/read_later/:id', async (req, res) => {
  * Get all the read later articles
  *
  */
-router.get('/user/read_later', async (req, res) => {
+router.get('/user/read_later', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const readLater = await prisma.user.findUnique({
         where: {
@@ -2396,15 +2383,21 @@ router.put('/user/article-reads/:id/time', async (req, res) => {
         },
     });
 
-    if (!article) {
+    if (!article || article.articleReads.length === 0) {
         res.status(400).send({ error: 'Article not found' });
         return;
     }
 
     // check the article read time
-    const articleReadTime = +article.articleReads[0].article.readTimeMinutes;
+    const articleRead = article.articleReads[0]?.article;
+    if(!articleRead){
+        res.status(400).send({ error: 'Article not found' });
+        return;
+    }
+
+    const articleReadTime =  +articleRead.readTimeMinutes;
     const currentReadTime = +readTimeMinutes;
-    const totalReadTime = +article.articleReads[0].readTimeInMinutes + currentReadTime;
+    const totalReadTime = +(article.articleReads[0] ? article.articleReads[0] : { readTimeInMinutes: 0}).readTimeInMinutes + currentReadTime;
     let finalReadTime = 0;
     // check if the read time exceeds total reading time of the article
     if (totalReadTime >= articleReadTime) {
@@ -2581,8 +2574,10 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
         if (users.length < 1) return res.status(400).json({ error: 'Entity not found' });
 
         res.json(users);
+        return;
     } catch (error) {
         res.status(400).json({ error });
+        return;
     }
 
     // size is required, cursor is required
@@ -2597,12 +2592,13 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
 /**
  * Get all active article stories of the logged in user to see
  */
-router.get('/user/article-stories', async (req, res) => {
+router.get('/user/article-stories', (_req) => {
     // fetch all active article stories from the database for the logged in user
     // fetched stories should not contain full article
     // fetched stories should not be expired
     // sort the stories by the createdAt ( desc ) to get the latest stories first
     // stories should contain author minimal information like name, email, profile picture etc
+    return;
 });
 /**
  * Mark the story as seen by the logged in user given the story distribution id

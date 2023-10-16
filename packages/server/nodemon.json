@@ -1,6 +1,7 @@
 {
-    "watch": ["src"],
-    "ext": "ts",
-    "exec": "ts-node src/index.ts"
-  }
-  
+  "watch": [
+    "src"
+  ],
+  "ext": "ts",
+  "exec": "rollup -c && node dist/server.js"
+}

@@ -2,17 +2,35 @@
   "name": "intellectia",
   "version": "1.0.0",
   "description": "Empowering the world through AI",
+  "engines": {
+    "node": "^18.0.0",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
+    "app-docker": "docker-compose up -d",
+    "app-setup-docker": "pnpm run app-docker && node -e \"setTimeout(() => { console.log('Delay finished'); }, 20000)\" && pnpm run app-setup",
+    "app-dev-docker": "pnpm run app-docker && pnpm run app-dev",
+    "app-log": "nx view-logs",
+    "app-lint": "nx run-many --target=lint --all --maxParallel=10",
     "app-graph": "nx graph",
     "app-test": "nx exec -- pnpm run _test ",
     "app-install": "pnpm recursive install",
+    "app-studio": "nx run-many --target=studio --all --maxParallel=10",
     "app-migrate": "nx run-many --target=migrate --all --maxParallel=10",
+    "app-generate": "nx run-many --target=generate --all --maxParallel=10",
     "app-dev": "nx run-many --target=dev --all --maxParallel=10",
     "app-build": "nx run-many --target=build --all --maxParallel=10",
-    "app-setup": "pnpm run app-install && pnpm run app-migrate && pnpm run app-dev"
+    "app-setup": "pnpm run app-install && pnpm run app-generate && pnpm run app-migrate && pnpm run app-dev"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "AI",
+    "Machine Learning",
+    "Blogging",
+    "Prisma",
+    "Typescript",
+    "Nx"
+  ],
+  "author": "prasenjeet-symon",
   "workspaces": {
     "packages": [
       "packages/*",
@@ -22,8 +40,13 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "@types/node": "^20.8.6",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.51.0",
+    "eslint-config-airbnb-base": "^15.0.0",
     "nx": "16.10.0",
-    "nx-cloud": "latest"
+    "nx-cloud": "^16.5.2"
   },
   "nx": {
     "targets": {
@@ -32,6 +55,12 @@
           "{projectRoot}/dist"
         ]
       }
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "@intellectia/utils": "workspace:^",
+      "@intellectia/types": "workspace:^"
     }
   }
 }

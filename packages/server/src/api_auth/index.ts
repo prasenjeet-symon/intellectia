@@ -3,16 +3,17 @@
  */
 
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
 import { emailPasswordValidator, emailValidator, tokenEmailValidator, tokenValidator } from '../validators';
-import rateLimit from 'express-rate-limit';
 
-const router = Router();
+const router: Router = Router();
 
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
     res.send({ message: 'Hello from Authentication' });
+    return;
 });
 
 /**
@@ -86,14 +87,16 @@ router.post('/login', async (req, res) => {
         });
 
         res.send({ token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            res.status(400).send({ error: error.issues[0]?.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(400).json({ error });
+        return;
     }
-    // run the validators
 });
 
 /**
@@ -101,7 +104,7 @@ router.post('/login', async (req, res) => {
  */
 router.post('/signup', async (req, res) => {
     try {
-        const parsedBody = await emailPasswordValidator.parseAsync(req.body);
+        const parsedBody = emailPasswordValidator.parse(req.body);
         const email = parsedBody.email;
         const password = parsedBody.password;
         // check if the user already exit in the database
@@ -133,12 +136,13 @@ router.post('/signup', async (req, res) => {
         // generate the JWT token
         const token = generateToken(email, newUser.userId, false);
         res.send({ token, isAdmin: false, userId: newUser.userId, email: newUser.email });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
 
-        return res.status(400).json({ error });
+        return res.status(400).json({ error});
     }
 });
 
@@ -198,9 +202,10 @@ router.post('/magic', async (req, res) => {
 
         // TODO : In production mode, send the magic link to the user via email and don't return anything
         res.send({ magicLink });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            return res.status(400).send({ error: error.issues[0]?.message });
         }
 
         return res.status(400).json({ error });
@@ -290,6 +295,7 @@ router.post(
             });
 
             res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+            return;
         } catch (error) {
             if (error instanceof ZodError && !error.isEmpty) {
                 res.status(400).send({ error: 'Token and email are required and must be non-empty' });
@@ -353,6 +359,7 @@ router.post('/google', async (req, res) => {
         // generate the JWT token
         const tokenJWT = generateToken(email, newUser.userId, false);
         res.send({ token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token is required and must be non-empty' });
@@ -432,6 +439,7 @@ router.post('/google_login', async (req, res) => {
         });
 
         res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token is required and must be non-empty' });
@@ -445,7 +453,7 @@ router.post('/google_login', async (req, res) => {
 /**
  * Logout the user
  */
-router.post('/logout', authenticateUser, async (req, res) => {
+router.post('/logout', authenticateUser, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
         const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
@@ -489,6 +497,7 @@ router.post('/logout', authenticateUser, async (req, res) => {
         });
 
         res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token and email are required and must be non-empty' });
@@ -504,7 +513,7 @@ router.post('/logout', authenticateUser, async (req, res) => {
  * Logout all the sessions
  *
  */
-router.post('/logout_all', authenticateUser, async (req, res) => {
+router.post('/logout_all', authenticateUser, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
         const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
@@ -540,6 +549,7 @@ router.post('/logout_all', authenticateUser, async (req, res) => {
         });
 
         res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             res.status(400).send({ error: 'Token and email are required and must be non-empty' });

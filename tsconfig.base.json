@@ -1,0 +1,38 @@
+{
+  "include": ["packages", "lib" ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "node_modules"
+  ],
+  "compilerOptions": {
+    "allowJs": false,
+    "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
+    "module": "ES6",
+    "lib": ["ES2018", "dom"],
+    "target": "ES5",
+    "declaration": true,
+    "declarationMap": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "paths": {
+      "@intellectia/utils": ["lib/utils/src"],
+      "@intellectia/utils/*": ["lib/utils/src/*"],
+      "@intellectia/types": ["lib/types/src"],
+      "@intellectia/types/*": ["lib/types/src/*"]
+    }
+  }
+}

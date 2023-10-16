@@ -62,6 +62,18 @@ export async function loginWithGoogle(token: string): Promise<AxiosResponse<IAut
 }
 
 /**
+ * Logs user out
+ */
+export async function logoutUser() {
+  const apiUrl = '/auth/logout';
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
+
+  const response = await axios.post<string>(apiUrl);
+  return response.data;
+}
+
+/**
  * Fetch all the application topics
  */
 export async function getTopics(): Promise<ITopicResult[]> {

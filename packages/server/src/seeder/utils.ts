@@ -1,31 +1,21 @@
 import { faker } from '@faker-js/faker';
 import { UniqueEnforcer } from 'enforce-unique';
-import * as readFileFs from 'fs';
+import * as fs from 'fs';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
 import path from "path"
+import  {load} from 'js-yaml';
 
 /**
  * Parse the Markdown file to JSON
  */
-export async function markdownToJSON(): Promise<
-    | {
-          title: string;
-          subTitle: string;
-          coverImage: string;
-          markdownContent: string;
-          htmlContent: string;
-      }
-    | undefined
-> {
-    // Markdown file is located in the assets folder
-    // markdown file is a article about the cat journey to the moon.
-    // read that markdown and generate the JSON
-    // JSON :  { title: string; subTitle: string; coverImage: string; markdownContent: string, htmlContent: string }
-    // cover image should be asset file location ( relative url ) , please check the server.ts file for the media path
-    // use the function markdownToHTML to get the HTML
-
-    /* try block for reading and extracting metadata from markdown file */
+export async function markdownToJSON(): Promise<{
+    title: string;
+    subTitle: string;
+    coverImage: string;
+    markdownContent: string;
+    htmlContent: string;
+  }> {
     try {
         /* extracting HTML content using specified function markdownToHTML */
         const catFile = path.join(__dirname, "..", "/assets/catOnTheMoon.md")
@@ -69,7 +59,7 @@ export async function markdownToJSON(): Promise<
         /* catch any errors that might occur */
         console.log(error.message);
     }
-}
+  }
 
 /**
  * Parse the Markdown to HTML
@@ -77,12 +67,13 @@ export async function markdownToJSON(): Promise<
 // used showdown (https://www.npmjs.com/package/showdown)
 export async function markdownToHTML(inputPath: string): Promise<{ HTML: string } | undefined> {
     try {
-        const data: string = readFileFs.readFileSync(inputPath, 'utf8');
+        const data: string = fs.readFileSync(inputPath, 'utf8');
         const converter = new showdown.Converter();
         const result = converter.makeHtml(data);
         return { HTML: result };
     } catch (error: any) {
         console.error(error);
+        throw error;
     }
 }
 
@@ -154,7 +145,7 @@ export async function generateFakeUser(): Promise<{
 /**
  * Create articles to the database
  */
-export async function createArticlesPerUser(email: string, numberOfArticles: number): Promise<void> {
+export async function createArticlesPerUser(_email: string, _numberOfArticles: number): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // Create articles to the database
     // use the function generateFakeArticle to generate fake article
@@ -204,7 +195,7 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
  * Create multiple articles to the database for every user
  *
  */
-export async function createMultipleArticles(min: number, max: number): Promise<void> {
+export async function createMultipleArticles(_min: number, _max: number): Promise<void> {
     // Fetch all the created users from the database
     // created n number of article per user using createArticlesPerUser function
     // choose n randomly where n = [min, max] // both min and max are integer
@@ -213,7 +204,7 @@ export async function createMultipleArticles(min: number, max: number): Promise<
 /**
  * Assign topics to the articles
  */
-export async function assignTopicsToArticles(email: string): Promise<void> {
+export async function assignTopicsToArticles(_email: string): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // fetch user topics from the database
     // fetch all the topics of application from the database
@@ -246,7 +237,7 @@ export async function createMultipleUsers(numberOfUser: number) {
 /**
  * Assign topics to the users
  */
-export async function assignTopicsToUsers(email: string): Promise<void> {
+export async function assignTopicsToUsers(_email: string): Promise<void> {
     // Assign topics to the created user except the main user ( incoming email )
     // fetch all the topics of application from the database
     // choose aftmost 3 topics for the user
@@ -268,7 +259,7 @@ export async function saveArticlesForUsers(): Promise<void> {
 /**
  * Given the article and user , comment on the article
  */
-export async function commentOnArticle(email: string, articleId: number, min: number, max: number): Promise<void> {
+export async function commentOnArticle(_email: string, _articleId: number, _min: number, _max: number): Promise<void> {
     // email is the commenter's email id
     // comment on article with given article id
     // create n number of fake comments for the article where n belong to [ min , max ] and min, max and n  belong to positive Integer
@@ -277,7 +268,7 @@ export async function commentOnArticle(email: string, articleId: number, min: nu
 /**
  * Add multiple comments to the articles
  */
-export async function addMultipleCommentsToArticles(min: number, max: number): Promise<void> {
+export async function addMultipleCommentsToArticles(_min: number, _max: number): Promise<void> {
     // add comments to the every article
     // fetch all the articles from the database
     // fetch all the users from the database
@@ -289,7 +280,7 @@ export async function addMultipleCommentsToArticles(min: number, max: number): P
 /**
  * Add replies to the comments
  */
-export async function addRepliesToComments(min: number, max: number): Promise<void> {
+export async function addRepliesToComments(_min: number, _max: number): Promise<void> {
     // add replies to the every comment
     // fetch all the comments from the database
     // fetch all the users from the database
@@ -300,7 +291,7 @@ export async function addRepliesToComments(min: number, max: number): Promise<vo
 /**
  * Add likes/dislikes to the articles by users
  */
-export async function addLikesToArticles(min: number, max: number): Promise<void> {
+export async function addLikesToArticles(_min: number, _max: number): Promise<void> {
     // How to add likes and dislike to the article: See below
     // 1. fetch all the articles from the database
     // 2. fetch all the users from the database
