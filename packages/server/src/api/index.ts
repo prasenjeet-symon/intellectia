@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idArrayValidator, idValidator, titleValidator, userTopicsValidator } from '../validators';
+import { emailValidator, idArrayValidator, idValidator, titleValidator, updateArticleSeriesValidator, userTopicsValidator } from '../validators';
 
 const router:Router = Router();
 
@@ -488,11 +488,11 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
  */
 router.post('/user/article_series', async (req, res) => {
     // title is required
+    // const idVaildator = idValidator.safeParse({id : req.params.id});
+    const bodyValidator = titleValidator.safeParse(req.body);
 
-    const response = titleValidator.safeParse(req.body);
-
-    if (!response.success) {
-        res.status(400).send({ error: response.error.errors[0]?.message  });
+    if (!bodyValidator.success) {
+        res.status(400).send({ error: bodyValidator.error.errors[0]?.message  });
         return;
     }
 
@@ -519,19 +519,11 @@ router.post('/user/article_series', async (req, res) => {
  * Update article series
  */
 router.put('/user/article_series/:id', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    let response = updateArticleSeriesValidator.safeParse(req.body);
 
-    if (!('title' in req.body)) {
-        res.status(400).send({ error: 'Title is required' });
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0]?.message});
         return;
     }
 

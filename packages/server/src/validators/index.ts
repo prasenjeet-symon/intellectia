@@ -22,6 +22,30 @@ export const titleValidator = z.object({
         .min(1)
 });
 
+export const updateArticleSeriesValidator = z.object({
+    title: z
+        .string({
+            required_error: "Title is required",
+            invalid_type_error: "Title must be a string"
+        })
+        .min(1),
+    description: z
+        .string({
+            invalid_type_error: "Description must be a string"
+        })
+        .min(10, {
+            message: "Description must contain at least 10 letters"
+        })
+        .optional(),
+    logo: z
+        .string({
+            invalid_type_error: "Logo must be a string"
+        })
+        .min(1, {
+            message: "Logo must contain at least 1 letter"
+        })
+        .optional(),
+});
 
 
 export const emailValidator = z.object({
