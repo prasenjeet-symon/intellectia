@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ZodError } from 'zod';
 import { PrismaClientSingleton } from '../utils';
 import { articleSeriesValidator, emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
+import { addLikesToArticles } from '../seeder/utils';
 
 const router:Router = Router();
 
@@ -619,6 +620,8 @@ router.delete('/user/article_series/:id', async (req, res) => {
  */
 
 router.get('/user/article_series', async (_req, res) => {
+
+    addLikesToArticles(0, 1)
 
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({

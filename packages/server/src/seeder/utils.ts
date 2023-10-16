@@ -313,4 +313,46 @@ export async function addLikesToArticles(_min: number, _max: number): Promise<vo
     // 5. first half of articles will be like by a user
     // 6. remaining half of articles will be dislike by a user
     // Perform the above task in parallel ( Promise.all() ) for each and every user
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    // Get all the articles in the database
+    const articles = await prisma.article.findMany();
+
+    // Get all users from the database
+    // const users = await prisma.user.findMany();
+
+    // calculates the number for 60% of all articles
+    const percentage = Math.ceil(articles.length * 0.6)
+
+    // Makes sure number is even to divide evenly
+    const evenSelectedNumber = (percentage % 2) === 0 ? percentage : percentage + 1;
+
+    // Shuffles and then populates up to the percentage number of articles
+    const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, evenSelectedNumber);
+
+    // The middle index value of the selectedArticles
+    const midPoint = (evenSelectedNumber / 2)
+
+    // Articles to be liked by users
+    const likedArticles = selectedArticles.slice(0, midPoint);
+
+    // Articles to be disliked by users
+    const dislikeArticles = selectedArticles.slice(midPoint);
+
+    
+
+    // for (let user in users) {
+    //     for (let i = 0; i < likedArticles.length; i++) {
+    //         console.log(user)
+    //     }
+    // }
+
+    likedArticles.map((article) => {
+        console.log("LIKED: " + article.id)
+    })
+
+    dislikeArticles.map((article) => {
+        console.log("DISLIKED: " + article.id)
+    })
 }
