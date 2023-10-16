@@ -5,6 +5,9 @@ import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
 import { response } from 'express';
 import path from "path"
+import router from '../api'; 
+import axios from 'axios';
+
 /**
  * Parse the Markdown file to JSON
  */
@@ -160,10 +163,24 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
     // use the function generateFakeArticle to generate fake article
     // initially article should be created in draft form ( isPublished status set to false )
 
-    
-    const fakeArticle = generateFakeArticle()
-        .then((article) => console.log(article!.htmlContent))
-
+    for (let i = 0; i < numberOfArticles; i++) {
+        const fakeArticle = await generateFakeArticle();
+        axios.post('/api/user/article', {
+            title: fakeArticle?.title,
+            subtitle: fakeArticle?.subtitle,
+            htmlContent: fakeArticle?.htmlContent,
+            markdownContent: fakeArticle?.markdownContent
+        }
+        )
+        .then(function (response) {
+            console.log("RESPONSE TIME:")
+            console.log(response);
+        })
+        .catch(function (error) {
+            console.log("ERROR")
+            console.log(error);
+        });
+    }
 
 }
 /**
