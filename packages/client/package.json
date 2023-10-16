@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -10,9 +11,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@intellectia/types": "^1.0.0",
+    "@intellectia/utils": "^1.0.0",
     "@hookform/resolvers": "^3.3.1",
-    "@intellectia/types": "workspace:^",
-    "@intellectia/utils": "workspace:^",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.5",

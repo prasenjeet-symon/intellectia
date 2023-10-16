@@ -1,14 +1,15 @@
 import cors from 'cors';
 import express from 'express';
 import path from 'path';
-import router from './api'; 
+import router from './api';
 import routerAuth from './api_auth';
 import routerPublic from './api_public';
 import { authenticateUser } from './utils';
+import { addNumbers } from '@intellectia/utils';
 
-export function createServer() {
+export function createServer(): express.Express {
+    console.log(addNumbers(1,2));
     const app = express();
-
     app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -17,7 +18,7 @@ export function createServer() {
     app.use('/server/api_public', routerPublic);
     app.use('/server/api', authenticateUser, router);
 
-    app.get('/server/', (req, res) => {
+    app.get('/server/', (_req, res) => {
         res.send({ message: 'Hello World!' });
     });
 

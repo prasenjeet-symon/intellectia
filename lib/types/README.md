@@ -1,7 +1,5 @@
 # @intellectia/types
 
-To install dependencies:
+> Please do not run any command directly from this location. Run all your commands from the root of your project.
 
-```bash
-pnpm install
-```
+Don't know how to run pnpm command, checkout official docs from here [https://pnpm.io](https://pnpm.io)

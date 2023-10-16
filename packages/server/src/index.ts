@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import * as  dotenv from 'dotenv';
 import { createServer } from './server';
 import { createIntellectiaTopics } from './utils';
 dotenv.config(); // Load environment variables from .env
