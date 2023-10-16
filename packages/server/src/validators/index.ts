@@ -22,6 +22,8 @@ export const titleValidator = z.object({
         .min(1)
 });
 
+
+
 export const emailValidator = z.object({
     email: z.string().email(),
 });

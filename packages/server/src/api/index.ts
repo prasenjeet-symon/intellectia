@@ -489,7 +489,7 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
 router.post('/user/article_series', async (req, res) => {
     // title is required
 
-    const response = titleValidator.safeParse({ title: req.body.title });
+    const response = titleValidator.safeParse(req.body);
 
     if (!response.success) {
         res.status(400).send({ error: response.error.errors[0]?.message  });
