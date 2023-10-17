@@ -1,29 +1,36 @@
 import { faker } from '@faker-js/faker';
+import { Article, User } from '@prisma/client';
 import { UniqueEnforcer } from 'enforce-unique';
 import * as fs from 'fs';
 import path from 'path';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
-import { Article, User } from '@prisma/client';
+/**
+ * Create new user given email and password
+ */
+export async function createUserWithEmailPassword(email: string, password: string): Promise<void> {
+    // add new user to database
+    // use the email and password
+    // if the user already exit then just return silently
+    // use prisma client directly ( no api call )
+}
+
 /**
  * Parse the Markdown file to JSON
  */
-export async function markdownToJSON(): Promise<
-    | {
-          title: string;
-          subTitle: string;
-          coverImage: string;
-          markdownContent: string;
-          htmlContent: string;
-      }
-    | undefined
-> {
+export async function markdownToJSON(): Promise<{
+    title: string;
+    subTitle: string;
+    coverImage: string;
+    markdownContent: string;
+    htmlContent: string;
+}> {
     try {
         /* extracting HTML content using specified function markdownToHTML */
         const catFile = path.join(__dirname, '..', '/assets/catOnTheMoon.md');
         let htmlContent = await markdownToHTML(catFile);
         if (!htmlContent) {
-            return;
+            throw new Error('Markdown to HTML conversion failed');
         }
 
         /* read selected file synchronously */
@@ -39,7 +46,7 @@ export async function markdownToJSON(): Promise<
         const metadata = metadataMatched![1];
 
         if (!metadata) {
-            return;
+            throw new Error('No metadata found');
         }
 
         // split metadata into lines by '\n' getting strings containing the metadata
@@ -63,8 +70,8 @@ export async function markdownToJSON(): Promise<
         };
     } catch (error: any) {
         /* catch any errors that might occur */
-        console.log(error.message);
-        return;
+       console.error(error);
+       throw error;
     }
 }
 
@@ -306,18 +313,17 @@ export async function addRepliesToComments(_min: number, _max: number): Promise<
  * Helper function to add likes or dislikes to the article with specific user
  */
 async function addLikesOrDislike(user: User, article: Article, isLike: boolean) {
-
     const prisma = PrismaClientSingleton.prisma;
 
-    const action = isLike ? "liked" : "disliked";
+    const action = isLike ? 'liked' : 'disliked';
 
     return prisma.like.create({
         data: {
             userId: user.id,
             articleId: article.id,
             status: action,
-        }
-    })
+        },
+    });
 }
 
 /**
@@ -335,16 +341,16 @@ export async function addLikesToArticles(): Promise<void> {
 
     const prisma = PrismaClientSingleton.prisma;
 
-    const [articles, users] = await Promise.all([await prisma.article.findMany(), await prisma.user.findMany()])
+    const [articles, users] = await Promise.all([await prisma.article.findMany(), await prisma.user.findMany()]);
 
     // calculates the number for 60% of all articles
-    const percentage = Math.ceil(articles.length * 0.6);    
+    const percentage = Math.ceil(articles.length * 0.6);
 
     // Shuffles and then populates up to the percentage number of articles
     const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, percentage);
 
     // The middle index value of the selectedArticles
-    const midPoint = (percentage / 2)
+    const midPoint = percentage / 2;
 
     // Articles to be liked by users
     const likedArticles = selectedArticles.slice(0, midPoint);
@@ -359,6 +365,6 @@ export async function addLikesToArticles(): Promise<void> {
 
             // Dislikes the second half of articles
             await Promise.all(dislikeArticles.map((article) => addLikesOrDislike(user, article, false)));
-        })
-    )
+        }),
+    );
 }
