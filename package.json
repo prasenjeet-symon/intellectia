@@ -9,7 +9,7 @@
     "app-log": "nx view-logs",
     "app-lint": "nx run-many --target=lint --all --maxParallel=10",
     "app-graph": "nx graph",
-    "app-test": "nx exec -- pnpm run _test ",
+    "app-test": "nx run-many --target=test --all --maxParallel=10",
     "app-install": "pnpm recursive install",
     "app-studio": "nx run prisma-studio",
     "app-migrate": "nx run prisma-migrate",

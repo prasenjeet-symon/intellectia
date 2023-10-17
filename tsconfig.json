@@ -10,8 +10,10 @@
       "@intellectia/utils": ["lib/utils/src"],
       "@intellectia/utils/*": ["lib/utils/src/*"],
       "@intellectia/types": ["lib/types/src"],
-      "@intellectia/types/*": ["lib/types/src/*"]
+      "@intellectia/types/*": ["lib/types/src/*"],
+      "@intellectia/server": ["packages/server/src"],
+      "@intellectia/server/*": ["packages/server/src/*"],
     },
-    "types": ["node"]
+    "types": ["node", "jest"]
   }
 }

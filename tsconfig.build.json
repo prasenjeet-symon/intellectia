@@ -19,5 +19,5 @@
     "moduleResolution": "node",
     "resolveJsonModule": true
   },
-  "exclude": ["test", "**/*.test.ts", "**/*.test.tsx", "**/*.seed.ts"]
+  "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/*.seed.ts"]
 }
