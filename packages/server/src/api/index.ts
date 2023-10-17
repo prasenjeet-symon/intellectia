@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { articlesObjectValidator, emailObjectValidator, idObjectValidator, topicsObjectValidator } from '../validators';
+import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, topicsObjectValidator } from '../validators';
 
 const router: Router = Router();
 
@@ -515,13 +515,11 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
  */
 router.post('/user/article_series', async (req, res) => {
     // title is required
-    if (!('title' in req.body)) {
-        res.status(400).send({ error: 'Title is required' });
-        return;
-    }
 
-    if (!req.body.title) {
-        res.status(400).send({ error: 'Title is required' });
+    const response = articleSeriesValidator.safeParse(req.body);
+
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0]?.message  });
         return;
     }
 
@@ -548,19 +546,18 @@ router.post('/user/article_series', async (req, res) => {
  * Update article series
  */
 router.put('/user/article_series/:id', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+
+    const idResponse = idValidator.safeParse({id : req.params.id});
+
+    if (!idResponse.success) {
+        res.status(400).send({ error: idResponse.error.errors[0]?.message});
         return;
     }
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    let bodyResponse = articleSeriesValidator.safeParse(req.body);
 
-    if (!('title' in req.body)) {
-        res.status(400).send({ error: 'Title is required' });
+    if (!bodyResponse.success) {
+        res.status(400).send({ error: bodyResponse.error.errors[0]?.message});
         return;
     }
 
@@ -649,7 +646,9 @@ router.delete('/user/article_series/:id', async (req, res) => {
 /**
  * Get all the article series
  */
+
 router.get('/user/article_series', async (_req, res) => {
+
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {
