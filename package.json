@@ -17,7 +17,7 @@
     "app-install": "pnpm recursive install",
     "app-studio": "nx run prisma-studio",
     "app-migrate": "nx run prisma-migrate",
-    "app-generate": "nx run prsma-generate",
+    "app-generate": "nx run prisma-generate",
     "app-seed": "nx run prisma-seed",
     "app-dev": "nx run-many --target=dev --all --maxParallel=10",
     "app-build": "nx run-many --target=build --all --maxParallel=10",
