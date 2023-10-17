@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import path from 'path';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
+import { Article, User } from '@prisma/client';
 /**
  * Parse the Markdown file to JSON
  */
@@ -300,6 +301,25 @@ export async function addRepliesToComments(_min: number, _max: number): Promise<
     // that n number of reply per comment will belong the random user n that is randomly chosen from the users list
     // loop on the comments and perform the above task and save the result ( reply ) to database in parallel ( Promise.all() )
 }
+
+/**
+ * Helper function to add likes or dislikes to the article with specific user
+ */
+async function addLikesOrDislike(user: User, article: Article, isLike: boolean) {
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    const action = isLike ? "liked" : "disliked";
+
+    return prisma.like.create({
+        data: {
+            userId: user.id,
+            articleId: article.id,
+            status: action,
+        }
+    })
+}
+
 /**
  * Add likes/dislikes to the articles by users
  */
@@ -312,4 +332,33 @@ export async function addLikesToArticles(): Promise<void> {
     // 5. first half of articles will be like by a user
     // 6. remaining half of articles will be dislike by a user
     // Perform the above task in parallel ( Promise.all() ) for each and every user
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    const [articles, users] = await Promise.all([await prisma.article.findMany(), await prisma.user.findMany()])
+
+    // calculates the number for 60% of all articles
+    const percentage = Math.ceil(articles.length * 0.6);    
+
+    // Shuffles and then populates up to the percentage number of articles
+    const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, percentage);
+
+    // The middle index value of the selectedArticles
+    const midPoint = (percentage / 2)
+
+    // Articles to be liked by users
+    const likedArticles = selectedArticles.slice(0, midPoint);
+
+    // Articles to be disliked by users
+    const dislikeArticles = selectedArticles.slice(midPoint);
+
+    await Promise.all(
+        users.map(async (user) => {
+            // Like the first half of articles
+            await Promise.all(likedArticles.map((article) => addLikesOrDislike(user, article, true)));
+
+            // Dislikes the second half of articles
+            await Promise.all(dislikeArticles.map((article) => addLikesOrDislike(user, article, false)));
+        })
+    )
 }
