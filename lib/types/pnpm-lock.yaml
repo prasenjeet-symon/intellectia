@@ -4,10 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@intellectia/utils': workspace:^
-  '@intellectia/types': workspace:^
-
 devDependencies:
   '@types/node':
     specifier: ^20.8.2

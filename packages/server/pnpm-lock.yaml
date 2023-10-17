@@ -6,10 +6,10 @@ settings:
 
 dependencies:
   '@intellectia/types':
-    specifier: workspace:^
+    specifier: ^1.0.0
     version: link:../../lib/types
   '@intellectia/utils':
-    specifier: workspace:^
+    specifier: ^1.0.0
     version: link:../../lib/utils
   '@prisma/client':
     specifier: ^5.2.0
