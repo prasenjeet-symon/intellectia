@@ -1,48 +1,54 @@
 import { z } from 'zod';
 import { validatorPassword } from '../utils';
+// ID unit validator
+export const idValidatorUnit = z.string().refine((val) => !isNaN(+val), {message: 'id must be a number'}).or(z.number().int().positive({
+    message: 'id must be higher than 0',
+}));
 
-export const idValidator = z.object({
-    id: z
-        .coerce
-        .number({
-            required_error: 'id is required',
-            invalid_type_error: 'id must be a number',
-        })
-        .positive({
-            message: 'id must be higher than 0',
-        }),
+// Email unit validator
+export const emailValidatorUnit = z.string().email({
+    message: 'email must be a valid email',
 });
 
-export const emailValidator = z.object({
-    email: z.string().email(),
+// Password validator
+export const passwordValidatorUnit = z.string().refine(validatorPassword, {
+    message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&) and be at least 8 characters long.',
 });
 
-export const passwordValidator = z.object({
-    password: z.string().refine(validatorPassword, {
-        message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&) and be at least 8 characters long.',
-    }),
+// Token validator unit ( JWT )
+export const tokenValidatorUnit = z.string();
+
+/**
+ *
+ *
+ *
+ */
+export const idObjectValidator = z.object({
+    id: idValidatorUnit,
 });
 
-export const tokenValidator = z.object({
-    token: z.string().min(1),
+export const emailObjectValidator = z.object({
+    email: emailValidatorUnit,
 });
 
-export const emailPasswordValidator = emailValidator.merge(passwordValidator);
-
-export const tokenEmailValidator = emailValidator.merge(tokenValidator);
-
-export const userTopicsValidator = z.object({
-    topics: z.array(z.number()),
+export const passwordObjectValidator = z.object({
+    password: passwordValidatorUnit,
 });
 
-export const idArrayValidator = z.array(
-    z
-        .number({
-            required_error: 'ids are required',
-            invalid_type_error: 'ids must be number',
-        })
-        .refine((value) => value !== 0, {
-            message: 'ids must not be equal to 0',
-        }),
-);
+export const tokenObjectValidator = z.object({
+    token: tokenValidatorUnit,
+});
 
+export const emailPasswordObjectValidator = emailObjectValidator.merge(passwordObjectValidator);
+
+export const tokenEmailObjectValidator = emailObjectValidator.merge(tokenObjectValidator);
+
+export const idArrayValidator = z.array(idValidatorUnit);
+
+export const topicsObjectValidator = z.object({
+    topics: idArrayValidator,
+});
+
+export const articlesObjectValidator = z.object({
+    articles: idArrayValidator,
+});

@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { ZodError } from 'zod';
+import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idArrayValidator, idValidator, userTopicsValidator } from '../validators';
+import { articlesObjectValidator, emailObjectValidator, idObjectValidator, topicsObjectValidator } from '../validators';
 
-const router:Router = Router();
+const router: Router = Router();
 
 router.get('/', (_req, res) => {
     res.send({ message: 'Hello World' });
@@ -11,7 +11,8 @@ router.get('/', (_req, res) => {
 });
 
 /**
- * Get all topics
+ * Fetch all the topics of intellectia
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.get('/topics', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
@@ -22,6 +23,7 @@ router.get('/topics', async (_req, res) => {
 
 /**
  * Fetch all the assigned topics of the user
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.get('/user/topics', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
@@ -45,11 +47,13 @@ router.get('/user/topics', async (_req, res) => {
 });
 /**
  * Get the single topic by id
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.get('/topic/:id', async (req, res) => {
     try {
-        const parsedParam = await idValidator.parseAsync({ id: +req.params.id });
-        const id = parsedParam.id;
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
+        const id = +parsedParam.id;
+
         const prisma = PrismaClientSingleton.prisma;
         const topic = await prisma.topic.findUnique({
             where: {
@@ -61,24 +65,30 @@ router.get('/topic/:id', async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 /**
  *
  * Assign multiple topics to the user
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.put('/user/topics', async (req, res) => {
     try {
-        const parsedBody = await userTopicsValidator.parseAsync(req.body.topics);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        // topics is the array of numbers
+        const parsedBody = await topicsObjectValidator.parseAsync(req.body);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
 
-        const topics = parsedBody.topics;
+        const topics = parsedBody.topics.map((topicId) => +topicId);
+
         const prisma = PrismaClientSingleton.prisma;
+
         await prisma.user.update({
             where: {
                 email: parsedLocals.email,
@@ -108,23 +118,27 @@ router.put('/user/topics', async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 
 /**
  *
  * Assign single topic to the user
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.put('/user/topic', async (req, res) => {
     try {
-        const parsedBody = await idValidator.parseAsync(req.body);
-        const parsedLocals = await emailValidator.parseAsync(res.locals);
-        const topicId = parsedBody.id;
+        const parsedBody = await idObjectValidator.parseAsync(req.body);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
+        const topicId = +parsedBody.id;
+
         const prisma = PrismaClientSingleton.prisma;
         // disconnect the topic from the user
         await prisma.user.update({
@@ -143,7 +157,7 @@ router.put('/user/topic', async (req, res) => {
         // connect the topic
         await prisma.user.update({
             where: {
-                email: res.locals.email,
+                email: parsedLocals.email,
             },
             data: {
                 topics: {
@@ -158,24 +172,27 @@ router.put('/user/topic', async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
         return;
     }
 });
 
 /**
  *
- * Delete the topic by id from the user
- *
+ * Delete single topic from the user
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.delete('/user/topic/:id', async (req, res) => {
     try {
-        const parsedParams = await idValidator.parseAsync(req.params.id);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
-        const topicId = parsedParams.id;
+        const parsedParams = await idObjectValidator.parseAsync(req.params);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
+
+        const topicId = +parsedParams.id;
         const prisma = PrismaClientSingleton.prisma;
         // disconnect the topic from the user
         await prisma.user.update({
@@ -195,23 +212,26 @@ router.delete('/user/topic/:id', async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 /**
  *
  * Delete multiple topics from the user
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.delete('/user/topics', async (req, res) => {
     try {
-        const parsedBody = await userTopicsValidator.parseAsync(req.body.topics);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        const parsedBody = await topicsObjectValidator.parseAsync(req.body);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
 
-        const topics = parsedBody.topics;
+        const topics = parsedBody.topics.map((topicId) => +topicId);
 
         const prisma = PrismaClientSingleton.prisma;
         // disconnect all the topics
@@ -232,24 +252,27 @@ router.delete('/user/topics', async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
         return;
     }
 });
 /**
  * Add an article to the article series
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.put('/user/article_series/:id/article', async (req, res) => {
     try {
-        const parsedBody = await idValidator.parseAsync(req.body);
-        const parsedParams = await idValidator.parseAsync(req.params);
-        const parsedLocals = await emailValidator.parseAsync(res.locals);
+        const parsedBody = await idObjectValidator.parseAsync(req.body);
+        const parsedParams = await idObjectValidator.parseAsync(req.params);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
 
-        const id = parsedParams.id; // article series id
-        const articleId = parsedBody.id; // article id
+        const id = +parsedParams.id; // article series id
+        const articleId = +parsedBody.id; // article id
 
         const prisma = PrismaClientSingleton.prisma;
         // remove old article from the article series
@@ -278,7 +301,7 @@ router.put('/user/article_series/:id/article', async (req, res) => {
         // add new article to the article series
         await prisma.user.update({
             where: {
-                email: res.locals.email,
+                email: parsedLocals.email,
             },
             data: {
                 articleSeries: {
@@ -302,59 +325,63 @@ router.put('/user/article_series/:id/article', async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0]?.message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
         return;
     }
 });
 /**
  * Delete an article from the article series
- */
+ * POSTMAN_DONE : This route is successfully added to postman and documented
+ */ 
 router.delete('/user/article_series/:id/article', async (req, res) => {
     try {
-        await idValidator.parseAsync(req.body);
-        await idValidator.parseAsync(req.params);
-    } catch (error) {
-        if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0]?.message });
-        }
-        return;
-    }
+        const parsedBody = await idObjectValidator.parseAsync(req.body);
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
 
-    const parsedBody = idValidator.parse(req.body);
-    const parsedParams = idValidator.parse(req.params);
+        const id = +parsedParam.id; // article series id
+        const articleId = +parsedBody.id; // article id
 
-    const id = parsedParams.id; // article series id
-    const articleId = parsedBody.id; // article id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect the article from the article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: {
-                                id: articleId,
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect the article from the article series
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: {
+                                    id: articleId,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Article deleted from series');
-    return;
+        res.send('Article deleted from series');
+        return;
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
+        }
+
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+    }
 });
 /**
  * Add multiple articles to the article series
@@ -445,13 +472,13 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
  */
 router.delete('/user/article_series/:id/articles', async (req, res) => {
     try {
-        const parsedParam = await idValidator.parseAsync({id: +req.params.id})
- 
-        const articleIds = await idArrayValidator.parseAsync(req.body.articles);
-        const id = parsedParam.id; // article series id
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
+        const parsedBody = await articlesObjectValidator.parseAsync(req.body);
+        const articleIds = parsedBody.articles.map((articleId) => +articleId);
+        const id = +parsedParam.id; // article series id
 
         const prisma = PrismaClientSingleton.prisma;
-    
+
         await prisma.user.update({
             where: {
                 email: res.locals.email,
@@ -473,7 +500,7 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
                 },
             },
         });
-    
+
         res.send('Articles deleted from series');
         return;
     } catch (error) {
@@ -481,7 +508,7 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
             return res.status(400).send({ error: error.issues[0]?.message });
         }
         return res.status(400).json({ error });
-    } 
+    }
 });
 /**
  * Add article series
@@ -571,50 +598,52 @@ router.put('/user/article_series/:id', async (req, res) => {
  * Delete article series
  */
 router.delete('/user/article_series/:id', async (req, res) => {
+    try {
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
+        const id = +parsedParam.id; // article series id
 
-    const response = idValidator.safeParse({id : req.params.id});
-
-    if (!response.success) {
-        res.status(400).send({ error: response.error.errors[0]?.message });
-        return;
-    }   
-
-    const id = +req.params.id; // article series id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect all articles from article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: { id: id },
-                    data: {
-                        articles: {
-                            set: [],
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect all articles from article series
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: { id: id },
+                        data: {
+                            articles: {
+                                set: [],
+                            },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                delete: {
-                    id: id,
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    delete: {
+                        id: id,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Article series deleted');
+        res.send('Article series deleted');
+        return;
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0]?.message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 
 /**
@@ -796,13 +825,13 @@ router.put('/user/article/:id/publish', async (req, res) => {
     }
 
     // topic ids is required, articleSeriesId is required
-    if (!('topicIds' in req.body)) {
+    if (!('topics' in req.body)) {
         res.status(400).send({ error: 'Topic ids are required' });
         return;
     }
 
     const articleId = +req.params.id; // article id
-    const topicIds = req.body.topicIds as number[];
+    const topicIds = req.body.topics as number[];
     const articleSeriesId = 'articleSeriesId' in req.body ? req.body.articleSeriesId : 0;
 
     // check if all the topics are valid
@@ -2389,14 +2418,14 @@ router.put('/user/article-reads/:id/time', async (req, res) => {
 
     // check the article read time
     const articleRead = article.articleReads[0]?.article;
-    if(!articleRead){
+    if (!articleRead) {
         res.status(400).send({ error: 'Article not found' });
         return;
     }
 
-    const articleReadTime =  +articleRead.readTimeMinutes;
+    const articleReadTime = +articleRead.readTimeMinutes;
     const currentReadTime = +readTimeMinutes;
-    const totalReadTime = +(article.articleReads[0] ? article.articleReads[0] : { readTimeInMinutes: 0}).readTimeInMinutes + currentReadTime;
+    const totalReadTime = +(article.articleReads[0] ? article.articleReads[0] : { readTimeInMinutes: 0 }).readTimeInMinutes + currentReadTime;
     let finalReadTime = 0;
     // check if the read time exceeds total reading time of the article
     if (totalReadTime >= articleReadTime) {

@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-import { emailPasswordValidator, emailValidator, tokenEmailValidator, tokenValidator } from '../validators';
+import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
 
 const router: Router = Router();
 
@@ -18,10 +18,11 @@ router.get('/', (_req, res) => {
 
 /**
  * Authenticate user with email and password
+ * POSTMAN_DONE : This route is successfully added to postman and documented    
  */
 router.post('/login', async (req, res) => {
     try {
-        const parsedBody = await emailPasswordValidator.parseAsync(req.body);
+        const parsedBody = await emailPasswordObjectValidator.parseAsync(req.body);
         const email = parsedBody.email;
         const password = parsedBody.password;
 
@@ -101,10 +102,11 @@ router.post('/login', async (req, res) => {
 
 /**
  * Signup user with email and password
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post('/signup', async (req, res) => {
     try {
-        const parsedBody = emailPasswordValidator.parse(req.body);
+        const parsedBody = emailPasswordObjectValidator.parse(req.body);
         const email = parsedBody.email;
         const password = parsedBody.password;
         // check if the user already exit in the database
@@ -148,10 +150,11 @@ router.post('/signup', async (req, res) => {
 
 /**
  * Magic URL creation
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post('/magic', async (req, res) => {
     try {
-        const parsedBody = await emailValidator.parseAsync(req.body);
+        const parsedBody = await emailObjectValidator.parseAsync(req.body);
         const email = parsedBody.email;
 
         const magicLinkToken = v4();
@@ -214,6 +217,7 @@ router.post('/magic', async (req, res) => {
 
 /**
  * Magic URL login
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post(
     '/magic_login',
@@ -225,7 +229,7 @@ router.post(
     async (req, res) => {
         try {
             // Validate res.locals using the Zod schema
-            const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
+            const parsedLocals = await tokenEmailObjectValidator.parseAsync(req.body);
             const email = parsedLocals.email;
             const token = parsedLocals.token;
 
@@ -310,13 +314,13 @@ router.post(
 /**
  *
  * Signup with google
- *
+ * POSTMAN_TODO : This route is waiting to be added to postman and documented
  */
 router.post('/google', async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenValidator.parseAsync(req.body);
+        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
         const token = parsedBody.token;
 
         const tokenPayload = await verifyGoogleAuthToken(token);
@@ -372,13 +376,14 @@ router.post('/google', async (req, res) => {
 
 /**
  * Sign-in with google
+ * POSTMAN_TODO : This route is waiting to be added to postman and documented
  *
  */
 router.post('/google_login', async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenValidator.parseAsync(req.body);
+        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
         const token = parsedBody.token;
         const tokenPayload = await verifyGoogleAuthToken(token);
 
@@ -452,11 +457,12 @@ router.post('/google_login', async (req, res) => {
 
 /**
  * Logout the user
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post('/logout', authenticateUser, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
-        const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
+        const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
         const email = parsedLocals.email;
         const token = parsedLocals.token;
 
@@ -511,12 +517,12 @@ router.post('/logout', authenticateUser, async (_req, res) => {
 /**
  *
  * Logout all the sessions
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post('/logout_all', authenticateUser, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
-        const parsedLocals = await tokenEmailValidator.parseAsync(res.locals);
+        const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
         const email = parsedLocals.email;
         const token = parsedLocals.token;
 
