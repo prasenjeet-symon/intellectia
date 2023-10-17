@@ -15,12 +15,13 @@
     "app-graph": "nx graph",
     "app-test": "nx exec -- pnpm run _test ",
     "app-install": "pnpm recursive install",
-    "app-studio": "nx run-many --target=studio --all --maxParallel=10",
-    "app-migrate": "nx run-many --target=migrate --all --maxParallel=10",
-    "app-generate": "nx run-many --target=generate --all --maxParallel=10",
+    "app-studio": "nx run prisma-studio",
+    "app-migrate": "nx run prisma-migrate",
+    "app-generate": "nx run prisma-generate",
+    "app-seed": "nx run prisma-seed",
     "app-dev": "nx run-many --target=dev --all --maxParallel=10",
     "app-build": "nx run-many --target=build --all --maxParallel=10",
-    "app-setup": "pnpm run app-install && pnpm run app-generate && pnpm run app-migrate && pnpm run app-dev"
+    "app-setup": "pnpm run app-install && pnpm run app-migrate --name=dev && pnpm run app-dev"
   },
   "keywords": [
     "AI",
