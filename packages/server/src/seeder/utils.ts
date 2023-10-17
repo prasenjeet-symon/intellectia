@@ -3,7 +3,7 @@ import { UniqueEnforcer } from 'enforce-unique';
 import * as fs from 'fs';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
-import  {load} from 'js-yaml';
+import path from "path"
 /**
  * Parse the Markdown file to JSON
  */
@@ -13,49 +13,57 @@ export async function markdownToJSON(): Promise<{
     coverImage: string;
     markdownContent: string;
     htmlContent: string;
-  }> {
+  } | undefined> {
     try {
-      // Extracting HTML content using the markdownToHTML function
-      let htmlContent = await markdownToHTML('../assets/catOnTheMoon.md');
-      if (!htmlContent) {
-        // If markdownToHTML returns undefined, handle the error or return an appropriate value.
-        throw new Error("Failed to generate HTML content.");
-      }
-  
-      // Read the markdown file synchronously using 'fs' module
-      const data = fs.readFileSync('../assets/catOnTheMoon.md', 'utf8');
-  
-      // Parse YAML front matter from the markdown file
-      const frontMatter = data.match(/---(.*?)---/s);
-      if (!frontMatter) {
-        throw new Error("YAML front matter not found in the markdown file.");
-      }
-  
-      const yamlData = frontMatter[1]?.trim();
-  
-      // Parse YAML data into an object
-      const yamlObject: any = load(yamlData ? yamlData : '{}');
-  
-      // Extract data from the YAML object
-      let title = yamlObject.title || "";
-      let subTitle = yamlObject.subTitle || "";
-      let image = yamlObject.coverImage || "";
-      let markdownContent = data.replace(frontMatter[0], ''); // Remove YAML front matter
-  
-      // Return data in JSON format
-      return {
-        title,
-        subTitle,
-        coverImage: `/server/media/${image}`,
-        markdownContent,
-        htmlContent: htmlContent.HTML,
-      };
-    } catch (error:any) {
-      // Catch any errors that might occur and log them
-      console.error(error.message);
-      throw error; // Rethrow the error for proper error handling at a higher level.
+        /* extracting HTML content using specified function markdownToHTML */
+        const catFile = path.join(__dirname, "..", "/assets/catOnTheMoon.md")
+        let htmlContent = await markdownToHTML(catFile);
+        if (!htmlContent) {
+            return;
+        }
+
+        /* read selected file synchronously */
+        const data = fs.readFileSync(catFile, 'utf8');   
+        
+        // Regex that to get YAML data from markdown
+        const charsBetweenHyphens = /^---([\s\S]*?)---/;
+
+        // If file has metadata it will be extracted
+        const metadataMatched = data.match(charsBetweenHyphens);
+
+        // Extracted metadata
+        const metadata = metadataMatched![1];
+
+        if(!metadata) {
+            return;
+        }
+
+        // split metadata into lines by '\n' getting strings containing the metadata
+        const metadataLines = metadata.split("\n");
+        
+        
+        /* metadata is now an array consisting of strings containing yaml front matter */
+        /* Title, subtitle and coverImage can be extracted from metadata array by calling their respective indexes in metadata array and splitting corresponding strings at ':' */
+        /* trim() to removed whitespace at start and end of strings */
+        let title = metadataLines[1]!.split(":")[1]!.trim();
+        let subTitle = metadataLines[2]!.split(":")[1]!.trim();
+        let image = metadataLines[3]!.split(":")[1]!.trim();
+        let markdownContent = data.split('---')[2]!;
+
+        //return data in JSON format
+        return {
+            title,
+            subTitle,
+            coverImage: `/server/media/${image}`,
+            markdownContent,
+            htmlContent: htmlContent.HTML,
+        };
+    } catch (error: any) {
+        /* catch any errors that might occur */
+        console.log(error.message);
+        return
     }
-  }
+}
 
 /**
  * Parse the Markdown to HTML
@@ -110,6 +118,11 @@ export async function generateFakeArticle(): Promise<
         readTimeMinutes: readTimeMinutes,
     };
 
+    console.log("IN ARTICLE");
+
+    console.log(article.title)
+
+
     return article;
 }
 
@@ -140,11 +153,56 @@ export async function generateFakeUser(): Promise<{
 /**
  * Create articles to the database
  */
-export async function createArticlesPerUser(_email: string, _numberOfArticles: number): Promise<void> {
+export async function createArticlesPerUser(email: string, numberOfArticles: number): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // Create articles to the database
     // use the function generateFakeArticle to generate fake article
     // initially article should be created in draft form ( isPublished status set to false )
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email: email,
+        }
+    })
+
+    if (!user) {
+        return;
+    }
+
+
+    for (let i = 0; i < numberOfArticles; i++) {
+        const fakeArticle = await generateFakeArticle();
+
+        Promise.resolve(fakeArticle).then((article) => {
+            console.log("TITTLE")
+            console.log(article!.title)
+        })
+
+        const title = fakeArticle!.title;
+        const subTitle = fakeArticle!.subtitle;
+        const htmlContent = fakeArticle!.htmlContent;
+        const markdownContent = fakeArticle!.markdownContent;
+
+        await prisma.user.update({
+            where: {
+                email: email
+            },
+            data: {
+                articles: {
+                    create: {
+                        title: title,
+                        subtitle: subTitle,
+                        htmlContent: htmlContent,
+                        markdownContent: markdownContent,
+                        readTimeMinutes: 0,
+                    },
+                },
+            },
+        });        
+    }
+
 }
 /**
  * Create multiple articles to the database for every user
