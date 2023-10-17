@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
 import path from "path"
+import { Article, User } from '@prisma/client';
 /**
  * Parse the Markdown file to JSON
  */
@@ -301,10 +302,29 @@ export async function addRepliesToComments(_min: number, _max: number): Promise<
     // that n number of reply per comment will belong the random user n that is randomly chosen from the users list
     // loop on the comments and perform the above task and save the result ( reply ) to database in parallel ( Promise.all() )
 }
+
+/**
+ * Helper function to add likes or dislikes to the article with specific user
+ */
+async function addLikesOrDislike(user: User, article: Article, isLike: boolean) {
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    const action = isLike ? "liked" : "disliked";
+
+    return prisma.like.create({
+        data: {
+            userId: user.id,
+            articleId: article.id,
+            status: action,
+        }
+    })
+}
+
 /**
  * Add likes/dislikes to the articles by users
  */
-export async function addLikesToArticles(_min: number, _max: number): Promise<void> {
+export async function addLikesToArticles(): Promise<void> {
     // How to add likes and dislike to the article: See below
     // 1. fetch all the articles from the database
     // 2. fetch all the users from the database
@@ -316,23 +336,16 @@ export async function addLikesToArticles(_min: number, _max: number): Promise<vo
 
     const prisma = PrismaClientSingleton.prisma;
 
-    // Get all the articles in the database
-    const articles = await prisma.article.findMany();
-
-    // Get all users from the database
-    const users = await prisma.user.findMany();
+    const [articles, users] = await Promise.all([await prisma.article.findMany(), await prisma.user.findMany()])
 
     // calculates the number for 60% of all articles
-    const percentage = Math.ceil(articles.length * 0.6)
-
-    // Makes sure number is even to divide evenly
-    const evenSelectedNumber = (percentage % 2) === 0 ? percentage : percentage + 1;
+    const percentage = Math.ceil(articles.length * 0.6);    
 
     // Shuffles and then populates up to the percentage number of articles
-    const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, evenSelectedNumber);
+    const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, percentage);
 
     // The middle index value of the selectedArticles
-    const midPoint = (evenSelectedNumber / 2)
+    const midPoint = (percentage / 2)
 
     // Articles to be liked by users
     const likedArticles = selectedArticles.slice(0, midPoint);
@@ -340,20 +353,13 @@ export async function addLikesToArticles(_min: number, _max: number): Promise<vo
     // Articles to be disliked by users
     const dislikeArticles = selectedArticles.slice(midPoint);
 
+    await Promise.all(
+        users.map(async (user) => {
+            // Like the first half of articles
+            await Promise.all(likedArticles.map((article) => addLikesOrDislike(user, article, true)));
 
-    
-
-    // for (let i = 0; i < users.length; i++) {
-    //     for (let i = 0; i < likedArticles.length; i++) {
-
-    //     }
-    // }
-
-    likedArticles.map((article) => {
-        console.log("LIKED: " + article.id)
-    })
-
-    dislikeArticles.map((article) => {
-        console.log("DISLIKED: " + article.id)
-    })
+            // Dislikes the second half of articles
+            await Promise.all(dislikeArticles.map((article) => addLikesOrDislike(user, article, false)));
+        })
+    )
 }
