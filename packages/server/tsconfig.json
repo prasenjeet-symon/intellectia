@@ -1,8 +1,10 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "include": ["src"],
+    "extends": "../../tsconfig.json",
+    "include": ["./src"],
     "compilerOptions": {
-       "declaration": false,
-       "declarationMap": false
-    }
+        "target": "ES6",
+        "module": "CommonJS",
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true,
+    },
 }

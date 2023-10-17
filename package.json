@@ -2,10 +2,6 @@
   "name": "intellectia",
   "version": "1.0.0",
   "description": "Empowering the world through AI",
-  "engines": {
-    "node": "^18.0.0",
-    "pnpm": ">=8.0.0"
-  },
   "scripts": {
     "app-docker": "docker-compose up -d",
     "app-setup-docker": "pnpm run app-docker && node -e \"setTimeout(() => { console.log('Delay finished'); }, 20000)\" && pnpm run app-setup",

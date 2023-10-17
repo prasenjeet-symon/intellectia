@@ -2,7 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import * as topicsJson from './assets/topics.json';
+import fs from 'fs';
+
 
 // Interfaces
 interface IGoogleAuthTokenResponse {
@@ -171,7 +172,11 @@ export async function createIntellectiaTopics() {
     });
 
     const previousTopicsTitles: Array<string> = previousTopics.map((topic) => topic.title);
-    const allTopics: string[] = topicsJson.topics;
+    // load the json located beside src folder 
+    const jsonData = fs.readFileSync(__dirname + '/../assets/topics.json', 'utf-8');
+    const data = JSON.parse(jsonData);
+    const allTopics: string[] = (data as { topics: string[] }).topics;
+    console.log(allTopics);
     const topicsToBeCreated: string[] = [];
 
     //find the new topics to be created
@@ -179,7 +184,7 @@ export async function createIntellectiaTopics() {
         if (!previousTopicsTitles.map((p) => p.toLowerCase()).includes(topic.toLowerCase())) {
             topicsToBeCreated.push(topic);
         }
-    });
+    }); 
 
     for (const topic of topicsToBeCreated) {
         const result = await prisma.topic.create({
@@ -193,7 +198,7 @@ export async function createIntellectiaTopics() {
 
         console.log(`[INFO] ${result.title} NEW Topic Created`);
     }
-}
+} 
 /**
  * Password validator
  */

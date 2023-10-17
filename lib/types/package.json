@@ -10,6 +10,14 @@
     "src",
     "dist"
   ],
+  "eslintConfig": {
+    "rules": {
+      "no-restricted-imports": [
+        "error",
+        "@intellectia/types"
+      ]
+    }
+  },
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",

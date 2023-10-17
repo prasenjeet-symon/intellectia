@@ -17,6 +17,14 @@
     "lint:fix": "pnpx eslint . --fix"
   },
   "keywords": [],
+  "eslintConfig": {
+    "rules": {
+      "no-restricted-imports": [
+        "error",
+        "@intellectia/utils"
+      ]
+    }
+  },
   "author": "prasenjeet-symon",
   "exports": {
     "./package.json": "./package.json",
@@ -35,7 +43,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@intellectia/types": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.2",
