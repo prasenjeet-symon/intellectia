@@ -1,8 +1,6 @@
 // .eslintrc.js
-
 module.exports = {
     root: false,
-    "extends": "../../.eslintrc.js",
+    extends: '../../.eslintrc.js',
     rules: {},
-  };
-  
+};

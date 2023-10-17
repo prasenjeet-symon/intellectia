@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
             return;
         }
 
-        res.status(400).json({ error });
+        res.status(500).json({ error });
         return;
     }
 });
@@ -137,6 +137,31 @@ router.post('/signup', async (req, res) => {
 
         // generate the JWT token
         const token = generateToken(email, newUser.userId, false);
+
+        // update the number of sessions
+        await prisma.user.update({
+            where: {
+                email: email,
+            },
+            data: {
+                sessions: {
+                    createMany: {
+                        data: [
+                            {
+                                expiresAt: jwtExpireDate(),
+                                ipAddress: req.ip,
+                                token: token,
+                                userAgent: req.headers['user-agent'] || '',
+                            },
+                        ],
+                    },
+                },
+                numberOfSessions: {
+                    increment: 1,
+                },
+            },
+        });
+
         res.send({ token, isAdmin: false, userId: newUser.userId, email: newUser.email });
         return;
     } catch (error) {
@@ -478,13 +503,14 @@ router.post('/logout', authenticateUser, async (_req, res) => {
         });
 
         if (!oldUser) {
-            res.status(401).send({ error: 'Invalid token or email' });
+            res.status(401).send({ error: 'No such user exit' });
             return;
         }
 
-        const isSessionExists = oldUser.sessions.find((session) => session.token === token);
+    
+        const isSessionExists = !!oldUser.sessions.find((session) => session.token === token);
         if (!isSessionExists) {
-            res.status(401).send({ error: 'Invalid token or email' });
+            res.status(401).send({ error: 'No such token' });
             return;
         }
 
@@ -510,7 +536,7 @@ router.post('/logout', authenticateUser, async (_req, res) => {
             return;
         }
 
-        return res.status(400).json({ error });
+        return res.status(500).json({ error });
     }
 });
 

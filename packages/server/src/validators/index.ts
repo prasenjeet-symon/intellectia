@@ -30,7 +30,6 @@ export const articleSeriesValidator = z.object({
         .optional(),
 });
 
-
 // Email unit validator
 export const emailValidatorUnit = z.string().email({
     message: 'email must be a valid email',

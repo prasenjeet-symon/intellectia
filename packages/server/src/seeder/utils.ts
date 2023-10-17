@@ -1,30 +1,33 @@
 import { faker } from '@faker-js/faker';
 import { UniqueEnforcer } from 'enforce-unique';
 import * as fs from 'fs';
+import path from 'path';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
-import path from "path"
 /**
  * Parse the Markdown file to JSON
  */
-export async function markdownToJSON(): Promise<{
-    title: string;
-    subTitle: string;
-    coverImage: string;
-    markdownContent: string;
-    htmlContent: string;
-  } | undefined> {
+export async function markdownToJSON(): Promise<
+    | {
+          title: string;
+          subTitle: string;
+          coverImage: string;
+          markdownContent: string;
+          htmlContent: string;
+      }
+    | undefined
+> {
     try {
         /* extracting HTML content using specified function markdownToHTML */
-        const catFile = path.join(__dirname, "..", "/assets/catOnTheMoon.md")
+        const catFile = path.join(__dirname, '..', '/assets/catOnTheMoon.md');
         let htmlContent = await markdownToHTML(catFile);
         if (!htmlContent) {
             return;
         }
 
         /* read selected file synchronously */
-        const data = fs.readFileSync(catFile, 'utf8');   
-        
+        const data = fs.readFileSync(catFile, 'utf8');
+
         // Regex that to get YAML data from markdown
         const charsBetweenHyphens = /^---([\s\S]*?)---/;
 
@@ -34,20 +37,19 @@ export async function markdownToJSON(): Promise<{
         // Extracted metadata
         const metadata = metadataMatched![1];
 
-        if(!metadata) {
+        if (!metadata) {
             return;
         }
 
         // split metadata into lines by '\n' getting strings containing the metadata
-        const metadataLines = metadata.split("\n");
-        
-        
+        const metadataLines = metadata.split('\n');
+
         /* metadata is now an array consisting of strings containing yaml front matter */
         /* Title, subtitle and coverImage can be extracted from metadata array by calling their respective indexes in metadata array and splitting corresponding strings at ':' */
         /* trim() to removed whitespace at start and end of strings */
-        let title = metadataLines[1]!.split(":")[1]!.trim();
-        let subTitle = metadataLines[2]!.split(":")[1]!.trim();
-        let image = metadataLines[3]!.split(":")[1]!.trim();
+        let title = metadataLines[1]!.split(':')[1]!.trim();
+        let subTitle = metadataLines[2]!.split(':')[1]!.trim();
+        let image = metadataLines[3]!.split(':')[1]!.trim();
         let markdownContent = data.split('---')[2]!;
 
         //return data in JSON format
@@ -61,7 +63,7 @@ export async function markdownToJSON(): Promise<{
     } catch (error: any) {
         /* catch any errors that might occur */
         console.log(error.message);
-        return
+        return;
     }
 }
 
@@ -118,10 +120,9 @@ export async function generateFakeArticle(): Promise<
         readTimeMinutes: readTimeMinutes,
     };
 
-    console.log("IN ARTICLE");
+    console.log('IN ARTICLE');
 
-    console.log(article.title)
-
+    console.log(article.title);
 
     return article;
 }
@@ -164,21 +165,20 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
     const user = await prisma.user.findUnique({
         where: {
             email: email,
-        }
-    })
+        },
+    });
 
     if (!user) {
         return;
     }
 
-
     for (let i = 0; i < numberOfArticles; i++) {
         const fakeArticle = await generateFakeArticle();
 
         Promise.resolve(fakeArticle).then((article) => {
-            console.log("TITTLE")
-            console.log(article!.title)
-        })
+            console.log('TITTLE');
+            console.log(article!.title);
+        });
 
         const title = fakeArticle!.title;
         const subTitle = fakeArticle!.subtitle;
@@ -187,7 +187,7 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
 
         await prisma.user.update({
             where: {
-                email: email
+                email: email,
             },
             data: {
                 articles: {
@@ -200,9 +200,8 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
                     },
                 },
             },
-        });        
+        });
     }
-
 }
 /**
  * Create multiple articles to the database for every user
@@ -304,7 +303,7 @@ export async function addRepliesToComments(_min: number, _max: number): Promise<
 /**
  * Add likes/dislikes to the articles by users
  */
-export async function addLikesToArticles(_min: number, _max: number): Promise<void> {
+export async function addLikesToArticles(): Promise<void> {
     // How to add likes and dislike to the article: See below
     // 1. fetch all the articles from the database
     // 2. fetch all the users from the database

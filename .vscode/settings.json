@@ -1,14 +1,16 @@
 {
-    "editor.fontFamily": "\"OperatorMonoLig Nerd Font\",'Inconsolata', monospace",
-    "editor.fontSize": 16,
-    "editor.fontWeight": "600",
-    "cSpell.words": [
-      "cacheable",
-      "intellectia",
-      "Kumar",
-      "pnpx",
-      "Prasenjeet",
-      "Symon",
-      "VITE"
-    ]
-  }
+  "editor.fontFamily": "\"OperatorMonoLig Nerd Font\",'Inconsolata', monospace",
+  "editor.fontSize": 16,
+  "editor.fontWeight": "600",
+  "cSpell.words": [
+    "cacheable",
+    "intellectia",
+    "Kumar",
+    "pnpx",
+    "Prasenjeet",
+    "rollup",
+    "Symon",
+    "VITE"
+  ],
+  "todohighlight.keywords": ["POSTMAN_DONE", "POSTMAN_TODO", "TODO", "DONE"]
+}

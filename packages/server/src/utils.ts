@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
-import * as topicsJson from './assets/topics.json';
 import jwt from 'jsonwebtoken';
+import * as topicsJson from './assets/topics.json';
 
 // Interfaces
 interface IGoogleAuthTokenResponse {
@@ -57,12 +57,12 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
 
     // Get the authentication token from the request headers, query parameters, or cookies
     // Example: Bearer <token>
-    const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : req.query.token as string; 
+    const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : (req.query.token as string);
 
     // Verify and decode the token
     try {
         // Verify the token using your secret key or public key
-        const decodedToken:jwt.JwtPayload = jwt.verify(token ? token:'', JWT_SECRET) as jwt.JwtPayload;
+        const decodedToken: jwt.JwtPayload = jwt.verify(token ? token : '', JWT_SECRET) as jwt.JwtPayload;
 
         // Set the userId and email in the request object
         res.locals.userId = decodedToken.userId;
@@ -72,6 +72,7 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
         // Move to the next middleware
         next();
     } catch (error) {
+        console.error(error);
         // Token verification failed
         res.status(401).json({ error: 'Invalid token' });
         return;

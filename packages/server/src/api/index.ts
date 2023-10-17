@@ -3,6 +3,7 @@ import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
 import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, idValidatorUnit, topicsObjectValidator } from '../validators';
 
+
 const router: Router = Router();
 
 router.get('/', (_req, res) => {

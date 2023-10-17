@@ -1,0 +1,5 @@
+dist/
+node_modules/
+prisma
+public
+rollup.config.js
