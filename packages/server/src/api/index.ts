@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, topicsObjectValidator } from '../validators';
+import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, idValidatorUnit, topicsObjectValidator } from '../validators';
 
 const router: Router = Router();
 
@@ -547,7 +547,7 @@ router.post('/user/article_series', async (req, res) => {
  */
 router.put('/user/article_series/:id', async (req, res) => {
 
-    const idResponse = idValidator.safeParse({id : req.params.id});
+    const idResponse = idValidatorUnit.safeParse({id : req.params.id});
 
     if (!idResponse.success) {
         res.status(400).send({ error: idResponse.error.errors[0]?.message});
