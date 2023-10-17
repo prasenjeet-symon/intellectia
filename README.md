@@ -7,6 +7,8 @@ At Intellectia, we're on a mission to eliminate misinformation and AI-generated 
 
 > "Welcome, valued contributors! 🌟 Whether you're a seasoned expert or new to the field, there's a place for everyone to make a meaningful impact here. Your unique perspective and skills are highly appreciated, and together, we can achieve great things. Let's collaborate, learn, and build something extraordinary. 🚀👏"
 
+>This repository is all about diving into the core of web and mobile development. We intentionally steer clear of Vercel, Next.js, or any full-stack or edge framework. No Firebase, no Appwrite, no cloud functions – just pure, old-school web development. For students, this is an incredible opportunity to learn far more than you might expect. While modern full-stack frameworks might make you feel like you've got it all covered, the reality is quite different.
+
 🔗 **Useful Links:**
 
 - 💬 [Discord](https://discord.gg/eQjh6AdEmg)
