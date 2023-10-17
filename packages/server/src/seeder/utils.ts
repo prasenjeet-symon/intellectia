@@ -320,7 +320,7 @@ export async function addLikesToArticles(_min: number, _max: number): Promise<vo
     const articles = await prisma.article.findMany();
 
     // Get all users from the database
-    // const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany();
 
     // calculates the number for 60% of all articles
     const percentage = Math.ceil(articles.length * 0.6)
@@ -340,11 +340,12 @@ export async function addLikesToArticles(_min: number, _max: number): Promise<vo
     // Articles to be disliked by users
     const dislikeArticles = selectedArticles.slice(midPoint);
 
+
     
 
-    // for (let user in users) {
+    // for (let i = 0; i < users.length; i++) {
     //     for (let i = 0; i < likedArticles.length; i++) {
-    //         console.log(user)
+
     //     }
     // }
 
