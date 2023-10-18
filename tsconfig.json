@@ -14,6 +14,6 @@
       "@intellectia/server": ["packages/server/src"],
       "@intellectia/server/*": ["packages/server/src/*"],
     },
-    "types": ["node", "jest"]
+    "types": ["node"]
   }
 }

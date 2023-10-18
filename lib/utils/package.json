@@ -4,7 +4,6 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "typings": "dist/esm/index.d.ts",
-  "type": "module",
   "description": "Utilities for Intellectia",
   "files": [
     "src",
@@ -13,6 +12,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
+    "test": "pnpx jest",
     "lint": "pnpx eslint .",
     "lint:fix": "pnpx eslint . --fix"
   },
@@ -43,15 +43,25 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@intellectia/types": "^1.0.0",
+    "express": "^4.18.2",
     "zod": "^3.22.4",
-    "@intellectia/types": "^1.0.0"
+    "cors": "^2.8.5"
   },
   "devDependencies": {
+    "@types/express": "^4.17.17",
     "@types/node": "^20.8.2",
     "rollup": "^4.1.1",
     "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-multi-input": "^1.4.1",
     "rollup-plugin-typescript2": "^0.36.0",
     "typescript": "^5.2.2",
-    "rollup-plugin-multi-input": "^1.4.1"
+    "@types/supertest": "^2.0.14",
+    "@types/cors": "^2.8.14",
+    "@types/jest": "^29.5.5",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "tslib": "^2.6.2"
   }
 }

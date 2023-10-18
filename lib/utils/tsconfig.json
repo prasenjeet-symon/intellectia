@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["./src"],
+  "include": ["./src", "__tests__"],
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "CommonJS",
     "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "types": ["node", "jest"]
   }
 }

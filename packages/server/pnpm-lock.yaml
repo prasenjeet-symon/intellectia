@@ -24,9 +24,6 @@ dependencies:
   '@types/js-yaml':
     specifier: ^4.0.7
     version: 4.0.7
-  '@types/supertest':
-    specifier: ^2.0.14
-    version: 2.0.14
   axios:
     specifier: ^1.5.0
     version: 1.5.0
@@ -86,6 +83,9 @@ devDependencies:
   '@types/showdown':
     specifier: ^2.0.2
     version: 2.0.2
+  '@types/supertest':
+    specifier: ^2.0.14
+    version: 2.0.14
   '@types/uuid':
     specifier: ^9.0.3
     version: 9.0.3
@@ -837,7 +837,7 @@ packages:
 
   /@types/cookiejar@2.1.2:
     resolution: {integrity: sha512-t73xJJrvdTjXrn4jLS9VSGRbz0nUY3cl2DMGDU48lKl+HR9dbbjW2A9r3g40VA++mQpy6uuHg33gy7du2BKpog==}
-    dev: false
+    dev: true
 
   /@types/cors@2.8.14:
     resolution: {integrity: sha512-RXHUvNWYICtbP6s18PnOCaqToK8y14DnLd75c6HfyKf228dxy7pHNOQkxPtvXKp/hINFMDjbYzsj63nnpPMSRQ==}
@@ -973,13 +973,13 @@ packages:
     dependencies:
       '@types/cookiejar': 2.1.2
       '@types/node': 20.8.5
-    dev: false
+    dev: true
 
   /@types/supertest@2.0.14:
     resolution: {integrity: sha512-Q900DeeHNFF3ZYYepf/EyJfZDA2JrnWLaSQ0YNV7+2GTo8IlJzauEnDGhya+hauncpBYTYGpVHwGdssJeAQ7eA==}
     dependencies:
       '@types/superagent': 4.1.19
-    dev: false
+    dev: true
 
   /@types/tough-cookie@2.3.9:
     resolution: {integrity: sha512-jLZVDbs/2XRjcgg6X5aXlni7AC85LYOjIQ5H9Eouny0t1SDKiXWxkbTPLkMdFKYxlKVZtMstlkpU1v6d14hVbA==}

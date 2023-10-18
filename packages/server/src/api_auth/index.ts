@@ -8,6 +8,8 @@ import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
 import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
+import { apiRequestAuthLoginValidator } from '@intellectia/utils/validators';
+import { IRequestAuthLogin } from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -20,17 +22,16 @@ router.get('/', (_req, res) => {
  * Authenticate user with email and password
  * POSTMAN_DONE : This route is successfully added to postman and documented    
  */
-router.post('/login', async (req, res) => {
+router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
     try {
-        const parsedBody = await emailPasswordObjectValidator.parseAsync(req.body);
-        const email = parsedBody.email;
-        const password = parsedBody.password;
+        const reqClientData: IRequestAuthLogin = res.locals.reqClientData;
+        console.log(reqClientData, 'reqClientData');
 
         // check if the user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
             where: {
-                email: email,
+                email: reqClientData.body.email,
             },
             include: {
                 sessions: true,
@@ -45,7 +46,7 @@ router.post('/login', async (req, res) => {
         }
 
         // check if the password is correct
-        if (oldUser.password !== password) {
+        if (oldUser.password !== reqClientData.body.password) {
             // status code 401 means that the user is unauthorized
             // wrong password
             res.status(401).send({ error: 'Wrong password. Please try again with correct password.' });
@@ -61,12 +62,12 @@ router.post('/login', async (req, res) => {
         }
 
         // generate the JWT token
-        const token = generateToken(email, oldUser.userId, false);
+        const token = generateToken(reqClientData.body.email, oldUser.userId, false);
 
         // update the number of sessions
         await prisma.user.update({
             where: {
-                email: email,
+                email: reqClientData.body.email,
             },
             data: {
                 sessions: {
