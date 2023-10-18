@@ -64,43 +64,7 @@ Becoming a reviewer on Intellectia is not just about contributing; it's about st
 git clone git@github.com:prasenjeet-symon/intellectia.git
 ```
 
-## Database Configuration
-
-Setting up your database for Intellectia is straightforward, with two options: XAMPP and Docker.
-
-### Using XAMPP (Cross-Platform, Apache, MariaDB, PHP, and Perl)
-
-1. Download XAMPP from the [official download link](https://www.apachefriends.org/download.html).
-
-2. Install XAMPP following the provided setup instructions.
-
-3. Open XAMPP and start all services one by one.
-
-4. Launch your web browser, navigate to [http://localhost](http://localhost), and click on "phpMyAdmin" in the header.
-
-5. Create a new database named 'intellectia.'
-
-### Using Docker
-
-1. Ensure Docker is installed on your operating system. If you're uncertain about Docker installation, please ask CHATGPT for guidance.
-
-2. After Docker is installed and running:
-
-3. Open your terminal and navigate to the root folder of Intellectia.
-
-4. Execute the command:
-
-```shell
-docker-compose up -d
-```
-
-5. Verify that port 3306 is available on your local machine. If not, please stop any processes using this port; it might be due to another MySQL server running on your computer.
-
-## Finalizing the Setup
-
-After cloning the project, let's complete the setup, including installing necessary dependencies and creating required environment files.
-
-### Creating .env Files for Server and Client
+## Creating .env Files for Server and Client
 
 **For the Server:**
 
@@ -139,6 +103,43 @@ cd packages/client
    - Manually create a new file at the same level as env.local.example and copy the content from env.local.example into the newly created .env file.
 
 By following these steps, you've successfully added .env files for both the server and client, ensuring that each part of your project has its environment configuration.
+
+
+## Database Configuration
+
+Setting up your database for Intellectia is straightforward, with two options: XAMPP and Docker.
+
+### Using XAMPP (Cross-Platform, Apache, MariaDB, PHP, and Perl)
+
+1. Download XAMPP from the [official download link](https://www.apachefriends.org/download.html).
+
+2. Install XAMPP following the provided setup instructions.
+
+3. Open XAMPP and start all services one by one.
+
+4. Launch your web browser, navigate to [http://localhost](http://localhost), and click on "phpMyAdmin" in the header.
+
+5. Create a new database named 'intellectia.'
+
+### Using Docker
+
+1. Ensure Docker is installed on your operating system. If you're uncertain about Docker installation, please ask CHATGPT for guidance.
+
+2. After Docker is installed and running:
+
+3. Open your terminal and navigate to the root folder of Intellectia.
+
+4. Execute the command:
+
+```shell
+docker-compose up -d
+```
+
+5. Verify that port 3306 is available on your local machine. If not, please stop any processes using this port; it might be due to another MySQL server running on your computer.
+
+## Finalizing the Setup
+
+After cloning the project, let's complete the setup, including installing necessary dependencies and creating required environment files.
 
 ### Ensure pnpm is Installed
 
