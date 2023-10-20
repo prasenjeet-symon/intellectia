@@ -13,6 +13,7 @@ At Intellectia, we're on a mission to eliminate misinformation and AI-generated 
 
 - 💬 [Discord](https://discord.gg/eQjh6AdEmg)
 - 📫 [PostMan](https://www.postman.com/galactic-firefly-721755/workspace/intellectia/request/10849501-459d4afa-6e15-4611-92e6-7d852344e17c) Learn to setup postman [Here](https://github.com/prasenjeet-symon/intellectia/wiki/Intellectia-Postman-Setup-Guide)
+- 📚 [ Intellectia Wiki ](https://github.com/prasenjeet-symon/intellectia/wiki)
 
 # Intellectia Client Development
 
