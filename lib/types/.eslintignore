@@ -1,0 +1,4 @@
+dist/
+node_modules/
+public
+rollup.config.js

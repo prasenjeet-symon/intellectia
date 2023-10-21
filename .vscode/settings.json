@@ -6,8 +6,11 @@
     "cacheable",
     "intellectia",
     "Kumar",
+    "pnpx",
     "Prasenjeet",
+    "rollup",
     "Symon",
     "VITE"
-  ]
+  ],
+  "todohighlight.keywords": ["POSTMAN_DONE", "POSTMAN_TODO", "TODO", "DONE"]
 }

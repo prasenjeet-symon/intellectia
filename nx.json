@@ -1,43 +1,44 @@
 {
-    "tasksRunnerOptions": {
-        "default": {
-            "runner": "nx/tasks-runners/default",
-            "options": {
-                "cacheableOperations": [
-                    "build",
-                    "test",
-                    "lint",
-                    "e2e",
-                    "affected"
-                ]
-            }
-        }
-    },
-    "namedInputs": {
-        "noMarkdown": [
-            "!{projectRoot}/**/*.md"
-        ]
-    },
-    "targetDefaults": {
-        "build": {
-            "inputs": [
-                "noMarkdown",
-                "^noMarkdown"
-            ],
-            "dependsOn": [
-                "^build"
-            ]
-        },
-        "dev": {
-            "dependsOn": [
-                "^build"
-            ]
-        },
-        "test": {
-            "inputs": [
-                "noMarkdown",
-                "^noMarkdown"
-            ]
-        }
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx-cloud",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "test",
+          "lint",
+          "e2e",
+          "affected"
+        ],
+        "accessToken": "Y2IyODM3NWUtZGVhOS00MTRkLWJmNmQtZWQyMzNhNjExZjJifHJlYWQtd3JpdGU="
+      }
     }
+  },
+  "namedInputs": {
+    "noMarkdown": [
+      "!{projectRoot}/**/*.md"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": [
+        "noMarkdown",
+        "^noMarkdown"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "dev": {
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test": {
+      "inputs": [
+        "noMarkdown",
+        "^noMarkdown"
+      ]
+    }
+  }
 }

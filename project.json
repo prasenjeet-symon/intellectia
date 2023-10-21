@@ -1,0 +1,32 @@
+{
+  "targets": {
+    "prisma-studio": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "./packages/server/",
+        "command": "prisma studio"
+      }
+    },
+    "prisma-seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "./packages/server/",
+        "command": "prisma db seed"
+      }
+    },
+    "prisma-migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "./packages/server/",
+        "command": "prisma migrate dev"
+      }
+    },
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "./packages/server/",
+        "command": "prisma generate"
+      }
+    }
+  }
+}

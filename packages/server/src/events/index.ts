@@ -4,7 +4,7 @@ import { AddArticleCreatedActivity, AddCommentActivity, AddLikeActivity, AddSave
 
 const events = new EventEmitter();
 
-events.on(Events.ARTICLE_CREATED, (data: any) => {
+events.on(Events.ARTICLE_CREATED, (_data: any) => {
     // { articleId: number, email: string }
     // email is the email id of logged in user ( article owner )
 });

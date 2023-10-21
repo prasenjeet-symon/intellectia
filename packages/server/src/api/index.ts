@@ -1,27 +1,32 @@
 import { Router } from 'express';
-import { ZodError } from 'zod';
+import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
-import { emailValidator, idValidator, userTopicsValidator } from '../validators';
+import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, idValidatorUnit, topicsObjectValidator } from '../validators';
 
-const router = Router();
 
-router.get('/', (req, res) => {
+const router: Router = Router();
+
+router.get('/', (_req, res) => {
     res.send({ message: 'Hello World' });
+    return;
 });
 
 /**
- * Get all topics
+ * Fetch all the topics of intellectia
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/topics', async (req, res) => {
+router.get('/topics', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const topics = await prisma.topic.findMany();
     res.send(topics);
+    return;
 });
 
 /**
  * Fetch all the assigned topics of the user
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/user/topics', async (req, res) => {
+router.get('/user/topics', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     // get all the topics of user
     const topics = await prisma.user.findUnique({
@@ -39,14 +44,17 @@ router.get('/user/topics', async (req, res) => {
     }
 
     res.send(topics.topics);
+    return;
 });
 /**
  * Get the single topic by id
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.get('/topic/:id', async (req, res) => {
     try {
-        const parsedParam = await idValidator.parseAsync({ id: +req.params.id });
-        const id = parsedParam.id;
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
+        const id = +parsedParam.id;
+
         const prisma = PrismaClientSingleton.prisma;
         const topic = await prisma.topic.findUnique({
             where: {
@@ -55,25 +63,33 @@ router.get('/topic/:id', async (req, res) => {
         });
 
         res.send(topic);
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
-        return res.status(400).json({ error });
+
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 /**
  *
  * Assign multiple topics to the user
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.put('/user/topics', async (req, res) => {
     try {
-        const parsedBody = await userTopicsValidator.parseAsync(req.body.topics);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        // topics is the array of numbers
+        const parsedBody = await topicsObjectValidator.parseAsync(req.body);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
 
-        const topics = parsedBody.topics;
+        const topics = parsedBody.topics.map((topicId) => +topicId);
+
         const prisma = PrismaClientSingleton.prisma;
+
         await prisma.user.update({
             where: {
                 email: parsedLocals.email,
@@ -100,27 +116,30 @@ router.put('/user/topics', async (req, res) => {
         });
 
         res.send('Topics added');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
-
-    // disconnect all the topics, before adding new topics
 });
 
 /**
  *
  * Assign single topic to the user
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.put('/user/topic', async (req, res) => {
     try {
-        const parsedBody = await idValidator.parseAsync(req.body.id);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
-        const topicId = parsedBody.id;
+        const parsedBody = await idObjectValidator.parseAsync(req.body);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
+        const topicId = +parsedBody.id;
+
         const prisma = PrismaClientSingleton.prisma;
         // disconnect the topic from the user
         await prisma.user.update({
@@ -139,7 +158,7 @@ router.put('/user/topic', async (req, res) => {
         // connect the topic
         await prisma.user.update({
             where: {
-                email: res.locals.email,
+                email: parsedLocals.email,
             },
             data: {
                 topics: {
@@ -151,25 +170,30 @@ router.put('/user/topic', async (req, res) => {
         });
 
         res.send('Topic added');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 
 /**
  *
- * Delete the topic by id from the user
- *
+ * Delete single topic from the user
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.delete('/user/topic/:id', async (req, res) => {
     try {
-        const parsedParams = await idValidator.parseAsync(req.params.id);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
-        const topicId = parsedParams.id;
+        const parsedParams = await idObjectValidator.parseAsync(req.params);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
+
+        const topicId = +parsedParams.id;
         const prisma = PrismaClientSingleton.prisma;
         // disconnect the topic from the user
         await prisma.user.update({
@@ -186,25 +210,29 @@ router.delete('/user/topic/:id', async (req, res) => {
         });
 
         res.send('Topic deleted');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 /**
  *
  * Delete multiple topics from the user
- *
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.delete('/user/topics', async (req, res) => {
     try {
-        const parsedBody = await userTopicsValidator.parseAsync(req.body.topics);
-        const parsedLocals = await emailValidator.parseAsync(res.locals.email);
+        const parsedBody = await topicsObjectValidator.parseAsync(req.body);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
 
-        const topics = parsedBody.topics;
+        const topics = parsedBody.topics.map((topicId) => +topicId);
 
         const prisma = PrismaClientSingleton.prisma;
         // disconnect all the topics
@@ -222,25 +250,30 @@ router.delete('/user/topics', async (req, res) => {
         });
 
         res.send('Topics deleted');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0].message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 /**
  * Add an article to the article series
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.put('/user/article_series/:id/article', async (req, res) => {
     try {
-        const parsedBody = await idValidator.parseAsync(req.body);
-        const parsedParams = await idValidator.parseAsync(req.params);
-        const parsedLocals = await emailValidator.parseAsync(res.locals);
+        const parsedBody = await idObjectValidator.parseAsync(req.body);
+        const parsedParams = await idObjectValidator.parseAsync(req.params);
+        const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
 
-        const id = parsedParams.id; // article series id
-        const articleId = parsedBody.id; // article id
+        const id = +parsedParams.id; // article series id
+        const articleId = +parsedBody.id; // article id
 
         const prisma = PrismaClientSingleton.prisma;
         // remove old article from the article series
@@ -269,7 +302,7 @@ router.put('/user/article_series/:id/article', async (req, res) => {
         // add new article to the article series
         await prisma.user.update({
             where: {
-                email: res.locals.email,
+                email: parsedLocals.email,
             },
             data: {
                 articleSeries: {
@@ -290,60 +323,66 @@ router.put('/user/article_series/:id/article', async (req, res) => {
         });
 
         res.send('Article added to series');
+        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
         }
 
-        return res.status(400).json({ error });
+        res.status(500).json({ error: 'Internal server error' });
+        return;
     }
 });
 /**
  * Delete an article from the article series
- */
+ * POSTMAN_DONE : This route is successfully added to postman and documented
+ */ 
 router.delete('/user/article_series/:id/article', async (req, res) => {
     try {
-        await idValidator.parseAsync(req.body);
-        await idValidator.parseAsync(req.params);
-    } catch (error) {
-        if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0].message });
-        }
+        const parsedBody = await idObjectValidator.parseAsync(req.body);
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
 
-        return;
-    }
+        const id = +parsedParam.id; // article series id
+        const articleId = +parsedBody.id; // article id
 
-    const parsedBody = idValidator.parse(req.body);
-    const parsedParams = idValidator.parse(req.params);
-
-    const id = parsedParams.id; // article series id
-    const articleId = parsedBody.id; // article id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect the article from the article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: {
-                                id: articleId,
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect the article from the article series
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: {
+                                    id: articleId,
+                                },
                             },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Article deleted from series');
+        res.send('Article deleted from series');
+        return;
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            const issue = error.issues[0] as ZodIssue;
+            res.status(400).send({ error: issue.message });
+            return;
+        }
+
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+    }
 });
 /**
  * Add multiple articles to the article series
@@ -433,73 +472,55 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
  * Delete multiple articles from the article series
  */
 router.delete('/user/article_series/:id/articles', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    try {
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
+        const parsedBody = await articlesObjectValidator.parseAsync(req.body);
+        const articleIds = parsedBody.articles.map((articleId) => +articleId);
+        const id = +parsedParam.id; // article series id
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+        const prisma = PrismaClientSingleton.prisma;
 
-    // articles is array of article ids that is numbers
-    if (!Array.isArray(req.body.articles)) {
-        res.status(400).send({ error: 'Articles is required' });
-        return;
-    }
-
-    const articleIds = req.body.articles as number[];
-    const id = +req.params.id; // article series id
-
-    const isArticleIdsValid = articleIds.every((articleId) => {
-        return typeof articleId === 'number';
-    });
-
-    if (!isArticleIdsValid) {
-        res.status(400).send({ error: 'Articles are required' });
-        return;
-    }
-
-    const prisma = PrismaClientSingleton.prisma;
-
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: {
-                        id: id,
-                    },
-                    data: {
-                        articles: {
-                            disconnect: articleIds.map((articleId) => ({
-                                id: articleId,
-                            })),
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: {
+                            id: id,
+                        },
+                        data: {
+                            articles: {
+                                disconnect: articleIds.map((articleId) => ({
+                                    id: articleId,
+                                })),
+                            },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Articles deleted from series');
+        res.send('Articles deleted from series');
+        return;
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0]?.message });
+        }
+        return res.status(400).json({ error });
+    }
 });
 /**
  * Add article series
  */
 router.post('/user/article_series', async (req, res) => {
     // title is required
-    if (!('title' in req.body)) {
-        res.status(400).send({ error: 'Title is required' });
-        return;
-    }
 
-    if (!req.body.title) {
-        res.status(400).send({ error: 'Title is required' });
+    const response = articleSeriesValidator.safeParse(req.body);
+
+    if (!response.success) {
+        res.status(400).send({ error: response.error.errors[0]?.message  });
         return;
     }
 
@@ -526,19 +547,18 @@ router.post('/user/article_series', async (req, res) => {
  * Update article series
  */
 router.put('/user/article_series/:id', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+
+    const idResponse = idValidatorUnit.safeParse({id : req.params.id});
+
+    if (!idResponse.success) {
+        res.status(400).send({ error: idResponse.error.errors[0]?.message});
         return;
     }
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    let bodyResponse = articleSeriesValidator.safeParse(req.body);
 
-    if (!('title' in req.body)) {
-        res.status(400).send({ error: 'Title is required' });
+    if (!bodyResponse.success) {
+        res.status(400).send({ error: bodyResponse.error.errors[0]?.message});
         return;
     }
 
@@ -576,59 +596,60 @@ router.put('/user/article_series/:id', async (req, res) => {
  * Delete article series
  */
 router.delete('/user/article_series/:id', async (req, res) => {
-    if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
+    try {
+        const parsedParam = await idObjectValidator.parseAsync(req.params);
+        const id = +parsedParam.id; // article series id
 
-    if (!req.params.id) {
-        // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
-        return;
-    }
-
-    const id = +req.params.id; // article series id
-
-    const prisma = PrismaClientSingleton.prisma;
-    // disconnect all articles from article series
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                update: {
-                    where: { id: id },
-                    data: {
-                        articles: {
-                            set: [],
+        const prisma = PrismaClientSingleton.prisma;
+        // disconnect all articles from article series
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    update: {
+                        where: { id: id },
+                        data: {
+                            articles: {
+                                set: [],
+                            },
                         },
                     },
                 },
             },
-        },
-    });
+        });
 
-    await prisma.user.update({
-        where: {
-            email: res.locals.email,
-        },
-        data: {
-            articleSeries: {
-                delete: {
-                    id: id,
+        await prisma.user.update({
+            where: {
+                email: res.locals.email,
+            },
+            data: {
+                articleSeries: {
+                    delete: {
+                        id: id,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    res.send('Article series deleted');
+        res.send('Article series deleted');
+        return;
+    } catch (error) {
+        if (error instanceof ZodError && !error.isEmpty) {
+            return res.status(400).send({ error: error.issues[0]?.message });
+        }
+
+        return res.status(400).json({ error });
+    }
 });
 
 /**
  * Get all the article series
  */
-router.get('/user/article_series', async (req, res) => {
+
+router.get('/user/article_series', async (_req, res) => {
+
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {
@@ -738,7 +759,7 @@ router.get('/user/article_series/:id/articles', async (req, res) => {
     }
 
     // only return articles
-    res.send(articles.articleSeries[0].articles);
+    res.send(articles.articleSeries[0]?.articles);
 });
 /**
  * Add article
@@ -804,13 +825,13 @@ router.put('/user/article/:id/publish', async (req, res) => {
     }
 
     // topic ids is required, articleSeriesId is required
-    if (!('topicIds' in req.body)) {
+    if (!('topics' in req.body)) {
         res.status(400).send({ error: 'Topic ids are required' });
         return;
     }
 
     const articleId = +req.params.id; // article id
-    const topicIds = req.body.topicIds as number[];
+    const topicIds = req.body.topics as number[];
     const articleSeriesId = 'articleSeriesId' in req.body ? req.body.articleSeriesId : 0;
 
     // check if all the topics are valid
@@ -1481,7 +1502,7 @@ router.delete('/user/read_later/:id', async (req, res) => {
  * Get all the read later articles
  *
  */
-router.get('/user/read_later', async (req, res) => {
+router.get('/user/read_later', async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const readLater = await prisma.user.findUnique({
         where: {
@@ -2390,15 +2411,21 @@ router.put('/user/article-reads/:id/time', async (req, res) => {
         },
     });
 
-    if (!article) {
+    if (!article || article.articleReads.length === 0) {
         res.status(400).send({ error: 'Article not found' });
         return;
     }
 
     // check the article read time
-    const articleReadTime = +article.articleReads[0].article.readTimeMinutes;
+    const articleRead = article.articleReads[0]?.article;
+    if (!articleRead) {
+        res.status(400).send({ error: 'Article not found' });
+        return;
+    }
+
+    const articleReadTime = +articleRead.readTimeMinutes;
     const currentReadTime = +readTimeMinutes;
-    const totalReadTime = +article.articleReads[0].readTimeInMinutes + currentReadTime;
+    const totalReadTime = +(article.articleReads[0] ? article.articleReads[0] : { readTimeInMinutes: 0 }).readTimeInMinutes + currentReadTime;
     let finalReadTime = 0;
     // check if the read time exceeds total reading time of the article
     if (totalReadTime >= articleReadTime) {
@@ -2575,8 +2602,10 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
         if (users.length < 1) return res.status(400).json({ error: 'Entity not found' });
 
         res.json(users);
+        return;
     } catch (error) {
         res.status(400).json({ error });
+        return;
     }
 
     // size is required, cursor is required

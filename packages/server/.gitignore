@@ -74,11 +74,3 @@ logs
 # Ignore generated coverage reports
 coverage/
 .lcov
-
-# Ignore test-specific files
-test/
-__tests__/
-
-# Ignore Prisma migration folders
-/migrations
-/prisma/migrations

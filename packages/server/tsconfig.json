@@ -1,13 +1,12 @@
 {
+    "extends": "../../tsconfig.json",
+    "include": ["./src", "__tests__"],
     "compilerOptions": {
         "target": "ES6",
         "module": "CommonJS",
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "strict": true,
+        "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true,
-        "resolveJsonModule": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
-    }
+        "types": ["node", "jest"]
+    },
+   
 }

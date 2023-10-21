@@ -1,8 +1,12 @@
+import { idValidator } from '@intellectia/utils/validators';
+
 /**
  * Purpose if this section is to generate the dummy data for the new contributors and testers of application
  */
 export class SeedData {
-    constructor() {}
+    constructor() {
+        
+    }
 
     /** Init the seeding */
     public async init() {

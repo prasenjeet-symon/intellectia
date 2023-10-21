@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.build.json",
+  "include": ["packages", "lib", ".eslintrc.js"],
+  "exclude": [],
+  "compilerOptions": {
+    "allowJs": false,
+    "baseUrl": ".",
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@intellectia/utils": ["lib/utils/src"],
+      "@intellectia/utils/*": ["lib/utils/src/*"],
+      "@intellectia/types": ["lib/types/src"],
+      "@intellectia/types/*": ["lib/types/src/*"],
+      "@intellectia/server": ["packages/server/src"],
+      "@intellectia/server/*": ["packages/server/src/*"],
+    },
+    "types": ["node"]
+  }
+}

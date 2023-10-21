@@ -1,30 +1,9 @@
 {
+    "extends": "../../tsconfig.json",
+    "include": ["./src"],
     "compilerOptions": {
-      "baseUrl": "./",
-      "strict": true,
-      "noUnusedLocals": true,
-      "module": "es6",
-      "noImplicitAny": true,
-      "sourceMap": true,
-      "declaration": true,
-      "declarationDir": "dist/esm/",
-      "outDir": "dist/esm/",
-      "target": "ES6",
-      "declarationMap": true,
-      "downlevelIteration": true,
-      "experimentalDecorators": true,
-      "esModuleInterop": true,
-      "moduleResolution": "Node",
-      "importHelpers": true,
-      "lib": [
-        "ES6",
-        "DOM",
-      ],
+        "module": "ESNext",
+        "forceConsistentCasingInFileNames": true,
+        "esModuleInterop": true,
     },
-    "include": [
-      "src/**/*"
-    ],
-    "exclude": [
-      "node_modules"
-    ],
-  }
+}

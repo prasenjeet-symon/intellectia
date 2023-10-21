@@ -1,7 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
 import { NextFunction, Request, Response } from 'express';
-import * as topicsJson from './assets/topics.json';
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+
 
 // Interfaces
 interface IGoogleAuthTokenResponse {
@@ -54,15 +56,14 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
         return;
     }
 
-    const jwt = require('jsonwebtoken');
     // Get the authentication token from the request headers, query parameters, or cookies
     // Example: Bearer <token>
-    const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : req.query.token;
+    const token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : (req.query.token as string);
 
     // Verify and decode the token
     try {
         // Verify the token using your secret key or public key
-        const decodedToken = jwt.verify(token, JWT_SECRET);
+        const decodedToken: jwt.JwtPayload = jwt.verify(token ? token : '', JWT_SECRET) as jwt.JwtPayload;
 
         // Set the userId and email in the request object
         res.locals.userId = decodedToken.userId;
@@ -72,6 +73,7 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
         // Move to the next middleware
         next();
     } catch (error) {
+        console.error(error);
         // Token verification failed
         res.status(401).json({ error: 'Invalid token' });
         return;
@@ -83,15 +85,15 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
  * Prisma client singleton
  */
 export class PrismaClientSingleton {
-    static #instance: PrismaClient;
+    static instance: PrismaClient;
 
     static get prisma() {
-        if (!PrismaClientSingleton.#instance) {
-            PrismaClientSingleton.#instance = new PrismaClient({
+        if (!PrismaClientSingleton.instance) {
+            PrismaClientSingleton.instance = new PrismaClient({
                 log: ['error'],
             });
         }
-        return PrismaClientSingleton.#instance;
+        return PrismaClientSingleton.instance;
     }
 }
 
@@ -101,7 +103,6 @@ export class PrismaClientSingleton {
  *
  */
 export const generateToken = (email: string, userId: string, isAdmin: boolean) => {
-    const jwt = require('jsonwebtoken');
     const JWT_SECRET = process.env.JWT_SECRET;
     if (!JWT_SECRET) {
         throw new Error('JWT_SECRET not set');
@@ -171,7 +172,11 @@ export async function createIntellectiaTopics() {
     });
 
     const previousTopicsTitles: Array<string> = previousTopics.map((topic) => topic.title);
-    const allTopics: string[] = topicsJson.topics;
+    // load the json located beside src folder 
+    const jsonData = fs.readFileSync(__dirname + '/../assets/topics.json', 'utf-8');
+    const data = JSON.parse(jsonData);
+    const allTopics: string[] = (data as { topics: string[] }).topics;
+    console.log(allTopics);
     const topicsToBeCreated: string[] = [];
 
     //find the new topics to be created
@@ -179,7 +184,7 @@ export async function createIntellectiaTopics() {
         if (!previousTopicsTitles.map((p) => p.toLowerCase()).includes(topic.toLowerCase())) {
             topicsToBeCreated.push(topic);
         }
-    });
+    }); 
 
     for (const topic of topicsToBeCreated) {
         const result = await prisma.topic.create({
@@ -193,7 +198,7 @@ export async function createIntellectiaTopics() {
 
         console.log(`[INFO] ${result.title} NEW Topic Created`);
     }
-}
+} 
 /**
  * Password validator
  */

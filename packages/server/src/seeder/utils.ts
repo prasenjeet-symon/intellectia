@@ -1,50 +1,64 @@
 import { faker } from '@faker-js/faker';
+import { Article, User } from '@prisma/client';
 import { UniqueEnforcer } from 'enforce-unique';
-import * as readFileFs from 'fs';
+import * as fs from 'fs';
+import path from 'path';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
 /**
+ * Create new user given email and password
+ */
+export async function createUserWithEmailPassword(email: string, password: string): Promise<void> {
+    // add new user to database
+    // use the email and password
+    // if the user already exit then just return silently
+    // use prisma client directly ( no api call )
+}
+
+/**
  * Parse the Markdown file to JSON
  */
-export async function markdownToJSON(): Promise<
-    | {
-          title: string;
-          subTitle: string;
-          coverImage: string;
-          markdownContent: string;
-          htmlContent: string;
-      }
-    | undefined
-> {
-    // Markdown file is located in the assets folder
-    // markdown file is a article about the cat journey to the moon.
-    // read that markdown and generate the JSON
-    // JSON :  { title: string; subTitle: string; coverImage: string; markdownContent: string, htmlContent: string }
-    // cover image should be asset file location ( relative url ) , please check the server.ts file for the media path
-    // use the function markdownToHTML to get the HTML
-
-    /* try block for reading and extracting metadata from markdown file */
+export async function markdownToJSON(): Promise<{
+    title: string;
+    subTitle: string;
+    coverImage: string;
+    markdownContent: string;
+    htmlContent: string;
+}> {
     try {
         /* extracting HTML content using specified function markdownToHTML */
-        let htmlContent = await markdownToHTML('../assets/catOnTheMoon.md');
+        const catFile = path.join(__dirname, '..', '/assets/catOnTheMoon.md');
+        let htmlContent = await markdownToHTML(catFile);
         if (!htmlContent) {
-            return;
+            throw new Error('Markdown to HTML conversion failed');
         }
 
         /* read selected file synchronously */
-        const data = readFileFs.readFileSync('../assets/catOnTheMoon.md', 'utf8');
+        const data = fs.readFileSync(catFile, 'utf8');
 
-        //grab yaml metadata at start of page
-        //split metadata at '\r\n' to get strings containing title, subtitle etc.
-        const metadata = data.split('---')[1].split('\r\n');
+        // Regex that to get YAML data from markdown
+        const charsBetweenHyphens = /^---([\s\S]*?)---/;
+
+        // If file has metadata it will be extracted
+        const metadataMatched = data.match(charsBetweenHyphens);
+
+        // Extracted metadata
+        const metadata = metadataMatched![1];
+
+        if (!metadata) {
+            throw new Error('No metadata found');
+        }
+
+        // split metadata into lines by '\n' getting strings containing the metadata
+        const metadataLines = metadata.split('\n');
 
         /* metadata is now an array consisting of strings containing yaml front matter */
         /* Title, subtitle and coverImage can be extracted from metadata array by calling their respective indexes in metadata array and splitting corresponding strings at ':' */
-        /* trimStart() to removed whitespace at start of strings */
-        let title = metadata[1].split(':')[1].trimStart();
-        let subTitle = metadata[2].split(':')[1].trimStart();
-        let image = metadata[3].split(':')[1].trimStart();
-        let markdownContent = data.split('---')[2];
+        /* trim() to removed whitespace at start and end of strings */
+        let title = metadataLines[1]!.split(':')[1]!.trim();
+        let subTitle = metadataLines[2]!.split(':')[1]!.trim();
+        let image = metadataLines[3]!.split(':')[1]!.trim();
+        let markdownContent = data.split('---')[2]!;
 
         //return data in JSON format
         return {
@@ -56,7 +70,8 @@ export async function markdownToJSON(): Promise<
         };
     } catch (error: any) {
         /* catch any errors that might occur */
-        console.log(error.message);
+       console.error(error);
+       throw error;
     }
 }
 
@@ -66,12 +81,13 @@ export async function markdownToJSON(): Promise<
 // used showdown (https://www.npmjs.com/package/showdown)
 export async function markdownToHTML(inputPath: string): Promise<{ HTML: string } | undefined> {
     try {
-        const data: string = readFileFs.readFileSync(inputPath, 'utf8');
+        const data: string = fs.readFileSync(inputPath, 'utf8');
         const converter = new showdown.Converter();
         const result = converter.makeHtml(data);
         return { HTML: result };
     } catch (error: any) {
         console.error(error);
+        throw error;
     }
 }
 
@@ -112,6 +128,10 @@ export async function generateFakeArticle(): Promise<
         readTimeMinutes: readTimeMinutes,
     };
 
+    console.log('IN ARTICLE');
+
+    console.log(article.title);
+
     return article;
 }
 
@@ -147,12 +167,55 @@ export async function createArticlesPerUser(email: string, numberOfArticles: num
     // Create articles to the database
     // use the function generateFakeArticle to generate fake article
     // initially article should be created in draft form ( isPublished status set to false )
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email: email,
+        },
+    });
+
+    if (!user) {
+        return;
+    }
+
+    for (let i = 0; i < numberOfArticles; i++) {
+        const fakeArticle = await generateFakeArticle();
+
+        Promise.resolve(fakeArticle).then((article) => {
+            console.log('TITTLE');
+            console.log(article!.title);
+        });
+
+        const title = fakeArticle!.title;
+        const subTitle = fakeArticle!.subtitle;
+        const htmlContent = fakeArticle!.htmlContent;
+        const markdownContent = fakeArticle!.markdownContent;
+
+        await prisma.user.update({
+            where: {
+                email: email,
+            },
+            data: {
+                articles: {
+                    create: {
+                        title: title,
+                        subtitle: subTitle,
+                        htmlContent: htmlContent,
+                        markdownContent: markdownContent,
+                        readTimeMinutes: 0,
+                    },
+                },
+            },
+        });
+    }
 }
 /**
  * Create multiple articles to the database for every user
  *
  */
-export async function createMultipleArticles(min: number, max: number): Promise<void> {
+export async function createMultipleArticles(_min: number, _max: number): Promise<void> {
     // Fetch all the created users from the database
     // created n number of article per user using createArticlesPerUser function
     // choose n randomly where n = [min, max] // both min and max are integer
@@ -161,7 +224,7 @@ export async function createMultipleArticles(min: number, max: number): Promise<
 /**
  * Assign topics to the articles
  */
-export async function assignTopicsToArticles(email: string): Promise<void> {
+export async function assignTopicsToArticles(_email: string): Promise<void> {
     // email : email id of the target user ( main user in focus )
     // fetch user topics from the database
     // fetch all the topics of application from the database
@@ -194,7 +257,7 @@ export async function createMultipleUsers(numberOfUser: number) {
 /**
  * Assign topics to the users
  */
-export async function assignTopicsToUsers(email: string): Promise<void> {
+export async function assignTopicsToUsers(_email: string): Promise<void> {
     // Assign topics to the created user except the main user ( incoming email )
     // fetch all the topics of application from the database
     // choose aftmost 3 topics for the user
@@ -216,7 +279,7 @@ export async function saveArticlesForUsers(): Promise<void> {
 /**
  * Given the article and user , comment on the article
  */
-export async function commentOnArticle(email: string, articleId: number, min: number, max: number): Promise<void> {
+export async function commentOnArticle(_email: string, _articleId: number, _min: number, _max: number): Promise<void> {
     // email is the commenter's email id
     // comment on article with given article id
     // create n number of fake comments for the article where n belong to [ min , max ] and min, max and n  belong to positive Integer
@@ -225,7 +288,7 @@ export async function commentOnArticle(email: string, articleId: number, min: nu
 /**
  * Add multiple comments to the articles
  */
-export async function addMultipleCommentsToArticles(min: number, max: number): Promise<void> {
+export async function addMultipleCommentsToArticles(_min: number, _max: number): Promise<void> {
     // add comments to the every article
     // fetch all the articles from the database
     // fetch all the users from the database
@@ -237,7 +300,7 @@ export async function addMultipleCommentsToArticles(min: number, max: number): P
 /**
  * Add replies to the comments
  */
-export async function addRepliesToComments(min: number, max: number): Promise<void> {
+export async function addRepliesToComments(_min: number, _max: number): Promise<void> {
     // add replies to the every comment
     // fetch all the comments from the database
     // fetch all the users from the database
@@ -245,10 +308,28 @@ export async function addRepliesToComments(min: number, max: number): Promise<vo
     // that n number of reply per comment will belong the random user n that is randomly chosen from the users list
     // loop on the comments and perform the above task and save the result ( reply ) to database in parallel ( Promise.all() )
 }
+
+/**
+ * Helper function to add likes or dislikes to the article with specific user
+ */
+async function addLikesOrDislike(user: User, article: Article, isLike: boolean) {
+    const prisma = PrismaClientSingleton.prisma;
+
+    const action = isLike ? 'liked' : 'disliked';
+
+    return prisma.like.create({
+        data: {
+            userId: user.id,
+            articleId: article.id,
+            status: action,
+        },
+    });
+}
+
 /**
  * Add likes/dislikes to the articles by users
  */
-export async function addLikesToArticles(min: number, max: number): Promise<void> {
+export async function addLikesToArticles(): Promise<void> {
     // How to add likes and dislike to the article: See below
     // 1. fetch all the articles from the database
     // 2. fetch all the users from the database
@@ -257,4 +338,33 @@ export async function addLikesToArticles(min: number, max: number): Promise<void
     // 5. first half of articles will be like by a user
     // 6. remaining half of articles will be dislike by a user
     // Perform the above task in parallel ( Promise.all() ) for each and every user
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    const [articles, users] = await Promise.all([await prisma.article.findMany(), await prisma.user.findMany()]);
+
+    // calculates the number for 60% of all articles
+    const percentage = Math.ceil(articles.length * 0.6);
+
+    // Shuffles and then populates up to the percentage number of articles
+    const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, percentage);
+
+    // The middle index value of the selectedArticles
+    const midPoint = percentage / 2;
+
+    // Articles to be liked by users
+    const likedArticles = selectedArticles.slice(0, midPoint);
+
+    // Articles to be disliked by users
+    const dislikeArticles = selectedArticles.slice(midPoint);
+
+    await Promise.all(
+        users.map(async (user) => {
+            // Like the first half of articles
+            await Promise.all(likedArticles.map((article) => addLikesOrDislike(user, article, true)));
+
+            // Dislikes the second half of articles
+            await Promise.all(dislikeArticles.map((article) => addLikesOrDislike(user, article, false)));
+        }),
+    );
 }
