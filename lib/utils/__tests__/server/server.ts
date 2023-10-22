@@ -13,6 +13,6 @@ app.get("/", (_req: Request, res: Response) => {
   res.send({ message: "Hello World!" });
 });
 
-app.use("/validators", validatorsRoute);
+app.use("/", validatorsRoute);
 
 export default app;

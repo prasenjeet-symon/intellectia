@@ -38,6 +38,9 @@
       "inputs": [
         "noMarkdown",
         "^noMarkdown"
+      ],
+      "dependsOn": [
+        "^build"
       ]
     }
   }
