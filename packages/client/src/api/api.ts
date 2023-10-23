@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { IAuthenticationResult, ITopicResult } from "@/types/types";
 import { AxiosResponse } from "axios";
 import AxiosClient from "./apiClient";
@@ -47,7 +48,7 @@ export async function loginWithEmailPassword(email: string, password: string): P
  */
 export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = "/auth/google";
-  return {} as any;
+  return {} as never;
 }
 
 /**
@@ -58,7 +59,7 @@ export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAu
  */
 export async function loginWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
   const apiUrl = "/auth/google_login";
-  return {} as any;
+  return {} as never;
 }
 
 /**
