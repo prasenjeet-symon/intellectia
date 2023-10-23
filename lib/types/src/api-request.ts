@@ -8,12 +8,12 @@ export interface IRequestAuthLogin {
     email: string;
     password: string;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 /**
  *
- * Request for - /server/auth/signup
+ * Request for - /server/auth/signupparam: object
  *
  */
 export interface IRequestAuthSignup extends IRequestAuthLogin {}
@@ -25,8 +25,8 @@ export interface IRequestAuthMagic {
   body: {
     email: string;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 /**
  * Request for - /server/auth/magic_login
@@ -36,8 +36,8 @@ export interface IRequestAuthMagicLogin {
     token: string;
     email: string;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -47,8 +47,8 @@ export interface IRequestAuthGoogle {
   body: {
     token: string;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -68,29 +68,29 @@ export interface IRequestAuthLogoutAll {}
  * Request validation for - /server/api/topics
  */
 export interface IRequestApiTopics {
-  body: {};
-  param: {};
-  query: {};
+  body: object;
+  param: object;
+  query: object;
 }
 
 /**
  * Request validation for - /server/api/user/topics
  */
 export interface IRequestUserTopics {
-  body: {};
-  param: {};
-  query: {};
+  body: object;
+  param: object;
+  query: object;
 }
 
 /**
  * Request validation for - /server/api/topic/:id
  */
 export interface IRequestApiTopic {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -100,8 +100,8 @@ export interface IRequestUserTopicsUpdate {
   body: {
     topics: number[];
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -111,19 +111,19 @@ export interface IRequestUserTopicUpdate {
   body: {
     id: number;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
  * Request validation for - DELETE /server/api/user/topic/:id
  */
 export interface IRequestDeleteUserTopic {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -134,8 +134,8 @@ export interface IRequestUserTopicsDelete {
   body: {
     topics: number[];
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -148,7 +148,7 @@ export interface IRequestUserArticleSeriesIDArticleUpdate {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -161,7 +161,7 @@ export interface IRequestDeleteUserArticleSeriesArticle {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -174,7 +174,7 @@ export interface IRequestUserArticleSeriesArticlesUpdate {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 /**
  * Request validation for - DELETE /server/api/user/article_series/:id/articles
@@ -187,7 +187,7 @@ export interface IRequestUserArticleSeriesArticlesDelete {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -197,8 +197,8 @@ export interface IRequestUserArticleSeries {
   body: {
     title: string;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -213,7 +213,7 @@ export interface IRequestUserArticleSeriesIdUpdate {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -223,39 +223,39 @@ export interface IRequestDeleteUserArticleSeriesId {
   param: {
     id: number;
   };
-  body: {};
-  query: {};
+  body: object;
+  query: object;
 }
 
 /**
  * Request validation for - GET /server/api/user/article_series
  */
 export interface IRequestGetUserArticleSeries {
-  body: {};
-  param: {};
-  query: {};
+  body: object;
+  param: object;
+  query: object;
 }
 
 /**
  * Request validation for - GET /server/api/user/article_series/:id
  */
 export interface IRequestGetUserArticleSeriesId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - GET /server/api/user/article_series/:id/articles
  */
 export interface IRequestGetUserArticleSeriesIdArticles {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -268,8 +268,8 @@ export interface IRequestPostUserArticle {
     htmlContent: string;
     markdownContent: string;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -282,7 +282,7 @@ export interface IRequestPutUserArticleIdPublish {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -298,51 +298,51 @@ export interface IRequestPutUserArticleId {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - PUT /server/api/user/article/:id/unpublish
  */
 export interface IRequestPutUserArticleIdUnpublish {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - PUT /server/api/user/article/:id/republish
  */
 export interface IRequestPutUserArticleIdRepublish {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - GET /server/api/user/articles/:status
  */
 export interface IRequestGetUserArticlesStatus {
-  body: {};
+  body: object;
   param: { status: string };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - GET /server/api/user/articles/:status/:size/:cursor
  */
 export interface IRequestGetUserArticlesStatusSizeCursor {
-  body: {};
+  body: object;
   param: {
     status: string;
     size: number;
     cursor: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -356,7 +356,7 @@ export interface IRequestPostUserArticleIdComment {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -369,17 +369,17 @@ export interface IRequestPutUserCommentId {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 /**
  * Request validation for - DELETE /server/api/user/comment/:id
  */
 export interface IRequestDeleteUserCommentId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -391,8 +391,8 @@ export interface IRequestGetUserArticleIdCommentsSizeCursor {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 /**
  * Request validation for - GET /server/api/user/comment/:id/replies/:size/:cursor
@@ -403,8 +403,8 @@ export interface IRequestGetUserCommentIdRepliesSizeCursor {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
@@ -414,8 +414,8 @@ export interface IRequestPostUserReadLater {
   body: {
     id: number;
   };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 
 /**
@@ -425,37 +425,37 @@ export interface IRequestDeleteUserReadLater {
   param: {
     id: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
  * Request validation for - GET /server/api/user/read_later
  */
 export interface IRequestGetUserReadLater {
-  body: {};
-  param: {};
-  query: {};
+  body: object;
+  param: object;
+  query: object;
 }
 /**
  * Request validation for - PUT /server/api/user/article/:id/like
  */
 export interface IRequestPutUserArticleIdLike {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 /**
  * Request validation for - PUT /server/api/user/article/:id/dislike
  */
 export interface IRequestPutUserArticleIdDislike {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 /**
  * Request validation for - GET /server/api/user/liked_articles/:status/:size/:cursor
@@ -466,8 +466,8 @@ export interface IRequestGetUserLikedArticles {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
@@ -480,41 +480,41 @@ export interface IRequestGetUserArticleLikes {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
  * Request validation for - PUT /server/api/user/follow/:id
  */
 export interface IRequestPutUserFollowId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - DELETE /server/api/user/follow/:id
  */
 export interface IRequestDeleteUserFollowId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
  * Request validation for - DELETE /server/api/user/follower/:id
  */
 export interface IRequestDeleteUserFollowerId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -525,8 +525,8 @@ export interface IRequestGetUserFollowers {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 /**
  * Request validation for - GET /server/api/user/followings/:size/:cursor
@@ -536,19 +536,19 @@ export interface IRequestGetUserFollowings {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
  * Request validation for - PUT /server/api/user/follow/suggest/:id
  */
 export interface IRequestPutUserFollowSuggestId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -559,8 +559,8 @@ export interface IRequestGetUserFollowingsSuggestSizeCursor {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
@@ -570,8 +570,8 @@ export interface IRequestGetUserFollowingsSuggestSize {
   param: {
     size: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
@@ -579,18 +579,18 @@ export interface IRequestGetUserFollowingsSuggestSize {
  */
 export interface IRequestPutUserFollowingsSuggest {
   body: { ids: number[] };
-  param: {};
-  query: {};
+  param: object;
+  query: object;
 }
 /**
  * Request validation for - PUT /server/api/user/article-reads/:id
  */
 export interface IRequestPutUserArticleReadsId {
-  body: {};
+  body: object;
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 
 /**
@@ -603,7 +603,7 @@ export interface IRequestPutUserArticleReadsIdTime {
   param: {
     id: number;
   };
-  query: {};
+  query: object;
 }
 /**
  * Request validation for - GET /server/api/user/read-later/unread/:size/:cursor
@@ -613,8 +613,8 @@ export interface IRequestGetUserReadLaterUnreadSizeCursor {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
 
 /**
@@ -625,6 +625,6 @@ export interface IRequestGetUserArticleActivitiesSizeCursor {
     size: number;
     cursor: number;
   };
-  query: {};
-  body: {};
+  query: object;
+  body: object;
 }
