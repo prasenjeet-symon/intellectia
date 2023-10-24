@@ -1539,7 +1539,7 @@ describe("apiRequestPUTUserArticleIdPublishValidator", () => {
   it("should return 400 for missing required fields", (done) => {
     // Simulate an error condition by sending a request with missing required fields
     const invalidId = "invalid-id";
-    const invalidTopics: any = []; // Empty array, should be non-empty
+    const invalidTopics: unknown = []; // Empty array, should be non-empty
     const reqQuery = {};
     const reqBody = { topics: invalidTopics };
 
