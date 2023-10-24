@@ -66,6 +66,7 @@ import {
   idValidatorUnit,
   pageSizeStringValidatorUnit,
   passwordValidatorUnit,
+  pureStringValidatorUnit,
   tokenValidatorUnit,
 } from "./validators";
 
@@ -540,7 +541,7 @@ export async function apiRequestDELETEUserTopicValidator(
   try {
     const validParams = await z
       .object({
-        id: idValidatorUnit,
+        id: idStringValidatorUnit,
       })
       .parseAsync(req.params);
 
@@ -1184,7 +1185,7 @@ export async function apiRequestGETUserArticlesStatusValidator(
 ) {
   try {
     const validParams = await z
-      .object({ status: z.string() })
+      .object({ status: pureStringValidatorUnit })
       .parseAsync(req.params);
 
     const validQuery = await z.object({}).parseAsync(req.query);
@@ -1220,9 +1221,9 @@ export async function apiRequestGETUserArticlesStatusSizeCursorValidator(
   try {
     const validParams = await z
       .object({
-        status: z.string(),
-        size: z.number(),
-        cursor: z.number(),
+        status: pureStringValidatorUnit,
+        size: pageSizeStringValidatorUnit,
+        cursor: cursorStringValidatorUnit,
       })
       .parseAsync(req.params);
 
@@ -1969,7 +1970,6 @@ export async function apiRequestGETUserFollowingsSuggestSizeValidator(
     res.locals.reqClientData = resLocalData;
     next();
   } catch (error) {
-    console.error(error, 'ERR')
     if (error instanceof ZodError && !error.isEmpty) {
       res.status(400).send({ error: error.issues[0]?.message });
       next(error);
@@ -2154,6 +2154,7 @@ export async function apiRequestGETUserArticleActivitiesValidator(
     res.locals.reqClientData = resLocalData;
     next();
   } catch (error) {
+    console.log(error, "ERROR");
     if (error instanceof ZodError && !error.isEmpty) {
       res.status(400).send({ error: error.issues[0]?.message });
       next(error);

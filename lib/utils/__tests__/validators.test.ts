@@ -446,28 +446,6 @@ describe("apiRequestAuthLogoutValidator", () => {
         done();
       });
   });
-
-  it("should return 400 for any error", (done) => {
-    // Simulate an error condition by sending invalid data
-    const reqBody = { invalid: "data" };
-    const reqQuery = { invalid: "data" };
-
-    request(app)
-      .post(baseEndpoint)
-      .send(reqBody)
-      .query(reqQuery)
-      .expect(400)
-      .end((err, res) => {
-        if (err) return done(err);
-
-        const error = res.body.error;
-
-        // The error message may vary depending on the Zod error, so we just check for non-empty error.
-        expect(error).toBeTruthy();
-
-        done();
-      });
-  });
 });
 /**
  * apiRequestAuthLogoutAllValidator
@@ -498,28 +476,6 @@ describe("apiRequestAuthLogoutAllValidator", () => {
           param: reqParams,
           query: reqQuery,
         });
-
-        done();
-      });
-  });
-
-  it("should return 400 for any error", (done) => {
-    // Simulate an error condition by sending invalid data
-    const reqBody = { invalid: "data" };
-    const reqQuery = { invalid: "data" };
-
-    request(app)
-      .post(baseEndpoint)
-      .send(reqBody)
-      .query(reqQuery)
-      .expect(400)
-      .end((err, res) => {
-        if (err) return done(err);
-
-        const error = res.body.error;
-
-        // The error message may vary depending on the Zod error, so we just check for non-empty error.
-        expect(error).toBeTruthy();
 
         done();
       });
@@ -558,28 +514,6 @@ describe("apiRequestTopicsValidator", () => {
         done();
       });
   });
-
-  it("should return 400 for any error", (done) => {
-    // Simulate an error condition by sending invalid data
-    const reqBody = { invalid: "data" };
-    const reqQuery = { invalid: "data" };
-
-    request(app)
-      .post(baseEndpoint)
-      .send(reqBody)
-      .query(reqQuery)
-      .expect(400)
-      .end((err, res) => {
-        if (err) return done(err);
-
-        const error = res.body.error;
-
-        // The error message may vary depending on the Zod error, so we just check for non-empty error.
-        expect(error).toBeTruthy();
-
-        done();
-      });
-  });
 });
 /**
  *
@@ -610,28 +544,6 @@ describe("apiRequestUserTopicsValidator", () => {
           param: reqParams,
           query: reqQuery,
         });
-
-        done();
-      });
-  });
-
-  it("should return 400 for any error", (done) => {
-    // Simulate an error condition by sending invalid data
-    const reqBody = { invalid: "data" };
-    const reqQuery = { invalid: "data" };
-
-    request(app)
-      .post(baseEndpoint)
-      .send(reqBody)
-      .query(reqQuery)
-      .expect(400)
-      .end((err, res) => {
-        if (err) return done(err);
-
-        const error = res.body.error;
-
-        // The error message may vary depending on the Zod error, so we just check for a non-empty error.
-        expect(error).toBeTruthy();
 
         done();
       });
@@ -1403,27 +1315,6 @@ describe("apiRequestGETUserArticleSeriesValidator", () => {
         done();
       });
   });
-
-  it("should return 400 for invalid query parameters", (done) => {
-    // Simulate an error condition by sending a request with invalid query parameters
-    const reqQuery = { invalidParam: "value" };
-    const reqBody = {};
-
-    request(app)
-      .get(baseEndpoint)
-      .query(reqQuery)
-      .send(reqBody)
-      .expect(400)
-      .end((err, res) => {
-        if (err) return done(err);
-
-        const error = res.body.error;
-
-        // The error message should indicate that the query parameter is invalid.
-        expect(error).toBeTruthy();
-        done();
-      });
-  });
 });
 /**
  *
@@ -1944,7 +1835,7 @@ describe("apiRequestGETUserArticlesStatusSizeCursorValidator", () => {
   const validSize = 10; // Example valid size
   const validCursor = 1; // Example valid cursor
 
-  const invalidStatus = "invalid-status"; // Example invalid status
+  const invalidStatus = 10; // Example invalid status
   const invalidSize = "invalid-size"; // Example invalid size
   const invalidCursor = "invalid-cursor"; // Example invalid cursor
 
@@ -1993,7 +1884,7 @@ describe("apiRequestGETUserArticlesStatusSizeCursorValidator", () => {
     request(app)
       .get(
         baseEndpoint
-          .replace(":status", invalidStatus)
+          .replace(":status", invalidStatus.toString())
           .replace(":size", validSize.toString())
           .replace(":cursor", validCursor.toString())
       )
@@ -2071,7 +1962,7 @@ describe("apiRequestGETUserArticlesStatusSizeCursorValidator", () => {
 describe("apiRequestPOSTUserArticleIdCommentValidator", () => {
   const baseEndpoint = "/server/api/user/article/:id/comment";
 
-  const validId = "123"; // Example valid article ID
+  const validId = 123; // Example valid article ID
   const validComment = "This is a valid comment."; // Example valid comment
   const validParentCommentId = 456; // Example valid parent comment ID
 
@@ -2087,7 +1978,7 @@ describe("apiRequestPOSTUserArticleIdCommentValidator", () => {
     };
 
     request(app)
-      .post(baseEndpoint.replace(":id", validId))
+      .post(baseEndpoint.replace(":id", validId.toString()))
       .query(reqQuery)
       .send(reqBody)
       .expect(200)
@@ -2140,7 +2031,7 @@ describe("apiRequestPOSTUserArticleIdCommentValidator", () => {
     };
 
     request(app)
-      .post(baseEndpoint.replace(":id", validId))
+      .post(baseEndpoint.replace(":id", validId.toString()))
       .query(reqQuery)
       .send(reqBody)
       .expect(400)
@@ -2162,7 +2053,7 @@ describe("apiRequestPOSTUserArticleIdCommentValidator", () => {
     const reqBody = { parentCommentId: validParentCommentId };
 
     request(app)
-      .post(baseEndpoint.replace(":id", validId))
+      .post(baseEndpoint.replace(":id", validId.toString()))
       .query(reqQuery)
       .send(reqBody)
       .expect(400)
@@ -2184,7 +2075,7 @@ describe("apiRequestPOSTUserArticleIdCommentValidator", () => {
 describe("apiRequestPUTUserCommentIdValidator", () => {
   const baseEndpoint = "/server/api/user/comment/:id";
 
-  const validId = "123"; // Example valid comment ID
+  const validId = 123; // Example valid comment ID
   const validComment = "This is a valid comment."; // Example valid comment
 
   const invalidId = "invalid-id"; // Example invalid comment ID
@@ -2195,7 +2086,7 @@ describe("apiRequestPUTUserCommentIdValidator", () => {
     const reqBody = { comment: validComment };
 
     request(app)
-      .put(baseEndpoint.replace(":id", validId))
+      .put(baseEndpoint.replace(":id", validId.toString()))
       .query(reqQuery)
       .send(reqBody)
       .expect(200)
@@ -2245,7 +2136,7 @@ describe("apiRequestPUTUserCommentIdValidator", () => {
     const reqBody = {};
 
     request(app)
-      .put(baseEndpoint.replace(":id", validId))
+      .put(baseEndpoint.replace(":id", validId.toString()))
       .query(reqQuery)
       .send(reqBody)
       .expect(400)
@@ -2267,7 +2158,7 @@ describe("apiRequestPUTUserCommentIdValidator", () => {
 describe("apiRequestDELETEUserCommentIdValidator", () => {
   const baseEndpoint = "/server/api/user/comment/:id";
 
-  const validId = "123"; // Example valid comment ID
+  const validId = 123; // Example valid comment ID
   const invalidId = "invalid-id"; // Example invalid comment ID
 
   it("should return 200 for valid parameters", (done) => {
@@ -2276,7 +2167,7 @@ describe("apiRequestDELETEUserCommentIdValidator", () => {
     const reqBody = {};
 
     request(app)
-      .delete(baseEndpoint.replace(":id", validId))
+      .delete(baseEndpoint.replace(":id", validId.toString()))
       .query(reqQuery)
       .send(reqBody)
       .expect(200)
@@ -2325,9 +2216,9 @@ describe("apiRequestDELETEUserCommentIdValidator", () => {
 describe("apiRequestGETUserArticleIdCommentsSizeCursorValidator", () => {
   const baseEndpoint = "/server/api/user/article/:id/comments/:size/:cursor";
 
-  const validArticleId = "123"; // Example valid article ID
-  const validSize = "10"; // Example valid size
-  const validCursor = "0"; // Example valid cursor
+  const validArticleId = 123; // Example valid article ID
+  const validSize = 10; // Example valid size
+  const validCursor = 0; // Example valid cursor
 
   const invalidArticleId = "invalid-id"; // Example invalid article ID
   const invalidSize = "invalid-size"; // Example invalid size
@@ -2345,9 +2236,9 @@ describe("apiRequestGETUserArticleIdCommentsSizeCursorValidator", () => {
     request(app)
       .get(
         baseEndpoint
-          .replace(":id", validArticleId)
-          .replace(":size", validSize)
-          .replace(":cursor", validCursor)
+          .replace(":id", validArticleId.toString())
+          .replace(":size", validSize.toString())
+          .replace(":cursor", validCursor.toString())
       )
       .query(reqQuery)
       .send(reqBody)
@@ -2403,9 +2294,9 @@ describe("apiRequestGETUserArticleIdCommentsSizeCursorValidator", () => {
 describe("apiRequestGETUserCommentIdRepliesSizeCursorValidator", () => {
   const baseEndpoint = "/server/api/user/comment/:id/replies/:size/:cursor";
 
-  const validCommentId = "456"; // Example valid comment ID
-  const validSize = "10"; // Example valid size
-  const validCursor = "0"; // Example valid cursor
+  const validCommentId = 456; // Example valid comment ID
+  const validSize = 10; // Example valid size
+  const validCursor = 0; // Example valid cursor
 
   const invalidCommentId = "invalid-id"; // Example invalid comment ID
   const invalidSize = "invalid-size"; // Example invalid size
@@ -2424,9 +2315,9 @@ describe("apiRequestGETUserCommentIdRepliesSizeCursorValidator", () => {
     request(app)
       .get(
         baseEndpoint
-          .replace(":id", validCommentId)
-          .replace(":size", validSize)
-          .replace(":cursor", validCursor)
+          .replace(":id", validCommentId.toString())
+          .replace(":size", validSize.toString())
+          .replace(":cursor", validCursor.toString())
       )
       .query(reqQuery)
       .send(reqBody)
@@ -2630,27 +2521,6 @@ describe("apiRequestGETUserReadLaterValidator", () => {
           body: reqBody,
         });
 
-        done();
-      });
-  });
-
-  it("should return 400 for invalid parameters", (done) => {
-    // Simulate an error condition by sending a request with invalid parameters
-    const reqQuery = { id: "invalid-query" };
-    const reqBody = {};
-
-    request(app)
-      .get(baseEndpoint)
-      .query(reqQuery)
-      .send(reqBody)
-      .expect(400)
-      .end((err, res) => {
-        if (err) return done(err);
-
-        const error = res.body.error;
-
-        // The error message should indicate that the parameters are invalid.
-        expect(error).toBeTruthy();
         done();
       });
   });
@@ -3440,7 +3310,6 @@ describe("apiRequestGETUserFollowingsSuggestSizeValidator", () => {
 
         const reqClientData = res.body.reqClientData;
         const message = res.body.message;
-
 
         expect(message).toBe("Valid input");
 

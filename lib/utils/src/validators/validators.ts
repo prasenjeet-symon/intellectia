@@ -6,29 +6,23 @@ import { validatorPassword } from "../utils";
  * ID is int , positive and greater than 0
  */
 export const idValidatorUnit = z
-  .number()
-  .positive({ message: "Id must be greater than 0" })
-  .int({ message: "Id must be an integer" });
-
+  .number().positive().refine((val) => val > 0, {
+    message: "ID must be a positive integer",
+  })
 /**
  * ZOD validator for the id (number or string that can be parsed into a number)
  * ID is int, positive, and greater than 0
  */
 export const idStringValidatorUnit = z
   .string()
-  .refine(
-    (value) => {
-      const parsedValue = Number(value);
-      return (
-        !isNaN(parsedValue) && Number.isInteger(parsedValue) && parsedValue > 0
-      );
-    },
-    {
-      message:
-        "Id must be an integer or a string that can be parsed into a positive integer",
-    }
-  )
-  .transform((value) => Number(value));
+  .refine((value) => /^(0|[1-9]\d*)$/.test(value), {
+    message: "Page size must be a positive integer",
+  })
+  .transform((value) => Number(value))
+  .refine((val) => val > 0, {
+    message: "Page size must be a positive integer",
+  })
+  .transform((val) => val);
 /**
  * ZOD validator for the email
  * Email is string, email
@@ -52,7 +46,7 @@ export const passwordValidatorUnit = z.string().refine(validatorPassword, {
 
 /**
  * ZOD validator for the token
- * Token cannot be empty and must be string
+ * Token cannot be empty and must be a string
  */
 export const tokenValidatorUnit = z
   .string()
@@ -60,34 +54,36 @@ export const tokenValidatorUnit = z
 
 /**
  * ZOD cursor validator
- * Cursor is number , integer and greater than or equal to 0
+ * Cursor is a string that can be parsed into a number, and the number should be an integer greater than or equal to 0
  */
 export const cursorStringValidatorUnit = z
   .string()
-  .refine(
-    (value) => {
-      const parsedValue = Number(value);
-      return (
-        !isNaN(parsedValue) && Number.isInteger(parsedValue) && parsedValue >= 0
-      );
-    },
-    {
-      message:
-        "Id must be a number or a string that can be parsed into a non-negative integer",
-    }
-  )
-  .transform((value) => Number(value));
-
+  .refine((value) => /^(0|[1-9]\d*)$/.test(value), {
+    message: "Cursor must be a positive integer",
+  })
+  .transform((value) => Number(value))
+  .refine((val) => val >= 0, {
+    message: "Cursor must be a positive integer",
+  });
 /**
  * ZOD page size validator
- * Page size is number , integer and greater than 0
+ * Page size is a string that can be parsed into a number, and the number should be an integer greater than 0
  */
 export const pageSizeStringValidatorUnit = z
   .string()
-  .refine((value) => {
-    const parsedValue = Number(value);
-    return (
-      !isNaN(parsedValue) && Number.isInteger(parsedValue) && parsedValue > 0
-    );
+  .refine((value) => /^(0|[1-9]\d*)$/.test(value), {
+    message: "Cursor must be a positive integer",
   })
-  .transform((value) => Number(value));
+  .transform((value) => Number(value))
+  .refine((val) => val > 0, {
+    message: "Cursor must be a positive integer",
+  });
+/**
+ * Pure string validator
+ * Not a number as string , only string that starts with a letter
+ */
+export const pureStringValidatorUnit = z
+  .string()
+  .refine((value) => /^[a-zA-Z]/.test(value), {
+    message: "String must start with a letter",
+  });
