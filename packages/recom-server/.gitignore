@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# Environment variables file
+.env
+
+# IDE settings
+.idea/
+.vscode/
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Temporary files
+*.swp
+*.tmp
+
+# Package files
+*.zip
+*.tar.gz
+*.rar
+*.tar.xz
+
+# Other generated files
+*.csv
+*.db
+
+# Python local development server
+__pycache__/

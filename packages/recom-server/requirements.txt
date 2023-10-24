@@ -1,0 +1,12 @@
+Flask==2.3.2
+Flask-JWT==0.2.0
+Flask-Mail==0.9.1
+Flask-RESTful==0.3.10
+Flask-Script==2.0.6
+Flask-SQLAlchemy==3.0.5
+PyJWT==2.7.0
+python-dotenv==1.0.0
+SQLAlchemy==2.0.19
+flask-cors==4.0.0
+gunicorn==21.2.0
+psycopg2==2.9.7
