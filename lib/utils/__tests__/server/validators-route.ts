@@ -715,6 +715,19 @@ router.get(
 /**
  * apiRequestGETUserFollowingsValidator
  */
+/**
+ * apiRequestGETUserFollowingsSuggestSizeValidator
+ */
+router.get(
+  "/server/api/user/followings/suggest/:size",
+  apiRequestGETUserFollowingsSuggestSizeValidator,
+  async (_req, res) => {
+    res.status(200).json({
+      message: "Valid input",
+      reqClientData: res.locals.reqClientData,
+    });
+  }
+);
 router.get(
   "/server/api/user/followings/:size/:cursor",
   apiRequestGETUserFollowingsValidator,
@@ -752,20 +765,6 @@ router.get(
     });
   }
 );
-/**
- * apiRequestGETUserFollowingsSuggestSizeValidator
- */
-router.get(
-  "/server/api/user/followings/suggest/:size",
-  apiRequestGETUserFollowingsSuggestSizeValidator,
-  async (_req, res) => {
-    res.status(200).json({
-      message: "Valid input",
-      reqClientData: res.locals.reqClientData,
-    });
-  }
-);
-
 /**
  * apiRequestPUTUserFollowingsSuggestValidator
  */
