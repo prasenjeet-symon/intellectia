@@ -4,19 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@intellectia/utils': workspace:^
-  '@intellectia/types': workspace:^
-
 dependencies:
   '@hookform/resolvers':
     specifier: ^3.3.1
     version: 3.3.1(react-hook-form@7.47.0)
   '@intellectia/types':
-    specifier: workspace:^
+    specifier: ^1.0.0
     version: link:../../lib/types
   '@intellectia/utils':
-    specifier: workspace:^
+    specifier: ^1.0.0
     version: link:../../lib/utils
   '@radix-ui/react-label':
     specifier: ^2.0.2

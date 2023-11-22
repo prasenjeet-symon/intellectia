@@ -4,13 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@intellectia/utils': workspace:^
-  '@intellectia/types': workspace:^
-
 dependencies:
   '@intellectia/types':
-    specifier: workspace:^
+    specifier: ^1.0.0
     version: link:../types
   cors:
     specifier: ^2.8.5
