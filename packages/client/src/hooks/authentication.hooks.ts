@@ -109,7 +109,7 @@ export function useSignUpWithEmailAndPassword(navigate: NavigateFunction, ctx?: 
  * Hook - Authentication
  * Login user with email and password
  */
-export function useLoginWithEmailAndPassword(navigate: NavigateFunction, ctx?: IHookContext): IHookLoginWithEmailAndPassword {
+export function (navigate: NavigateFunction, ctx?: IHookContext): IHookLoginWithEmailAndPassword {
   const loginMutation = useMutation<AxiosResponse<IAuthenticationResult>, AxiosError<IAxiosError>, { email: string; password: string }, unknown>((inputData) => loginWithEmailPassword(inputData.email, inputData.password), {
     onError: (error) => {
       dispatchAPIError({
