@@ -5,10 +5,15 @@ import * as fs from 'fs';
 import path from 'path';
 import showdown from 'showdown';
 import { PrismaClientSingleton } from '../utils';
+
+
+
+
 /**
  * Create new user given email and password
  */
-export async function createUserWithEmailPassword(email: string, password: string): Promise<void> {
+//export async function createUserWithEmailPassword(email: string, password: string): Promise<void> {
+export async function createUserWithEmailPassword(): Promise<void> {
     // add new user to database
     // use the email and password
     // if the user already exit then just return silently
@@ -27,7 +32,7 @@ export async function markdownToJSON(): Promise<{
 }> {
     try {
         /* extracting HTML content using specified function markdownToHTML */
-        const catFile = path.join(__dirname, '..', '/assets/catOnTheMoon.md');
+        const catFile = path.join(__dirname, '..', '../assets/catOnTheMoon.md');
         let htmlContent = await markdownToHTML(catFile);
         if (!htmlContent) {
             throw new Error('Markdown to HTML conversion failed');
@@ -284,7 +289,38 @@ export async function commentOnArticle(_email: string, _articleId: number, _min:
     // comment on article with given article id
     // create n number of fake comments for the article where n belong to [ min , max ] and min, max and n  belong to positive Integer
     // save the comments in parallel ( Promise.all() )
-}
+    const prisma = PrismaClientSingleton.prisma;
+
+    // First we find the user by email
+    const user = await prisma.user.findUnique({
+        where: {
+            email: _email,
+        },
+    });
+
+    if (!user) {
+        throw new Error(`User with email ${_email} was not found.`);
+    }
+
+    // Determine a random number of comments
+    const numberOfComments = Math.floor(Math.random() * (_max - _min + 1)) + _min;
+
+    // Create comments and save them
+    await Promise.all(
+        Array.from({ length: numberOfComments }).map(async () => {
+            const commentContent = "commented"
+
+            return prisma.comment.create({
+                data: {
+                    content: commentContent,
+                    authorId: user.id,
+                    articleId: _articleId,
+                },
+            });
+        })
+    );
+    
+} 
 /**
  * Add multiple comments to the articles
  */
@@ -296,23 +332,87 @@ export async function addMultipleCommentsToArticles(_min: number, _max: number):
     // use the function commentOnArticle to comment on the article
     // repeat this process for every user fetched from the database and save the result in parallel ( Promise.all() )
     // loop through all the user and perform the above task
+    const prisma = PrismaClientSingleton.prisma;
+
+    // fetch all the articles from the database
+    // fetch all the users from the database
+    const [articles, users] = await Promise.all([
+        prisma.article.findMany(),
+        prisma.user.findMany(),
+    ]);
+
+    // each user will comments on randomly chosen 40% of the articles
+    await Promise.all(users.map(async (user) => {
+        // Random 40% choosing
+        const selectedArticles = articles.sort(() => 0.5 - Math.random()).slice(0, Math.ceil(articles.length * 0.4));
+
+        // use the function commentOnArticle to comment on the article
+        await Promise.all(selectedArticles.map(async (article) => {
+            await commentOnArticle(user.email, article.id, _min, _max);
+        }));
+    }));
 }
 /**
  * Add replies to the comments
  */
-export async function addRepliesToComments(_min: number, _max: number): Promise<void> {
+export async function addRepliesToComments(_min: number, _max: number): Promise<void> {//DONE
+
     // add replies to the every comment
     // fetch all the comments from the database
     // fetch all the users from the database
     // each comments will have n number of reply where n belong to the [ min , max ] and min, max and n  belong to positive Integer
     // that n number of reply per comment will belong the random user n that is randomly chosen from the users list
     // loop on the comments and perform the above task and save the result ( reply ) to database in parallel ( Promise.all() )
+
+    const prisma = PrismaClientSingleton.prisma;
+
+    // Fetch all comments from the database
+    const comments = await prisma.comment.findMany();
+    
+    // Fetch all users from the database
+    const users = await prisma.user.findMany();
+
+    // Ensure there are users available
+    if (users.length === 0) {
+        throw new Error('No users available to assign replies');
+    }
+
+    // Loop through each comment and add replies
+    await Promise.all(comments.map(async (parentComment) => {
+        // Determine the number of replies for this comment
+        const numberOfReplies = Math.floor(Math.random() * (_max - _min + 1)) + _min;
+
+        // Add the replies in parallel
+        await Promise.all(Array.from({ length: numberOfReplies }, async () => {
+            // Select a random user for each reply
+            const randomUserIndex = Math.floor(Math.random() * users.length);
+            const randomUser = users[randomUserIndex];
+
+            // Check if randomUser is defined
+            if (!randomUser) {
+                throw new Error('Random user is undefined');
+            }
+
+            // Create a fake reply content
+            const replyContent = faker.lorem.sentence();
+
+            // Save the reply to the database
+            await prisma.comment.create({
+                data: {
+                    content: replyContent,
+                    authorId: randomUser.id,
+                    articleId: parentComment.articleId, // Assuming the reply is on the same article
+                    parentCommentId: parentComment.id,
+                },
+            });
+        }));
+    }));
 }
 
 /**
  * Helper function to add likes or dislikes to the article with specific user
  */
-async function addLikesOrDislike(user: User, article: Article, isLike: boolean) {
+export async function addLikesOrDislike(user: User, article: Article, isLike: boolean) {
     const prisma = PrismaClientSingleton.prisma;
 
     const action = isLike ? 'liked' : 'disliked';
@@ -329,7 +429,7 @@ async function addLikesOrDislike(user: User, article: Article, isLike: boolean) 
 /**
  * Add likes/dislikes to the articles by users
  */
-export async function addLikesToArticles(): Promise<void> {
+export async function addLikesToArticles(): Promise<void> { //DONE
     // How to add likes and dislike to the article: See below
     // 1. fetch all the articles from the database
     // 2. fetch all the users from the database
@@ -338,6 +438,7 @@ export async function addLikesToArticles(): Promise<void> {
     // 5. first half of articles will be like by a user
     // 6. remaining half of articles will be dislike by a user
     // Perform the above task in parallel ( Promise.all() ) for each and every user
+    
 
     const prisma = PrismaClientSingleton.prisma;
 
