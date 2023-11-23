@@ -58,8 +58,12 @@ export async function signupWithGoogle(token: string): Promise<AxiosResponse<IAu
  * @return {Promise<AxiosResponse<IAuthenticationResult>>} A Promise that resolves to the authentication result.
  */
 export async function loginWithGoogle(token: string): Promise<AxiosResponse<IAuthenticationResult>> {
+  const axiosClient = AxiosClient.getInstance();
+  const axios = axiosClient.axiosInstance;
   const apiUrl = "/auth/google_login";
-  return {} as never;
+  const response = await axios.post<IAuthenticationResult>(apiUrl,{token});
+  
+  return response;
 }
 
 /**
