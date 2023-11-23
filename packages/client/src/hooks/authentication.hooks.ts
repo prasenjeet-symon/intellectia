@@ -5,7 +5,7 @@
  * file name should be like -> **.hook.ts ( if file holds one hook )
  */
 
-import { logoutUser, loginWithEmailPassword, signupWithEmailPassword } from "@/api/api";
+import { logoutUser, loginWithEmailPassword, signupWithEmailPassword, loginWithGoogle } from "@/api/api";
 import AxiosClient from "@/api/apiClient";
 import { dispatchAPIError, dispatchAPIViewError, dispatchAPIViewSuccess } from "@/lib/appUtils";
 import { queryClient } from "@/react-query";
@@ -164,7 +164,45 @@ export function useSignupWithGoogle(navigate: NavigateFunction, ctx?: IHookConte
  * Login user with Google token
  */
 export function useLoginWithGoogle(navigate: NavigateFunction, ctx?: IHookContext): IHookLoginWithGoogle {
-  return {} as any;
+  const loginWithGoogleMutation = useMutation<AxiosResponse<IAuthenticationResult>, AxiosError<IAxiosError>,{token:string},unknown>((inputData)=>loginWithGoogle(inputData.token),{
+    onError: (error) => {
+      dispatchAPIError({
+        hookCtx: APIHookType.GoogleLogin,
+        message: error,
+      });
+
+      if (!ctx || (ctx && ctx.showErrors)) {
+        dispatchAPIViewError({
+          hookCtx: APIHookType.GoogleLogin,
+          message: error.response?.data.error,
+        });
+      }
+    },onSuccess: (data) => {
+      // set the local storage
+      AxiosClient.getInstance().addToken(data.data.token);
+
+      if (!ctx || (ctx && ctx.showSuccess)) {
+        dispatchAPIViewSuccess({
+          hookCtx: APIHookType.GoogleLogin,
+          message: "You have successfully logged in.",
+        });
+      }
+
+      navigate("/dashboard");
+    }
+  });
+
+  const login = async (token:string) => {
+    try {
+      await loginWithGoogleMutation.mutateAsync({ token });
+    } catch (error: any) {
+      dispatchAPIError({
+        hookCtx: APIHookType.GoogleLogin,
+        message: error,
+      });
+    }
+  };
+  return { login, isLoading: loginWithGoogleMutation.isLoading};
 }
 
 /**
