@@ -6,9 +6,18 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
-import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
+import { Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
 import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
-import { apiRequestAuthLoginValidator } from '@intellectia/utils/validators';
+import {
+    apiRequestAuthGoogleLoginValidator,
+    apiRequestAuthGoogleValidator,
+    apiRequestAuthLoginValidator,
+    apiRequestAuthLogoutAllValidator,
+    apiRequestAuthLogoutValidator,
+    apiRequestAuthMagicLoginValidator,
+    apiRequestAuthMagicValidator,
+    apiRequestAuthSignupValidator
+} from '@intellectia/utils/validators';
 import { ApiResponse, IRequestAuthLogin,ICommon, IMagic} from '@intellectia/types';
 
 
@@ -142,7 +151,7 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
  * Signup user with email and password
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/signup', async (req, res) => {
+router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
     try {
         const parsedBody = emailPasswordObjectValidator.parse(req.body);
         const email = parsedBody.email;
@@ -238,7 +247,7 @@ router.post('/signup', async (req, res) => {
  * Magic URL creation
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/magic', async (req, res) => {
+router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
     try {
         const parsedBody = await emailObjectValidator.parseAsync(req.body);
         const email = parsedBody.email;
@@ -321,8 +330,7 @@ router.post('/magic', async (req, res) => {
  * Magic URL login
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post(
-    '/magic_login',
+router.post('/magic_login', apiRequestAuthMagicLoginValidator,
     rateLimit({
         windowMs: 5 * 60 * 1000, // 5 minutes
         max: 10,
@@ -452,7 +460,7 @@ router.post(
  * Signup with google
  * POSTMAN_TODO : This route is waiting to be added to postman and documented
  */
-router.post('/google', async (req, res) => {
+router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
@@ -540,7 +548,7 @@ router.post('/google', async (req, res) => {
  * POSTMAN_TODO : This route is waiting to be added to postman and documented
  *
  */
-router.post('/google_login', async (req, res) => {
+router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
@@ -649,7 +657,7 @@ router.post('/google_login', async (req, res) => {
  * Logout the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/logout', authenticateUser, async (_req, res) => {
+router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
         const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
@@ -735,7 +743,7 @@ router.post('/logout', authenticateUser, async (_req, res) => {
  * Logout all the sessions
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/logout_all', authenticateUser, async (_req, res) => {
+router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
         const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
