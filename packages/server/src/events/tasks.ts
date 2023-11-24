@@ -25,7 +25,49 @@ export async function CreateArticleStory(_email: string, articleId: number) {
  * Task ( Runs after the article's story is created successfully ).
  * Distribute the article story among the followers of the article's author
  */
-export async function DistributeArticleStory(_email: string, _articleId: number) {}
+export async function DistributeArticleStory(_email: string, _articleId: number) {
+    const prisma = PrismaClientSingleton.prisma;
+    const article = await prisma.article.findUnique({
+        where: {
+            id: _articleId,
+        },
+    });
+
+    const authorId = article?.userId!;
+
+    const followers = await prisma.user.findUnique({
+        where: {
+            id: authorId,
+        },
+        select: {
+            followers: {
+                select: {
+                    followerId: true,
+                },
+            },
+        },
+    });
+
+    const followerIds = followers?.followers.map((follower) => follower.followerId);
+
+    const articleStory = await prisma.articleStory.findUnique({
+        where: {
+            articleId: _articleId
+        },
+    });
+
+    const newArticleStoryDistribution = await prisma.articleStoryDistribution.createMany({
+        data: followerIds?.map((followerId) => ({
+            articleStoryId: articleStory?.id!,
+            userId: followerId!,
+            isSeen: false,
+            storyId: articleStory?.id!,
+            expiresAt: new Date(),
+        })) || [],
+    });
+
+    return newArticleStoryDistribution;
+}
 /**
  * Task ( Runs after the article's positive actions are created - comments, likes and save ).
  * Add author to suggested user to follow for the logged in user
