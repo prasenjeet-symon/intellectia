@@ -3,6 +3,55 @@ import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
 import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, idValidatorUnit, topicsObjectValidator } from '../validators';
 import { ApiResponse, IHelloWorldResponse, IGetTopics, IGetUserTopics, IGetTopicById, IGetAllArticleSeries, IGetSingleArticleSeries} from '@intellectia/types';
+import {
+    apiRequestDELETEUserArticleSeriesArticleValidator,
+    apiRequestDELETEUserArticleSeriesArticlesValidator,
+    apiRequestDELETEUserArticleSeriesIdValidator,
+    apiRequestDELETEUserCommentIdValidator,
+    apiRequestDELETEUserFollowIdValidator,
+    apiRequestDELETEUserFollowerIdValidator,
+    apiRequestDELETEUserReadLaterIdValidator,
+    apiRequestDELETEUserTopicValidator,
+    apiRequestDELETEUserTopicsValidator,
+    apiRequestGETUserArticleIdCommentsSizeCursorValidator,
+    apiRequestGETUserArticleLikesValidator,
+    apiRequestGETUserArticleSeriesIdArticlesValidator,
+    apiRequestGETUserArticleSeriesIdValidator,
+    apiRequestGETUserArticleSeriesValidator,
+    apiRequestGETUserArticlesStatusSizeCursorValidator,
+    apiRequestGETUserArticlesStatusValidator,
+    apiRequestGETUserCommentIdRepliesSizeCursorValidator,
+    apiRequestGETUserFollowersValidator,
+    apiRequestGETUserFollowingsSuggestSizeValidator,
+    apiRequestGETUserFollowingsSuggestValidator,
+    apiRequestGETUserFollowingsValidator,
+    apiRequestGETUserLikedArticlesValidator,
+    apiRequestGETUserReadLaterUnreadValidator,
+    apiRequestGETUserReadLaterValidator,
+    apiRequestPOSTUserArticleIdCommentValidator,
+    apiRequestPOSTUserArticleSeriesValidator,
+    apiRequestPOSTUserArticleValidator,
+    apiRequestPOSTUserReadLaterValidator,
+    apiRequestPUTUserArticleIdDislikeValidator,
+    apiRequestPUTUserArticleIdLikeValidator,
+    apiRequestPUTUserArticleIdPublishValidator,
+    apiRequestPUTUserArticleIdRepublishValidator,
+    apiRequestPUTUserArticleIdUnpublishValidator,
+    apiRequestPUTUserArticleIdValidator,
+    apiRequestPUTUserArticleReadsIdTimeValidator,
+    apiRequestPUTUserArticleReadsIdValidator,
+    apiRequestPUTUserArticleSeriesArticleValidator,
+    apiRequestPUTUserArticleSeriesArticlesValidator,
+    apiRequestPUTUserCommentIdValidator,
+    apiRequestPUTUserFollowIdValidator,
+    apiRequestPUTUserFollowSuggestIdValidator,
+    apiRequestPUTUserFollowingsSuggestValidator,
+    apiRequestPUTUserTopicValidator,
+    apiRequestPUTUserTopicsValidator,
+    apiRequestTopicValidator,
+    apiRequestTopicsValidator,
+    apiRequestUserTopicsValidator
+} from '@intellectia/utils/validators';
 
 const router: Router = Router();
 
@@ -20,7 +69,7 @@ router.get('/', (_req, res) => {
  * Fetch all the topics of intellectia
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/topics', async (_req, res) => {
+router.get('/topics', apiRequestTopicsValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const topics: IGetTopics[] = await prisma.topic.findMany();
     const response: ApiResponse<IGetTopics[]> = {
@@ -36,7 +85,7 @@ router.get('/topics', async (_req, res) => {
  * Fetch all the assigned topics of the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/user/topics', async (_req, res) => {
+router.get('/user/topics', apiRequestUserTopicsValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     // get all the topics of user
     const topics = await prisma.user.findUnique({
@@ -70,7 +119,7 @@ router.get('/user/topics', async (_req, res) => {
  * Get the single topic by id
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/topic/:id', async (req, res) => {
+router.get('/topic/:id', apiRequestTopicValidator, async (req, res) => {
     try {
         const parsedParam = await idObjectValidator.parseAsync(req.params);
         const id = +parsedParam.id;
@@ -114,7 +163,7 @@ router.get('/topic/:id', async (req, res) => {
  * Assign multiple topics to the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.put('/user/topics', async (req, res) => {
+router.put('/user/topics', apiRequestPUTUserTopicsValidator, async (req, res) => {
     try {
         // topics is the array of numbers
         const parsedBody = await topicsObjectValidator.parseAsync(req.body);
@@ -182,7 +231,7 @@ router.put('/user/topics', async (req, res) => {
  * Assign single topic to the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.put('/user/topic', async (req, res) => {
+router.put('/user/topic', apiRequestPUTUserTopicValidator, async (req, res) => {
     try {
         const parsedBody = await idObjectValidator.parseAsync(req.body);
         const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
@@ -251,7 +300,7 @@ router.put('/user/topic', async (req, res) => {
  * Delete single topic from the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.delete('/user/topic/:id', async (req, res) => {
+router.delete('/user/topic/:id', apiRequestDELETEUserTopicValidator, async (req, res) => {
     try {
         const parsedParams = await idObjectValidator.parseAsync(req.params);
         const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
@@ -304,7 +353,7 @@ router.delete('/user/topic/:id', async (req, res) => {
  * Delete multiple topics from the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.delete('/user/topics', async (req, res) => {
+router.delete('/user/topics', apiRequestDELETEUserTopicsValidator, async (req, res) => {
     try {
         const parsedBody = await topicsObjectValidator.parseAsync(req.body);
         const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
@@ -357,7 +406,7 @@ router.delete('/user/topics', async (req, res) => {
  * Add an article to the article series
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.put('/user/article_series/:id/article', async (req, res) => {
+router.put('/user/article_series/:id/article', apiRequestPUTUserArticleSeriesArticleValidator, async (req, res) => {
     try {
         const parsedBody = await idObjectValidator.parseAsync(req.body);
         const parsedParams = await idObjectValidator.parseAsync(req.params);
@@ -446,7 +495,7 @@ router.put('/user/article_series/:id/article', async (req, res) => {
  * Delete an article from the article series
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.delete('/user/article_series/:id/article', async (req, res) => {
+router.delete('/user/article_series/:id/article', apiRequestDELETEUserArticleSeriesArticleValidator, async (req, res) => {
     try {
         const parsedBody = await idObjectValidator.parseAsync(req.body);
         const parsedParam = await idObjectValidator.parseAsync(req.params);
@@ -508,7 +557,7 @@ router.delete('/user/article_series/:id/article', async (req, res) => {
 /**
  * Add multiple articles to the article series
  */
-router.put('/user/article_series/:id/articles', async (req, res) => {
+router.put('/user/article_series/:id/articles', apiRequestPUTUserArticleSeriesArticlesValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -621,7 +670,7 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
 /**
  * Delete multiple articles from the article series
  */
-router.delete('/user/article_series/:id/articles', async (req, res) => {
+router.delete('/user/article_series/:id/articles', apiRequestDELETEUserArticleSeriesArticlesValidator, async (req, res) => {
     try {
         const parsedParam = await idObjectValidator.parseAsync(req.params);
         const parsedBody = await articlesObjectValidator.parseAsync(req.body);
@@ -674,7 +723,7 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
 /**
  * Add article series
  */
-router.post('/user/article_series', async (req, res) => {
+router.post('/user/article_series', apiRequestPOSTUserArticleSeriesValidator, async (req, res) => {
     // title is required
 
     const response = articleSeriesValidator.safeParse(req.body);
@@ -777,7 +826,7 @@ router.put('/user/article_series/:id', async (req, res) => {
 /**
  * Delete article series
  */
-router.delete('/user/article_series/:id', async (req, res) => {
+router.delete('/user/article_series/:id', apiRequestDELETEUserArticleSeriesIdValidator, async (req, res) => {
     try {
         const parsedParam = await idObjectValidator.parseAsync(req.params);
         const id = +parsedParam.id; // article series id
@@ -843,8 +892,7 @@ router.delete('/user/article_series/:id', async (req, res) => {
 /**
  * Get all the article series
  */
-
-router.get('/user/article_series', async (_req, res) => {
+router.get('/user/article_series', apiRequestGETUserArticleSeriesValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {
@@ -873,10 +921,11 @@ router.get('/user/article_series', async (_req, res) => {
     };
     res.status(200).send(response);
 });
+
 /**
  * Get single article series
  */
-router.get('/user/article_series/:id', async (req, res) => {
+router.get('/user/article_series/:id', apiRequestGETUserArticleSeriesIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -934,10 +983,11 @@ router.get('/user/article_series/:id', async (req, res) => {
     };
     res.status(200).send(response);
 });
+
 /**
  * Get all the articles of given article series
  */
-router.get('/user/article_series/:id/articles', async (req, res) => {
+router.get('/user/article_series/:id/articles', apiRequestGETUserArticleSeriesIdArticlesValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1014,10 +1064,11 @@ router.get('/user/article_series/:id/articles', async (req, res) => {
     console.log(typeof articles )
     res.status(200).send(response);
 });
+
 /**
  * Add article
  */
-router.post('/user/article', async (req, res) => {
+router.post('/user/article', apiRequestPOSTUserArticleValidator, async (req, res) => {
     // title is required , subtitle is required, htmlContent is required, markdownContent is required
     if (!('title' in req.body) || !('subtitle' in req.body) || !('htmlContent' in req.body) || !('markdownContent' in req.body)) {
         const response: ApiResponse<null> = {
@@ -1080,10 +1131,11 @@ router.post('/user/article', async (req, res) => {
     };
     res.status(201).send(response);
 });
+
 /**
  * Publish article
  */
-router.put('/user/article/:id/publish', async (req, res) => {
+router.put('/user/article/:id/publish', apiRequestPUTUserArticleIdPublishValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1194,10 +1246,11 @@ router.put('/user/article/:id/publish', async (req, res) => {
     };
     res.status(201).send(response);
 });
+
 /**
  * Update article
  */
-router.put('/user/article/:id', async (req, res) => {
+router.put('/user/article/:id', apiRequestPUTUserArticleIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1282,7 +1335,7 @@ router.put('/user/article/:id', async (req, res) => {
 /**
  * Unpublish article
  */
-router.put('/user/article/:id/unpublish', async (req, res) => {
+router.put('/user/article/:id/unpublish', apiRequestPUTUserArticleIdUnpublishValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1336,7 +1389,7 @@ router.put('/user/article/:id/unpublish', async (req, res) => {
 /**
  * Republish article
  */
-router.put('/user/article/:id/republish', async (req, res) => {
+router.put('/user/article/:id/republish', apiRequestPUTUserArticleIdRepublishValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1390,7 +1443,7 @@ router.put('/user/article/:id/republish', async (req, res) => {
 /**
  * Get all the articles of user
  */
-router.get('/user/articles/:status', async (req, res) => {
+router.get('/user/articles/:status', apiRequestGETUserArticlesStatusValidator, async (req, res) => {
     // status is required
     if (!('status' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1452,7 +1505,7 @@ router.get('/user/articles/:status', async (req, res) => {
 /**
  * Get all the articles of user with pagination
  */
-router.get('/user/articles/:status/:size/:cursor', async (req, res) => {
+router.get('/user/articles/:status/:size/:cursor', apiRequestGETUserArticlesStatusSizeCursorValidator, async (req, res) => {
     // cursor is optional but it number , size is required and number , status is required and string
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1567,7 +1620,7 @@ router.get('/user/articles/:status/:size/:cursor', async (req, res) => {
 /**
  * Create a comment
  */
-router.post('/user/article/:id/comment', async (req, res) => {
+router.post('/user/article/:id/comment', apiRequestPOSTUserArticleIdCommentValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1651,7 +1704,7 @@ router.post('/user/article/:id/comment', async (req, res) => {
 /**
  * Update single comment
  */
-router.put('/user/comment/:id', async (req, res) => {
+router.put('/user/comment/:id', apiRequestPUTUserCommentIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1727,7 +1780,7 @@ router.put('/user/comment/:id', async (req, res) => {
 /**
  * Delete single comment
  */
-router.delete('/user/comment/:id', async (req, res) => {
+router.delete('/user/comment/:id', apiRequestDELETEUserCommentIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -1776,7 +1829,7 @@ router.delete('/user/comment/:id', async (req, res) => {
 /**
  * Get all the parent comments of given article
  */
-router.get('/user/article/:id/comments/:size/:cursor', async (req, res) => {
+router.get('/user/article/:id/comments/:size/:cursor', apiRequestGETUserArticleIdCommentsSizeCursorValidator, async (req, res) => {
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
             success: false,
@@ -1862,7 +1915,7 @@ router.get('/user/article/:id/comments/:size/:cursor', async (req, res) => {
 /**
  * Get all the replies of given comment
  */
-router.get('/user/comment/:id/replies/:size/:cursor', async (req, res) => {
+router.get('/user/comment/:id/replies/:size/:cursor', apiRequestGETUserCommentIdRepliesSizeCursorValidator, async (req, res) => {
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
             success: false,
@@ -1949,7 +2002,7 @@ router.get('/user/comment/:id/replies/:size/:cursor', async (req, res) => {
  * Add article to read later
  *
  */
-router.post('/user/read_later', async (req, res) => {
+router.post('/user/read_later', apiRequestPOSTUserReadLaterValidator, async (req, res) => {
     // id ( article id ) is required
     if (!('id' in req.body)) {
         const response: ApiResponse<null> = {
@@ -2005,7 +2058,7 @@ router.post('/user/read_later', async (req, res) => {
  * Remove article from read later
  *
  */
-router.delete('/user/read_later/:id', async (req, res) => {
+router.delete('/user/read_later/:id', apiRequestDELETEUserReadLaterIdValidator, async (req, res) => {
     // read later id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -2057,7 +2110,7 @@ router.delete('/user/read_later/:id', async (req, res) => {
  * Get all the read later articles
  *
  */
-router.get('/user/read_later', async (_req, res) => {
+router.get('/user/read_later', apiRequestGETUserReadLaterValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const readLater = await prisma.user.findUnique({
         where: {
@@ -2101,7 +2154,7 @@ router.get('/user/read_later', async (_req, res) => {
  * Like an article
  *
  */
-router.put('/user/article/:id/like', async (req, res) => {
+router.put('/user/article/:id/like', apiRequestPUTUserArticleIdLikeValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -2172,7 +2225,7 @@ router.put('/user/article/:id/like', async (req, res) => {
  * Dislike an article
  *
  */
-router.put('/user/article/:id/dislike', async (req, res) => {
+router.put('/user/article/:id/dislike', apiRequestPUTUserArticleIdDislikeValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
         const response: ApiResponse<null> = {
@@ -2243,7 +2296,7 @@ router.put('/user/article/:id/dislike', async (req, res) => {
  * Get all the liked/disliked articles by the user with pagination
  *
  */
-router.get('/user/liked_articles/:status/:size/:cursor', async (req, res) => {
+router.get('/user/liked_articles/:status/:size/:cursor', apiRequestGETUserLikedArticlesValidator, async (req, res) => {
     // only cursor is optional , size is required, status is required
 
     if (!('size' in req.params)) {
@@ -2353,7 +2406,7 @@ router.get('/user/liked_articles/:status/:size/:cursor', async (req, res) => {
  * Get all the likes/dislikes of the given article with pagination
  *
  */
-router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => {
+router.get('/user/article/:id/likes/:status/:size/:cursor', apiRequestGETUserArticleLikesValidator, async (req, res) => {
     // only cursor is optional , size is required, status is required, id is required
 
     if (!('id' in req.params)) {
@@ -2463,7 +2516,7 @@ router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => 
  * Follow an user removing old follow if there is, that may be suggested user
  *
  */
-router.put('/user/follow/:id', async (req, res) => {
+router.put('/user/follow/:id', apiRequestPUTUserFollowIdValidator, async (req, res) => {
     // ( user 1 ) o------> ( user 2 )
     // user 1 is the follower of user 2
     // user 2 is the following of user 1
@@ -2536,7 +2589,7 @@ router.put('/user/follow/:id', async (req, res) => {
  * Remove from following also suggested
  *
  */
-router.delete('/user/follow/:id', async (req, res) => {
+router.delete('/user/follow/:id', apiRequestDELETEUserFollowIdValidator, async (req, res) => {
     // ( user 1 ) o------> ( user 2 )
     // user 1 is the follower of user 2
     // user 2 is the following of user 1
@@ -2591,7 +2644,7 @@ router.delete('/user/follow/:id', async (req, res) => {
  * Remove from followers
  *
  */
-router.delete('/user/follower/:id', async (req, res) => {
+router.delete('/user/follower/:id', apiRequestDELETEUserFollowerIdValidator, async (req, res) => {
     // ( user 1 ) o------> ( user 2 )
     // user 1 is the follower of user 2
     // user 2 is the following of user 1
@@ -2646,7 +2699,7 @@ router.delete('/user/follower/:id', async (req, res) => {
  * Get followers with pagination no suggested users
  *
  */
-router.get('/user/followers/:size/:cursor', async (req, res) => {
+router.get('/user/followers/:size/:cursor', apiRequestGETUserFollowersValidator, async (req, res) => {
     // only cursor is optional , size is required
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
@@ -2739,7 +2792,7 @@ router.get('/user/followers/:size/:cursor', async (req, res) => {
  * Get followings with pagination no suggested users
  *
  */
-router.get('/user/followings/:size/:cursor', async (req, res) => {
+router.get('/user/followings/:size/:cursor', apiRequestGETUserFollowingsValidator, async (req, res) => {
     // only cursor is optional , size is required
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
@@ -2831,7 +2884,7 @@ router.get('/user/followings/:size/:cursor', async (req, res) => {
  * Add suggested user
  *
  */
-router.put('/user/follow/suggest/:id', async (req, res) => {
+router.put('/user/follow/suggest/:id', apiRequestPUTUserFollowSuggestIdValidator, async (req, res) => {
     // id is the user id of suggested user to the logged in user
     // id is required
     if (!('id' in req.params)) {
@@ -2901,7 +2954,7 @@ router.put('/user/follow/suggest/:id', async (req, res) => {
  * Get all the suggested users to follow for the logged in user with pagination
  *
  */
-router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
+router.get('/user/followings/suggest/:size/:cursor', apiRequestGETUserFollowingsSuggestValidator, async (req, res) => {
     // size is required, cursor is optional
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
@@ -2995,7 +3048,7 @@ router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
  * Get suggested users to follow for the logged in user given the size sorted by suggestion count ( asc )
  *
  */
-router.get('/user/followings/suggest/:size', async (req, res) => {
+router.get('/user/followings/suggest/:size', apiRequestGETUserFollowingsSuggestSizeValidator, async (req, res) => {
     // size is required
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
@@ -3073,7 +3126,7 @@ router.get('/user/followings/suggest/:size', async (req, res) => {
  * Update the suggestion count of the suggested users
  *
  */
-router.put('/user/followings/suggest', async (req, res) => {
+router.put('/user/followings/suggest', apiRequestPUTUserFollowingsSuggestValidator, async (req, res) => {
     // req body should contain ids of the suggested users
     // ids are required
     if (!('ids' in req.body)) {
@@ -3157,7 +3210,7 @@ router.put('/user/followings/suggest', async (req, res) => {
  * Add article to clicked articles, if already added then do nothing
  *
  */
-router.put('/user/article-reads/:id', async (req, res) => {
+router.put('/user/article-reads/:id', apiRequestPUTUserArticleReadsIdValidator, async (req, res) => {
     // id is the article id of the article to be added
     // id is required
     if (!('id' in req.params)) {
@@ -3240,7 +3293,7 @@ router.put('/user/article-reads/:id', async (req, res) => {
  * If the read time exceeds total reading time of the article then the article will be unaffected
  * Also increase the readCount of the article if under total reading time of the article
  */
-router.put('/user/article-reads/:id/time', async (req, res) => {
+router.put('/user/article-reads/:id/time', apiRequestPUTUserArticleReadsIdTimeValidator, async (req, res) => {
     // id is the article id of the article to be added
     // id is required
     if (!('id' in req.params)) {
@@ -3382,7 +3435,7 @@ router.put('/user/article-reads/:id/time', async (req, res) => {
  * Get the read later articles of the logged in user with pagination that are not read
  *
  */
-router.get('/user/read-later/unread/:size/:cursor', async (req, res) => {
+router.get('/user/read-later/unread/:size/:cursor', apiRequestGETUserReadLaterUnreadValidator, async (req, res) => {
     // size is required, cursor is optional
     if (!('size' in req.params)) {
         const response: ApiResponse<null> = {
