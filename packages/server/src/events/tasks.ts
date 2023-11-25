@@ -1,5 +1,5 @@
 import { PrismaClientSingleton } from '../utils';
-
+const { add } = require('date-fns');
 /**
  * Task ( Runs after the article is published successfully ).
  * Create the article story
@@ -56,13 +56,15 @@ export async function DistributeArticleStory(_email: string, _articleId: number)
         },
     });
 
+    const expirationTime = add(new Date(), { days: 1 }); // Calculate expiration time (1 day from now)
+
     const newArticleStoryDistribution = await prisma.articleStoryDistribution.createMany({
         data: followerIds?.map((followerId) => ({
             articleStoryId: articleStory?.id!,
             userId: followerId!,
             isSeen: false,
             storyId: articleStory?.id!,
-            expiresAt: new Date(),
+            expiresAt: expirationTime,
         })) || [],
     });
 
