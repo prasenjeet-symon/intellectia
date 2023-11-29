@@ -33,16 +33,6 @@ router.get('/', (_req, res) => {
     return;
 });
 
-router.get('/magic_login', (_req, res) => {
-    const response:ApiResponse<null> =  {
-       success: true,
-       status:200,
-       message:'Hello'
-    }
-    res.status(200).send(response);
-    return;
-});
-
 /**
  * Authenticate user with email and password
  * POSTMAN_DONE : This route is successfully added to postman and documented    
