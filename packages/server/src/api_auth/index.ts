@@ -145,7 +145,6 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         res.status(500).json(response);
         return;
     }
-
 });
 
 /**
@@ -168,7 +167,7 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         if (oldUser) {
             const response:ApiResponse<null> = {
                 success : false,
-                status:409,
+                status: 409,
                 error:'A account already exists with this email.'
             }
             res.status(500).json(response);
@@ -226,8 +225,8 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         if (error instanceof ZodError && !error.isEmpty) {
             const response:ApiResponse<null> ={
                 success : false,
-                status:400,
-                error:error.issues[0]?.message
+                status: 400,
+                error: error.issues[0]?.message
             }
             return res.status(400).send(response);
             
