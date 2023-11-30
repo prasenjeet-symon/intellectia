@@ -466,6 +466,8 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
+        // res.locals.reqClientData
+        // possibly put the 
         const parsedBody = await tokenObjectValidator.parseAsync(req.body);
         const token = parsedBody.token;
 
