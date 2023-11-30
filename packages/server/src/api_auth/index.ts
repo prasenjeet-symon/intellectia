@@ -18,8 +18,8 @@ import {
     apiRequestAuthMagicValidator,
     apiRequestAuthSignupValidator
 } from '@intellectia/utils/validators';
-import { ApiResponse, IRequestAuthLogin,ICommon, IMagic, IRequestAuthMagic} from '@intellectia/types';
 
+import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin,  IRequestAuthMagic, ICommon, IMagic} from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -139,8 +139,8 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         
         const response:ApiResponse<null> = {
             success : false,
-            status:500,
-            error:error
+            status: 500,
+            error: error
         }
         res.status(500).json(response);
         return;
@@ -167,7 +167,7 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         if (oldUser) {
             const response:ApiResponse<null> = {
                 success : false,
-                status:409,
+                status: 409,
                 error:'A account already exists with this email.'
             }
             res.status(500).json(response);
@@ -225,8 +225,8 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         if (error instanceof ZodError && !error.isEmpty) {
             const response:ApiResponse<null> ={
                 success : false,
-                status:400,
-                error:error.issues[0]?.message
+                status: 400,
+                error: error.issues[0]?.message
             }
             return res.status(400).send(response);
             
@@ -339,10 +339,9 @@ router.post('/magic_login', apiRequestAuthMagicLoginValidator,
     }),
     async (req, res) => {
         try {
-            // Validate res.locals using the Zod schema
-            const parsedLocals = await tokenEmailObjectValidator.parseAsync(req.body);
-            const email = parsedLocals.email;
-            const token = parsedLocals.token;
+            // Removed direct access to req.body
+            const reqClientData: IRequestAuthMagicLogin = res.locals.reqClientData;
+            const { email, token } = reqClientData.body;
 
             // check if the user is already associated with the email
             const prisma = PrismaClientSingleton.prisma;
@@ -429,29 +428,31 @@ router.post('/magic_login', apiRequestAuthMagicLoginValidator,
                 },
             });
             const response:ApiResponse<ICommon> = {
-                success : true,
+                success: true,
                 status: 200,
-                data:{ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
+                data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
             }
             res.status(200).send(response);
             return;
         } catch (error) {
+            // Handle errors and send appropriate response
             if (error instanceof ZodError && !error.isEmpty) {
-                const response:ApiResponse<null> = {
-                    success : false ,
-                    status : 400,
-                    error:'Token and email are required and must be non-empty'
-                }
-                res.status(400).send(response);
-                return;
-            }
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 400,
-                error:error
-            }
-            return res.status(400).send(response);
-        
+              const errorResponse: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token and email are required and must be non-empty',
+              };
+              res.status(400).send(errorResponse);
+              return;
+            } 
+
+            const genericErrorResponse: ApiResponse<null> = {
+                success: false,
+                status: 500,
+                error: 'An unexpected error occurred.',
+            };
+            res.status(500).send(genericErrorResponse);
+            return;
         }
     },
 );
