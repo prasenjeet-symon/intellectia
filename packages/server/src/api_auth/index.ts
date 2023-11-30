@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
+import { emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
 import {
     apiRequestAuthGoogleLoginValidator,
     apiRequestAuthGoogleValidator,
@@ -18,8 +18,8 @@ import {
     apiRequestAuthMagicValidator,
     apiRequestAuthSignupValidator
 } from '@intellectia/utils/validators';
-import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin, ICommon, IMagic} from '@intellectia/types';
 
+import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin,  IRequestAuthMagic, ICommon, IMagic} from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -249,8 +249,9 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
  */
 router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
     try {
-        const parsedBody = await emailObjectValidator.parseAsync(req.body);
-        const email = parsedBody.email;
+        const reqClientData: IRequestAuthMagic = res.locals.reqClientData;
+        const email: string = reqClientData.body.email;
+        console.log(req.body.email);
 
         const magicLinkToken = v4();
         const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
