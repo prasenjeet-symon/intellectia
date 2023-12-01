@@ -154,10 +154,10 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
 router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
     try {
         const reqClientData: IRequestAuthSignup = res.locals.reqClientData;
-
         const parsedBody = emailPasswordObjectValidator.parse(reqClientData.body);
         const email = parsedBody.email;
         const password = parsedBody.password;
+
         // check if the user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
