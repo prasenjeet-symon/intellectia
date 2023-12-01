@@ -19,7 +19,7 @@ import {
     apiRequestAuthSignupValidator
 } from '@intellectia/utils/validators';
 
-import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin,  IRequestAuthMagic, ICommon, IMagic} from '@intellectia/types';
+import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin,  IRequestAuthMagic, ICommon, IMagic, IRequestAuthSignup} from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -153,9 +153,10 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
  */
 router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
     try {
-        const parsedBody = emailPasswordObjectValidator.parse(req.body);
-        const email = parsedBody.email;
-        const password = parsedBody.password;
+        const reqClientData: IRequestAuthSignup = res.locals.reqClientData;
+
+        const email = reqClientData.body.email;
+        const password = reqClientData.body.password;
         // check if the user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
@@ -170,7 +171,7 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
                 status: 409,
                 error:'A account already exists with this email.'
             }
-            res.status(500).json(response);
+            res.status(409).json(response);
             return;
         }
 
@@ -228,17 +229,17 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
                 status: 400,
                 error: error.issues[0]?.message
             }
-            return res.status(400).send(response);
-            
+            res.status(400).send(response);
+            return;
         }
 
         const response:ApiResponse<null> = {
             success : false,
-            status:400,
-            error:error
+            status:500,
+            error: 'An unexpected error occurred.',
         }
-        return res.status(400).send(response);
-
+        res.status(500).send(response);
+        return;
     
     }
 });
