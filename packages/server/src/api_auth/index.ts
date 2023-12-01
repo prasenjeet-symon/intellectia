@@ -24,7 +24,7 @@ import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin, IRequestAuthMag
 const router: Router = Router();
 
 router.get('/', (_req, res) => {
-    const response: ApiResponse<null> = {
+    const response:ApiResponse<null> = {
         success: true,
         status: 200,
         message: 'Hello from Authentication',
