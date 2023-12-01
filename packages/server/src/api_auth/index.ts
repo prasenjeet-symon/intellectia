@@ -16,26 +16,26 @@ import {
     apiRequestAuthLogoutValidator,
     apiRequestAuthMagicLoginValidator,
     apiRequestAuthMagicValidator,
-    apiRequestAuthSignupValidator
+    apiRequestAuthSignupValidator,
 } from '@intellectia/utils/validators';
 
-import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin,  IRequestAuthMagic, ICommon, IMagic} from '@intellectia/types';
+import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin, IRequestAuthMagic, IRequestAuthSignup, ICommon, IMagic } from '@intellectia/types';
 
 const router: Router = Router();
 
 router.get('/', (_req, res) => {
-    const response:ApiResponse<null> =  {
-       success: true,
-       status:200,
-       message:'Hello from Authentication'
-    }
+    const response:ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Hello from Authentication',
+    };
     res.status(200).send(response);
     return;
 });
 
 /**
  * Authenticate user with email and password
- * POSTMAN_DONE : This route is successfully added to postman and documented    
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
     try {
@@ -56,11 +56,11 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         if (!oldUser) {
             // no such user exit
             // status code 404 means that the resource was not found ( no user exist with this email id )
-            const response:ApiResponse<null> = {
+            const response: ApiResponse<null> = {
                 success: false,
-                status:404,
-                error:'User not found. Please signup'
-            }
+                status: 404,
+                error: 'User not found. Please signup',
+            };
             res.status(404).send(response);
             return;
         }
@@ -69,13 +69,13 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         if (oldUser.password !== reqClientData.body.password) {
             // status code 401 means that the user is unauthorized
             // wrong password
-            const response:ApiResponse<null> = {
+            const response: ApiResponse<null> = {
                 success: false,
-                status:401,
-                error:'Wrong password. Please try again with correct password.'
-            }
+                status: 401,
+                error: 'Wrong password. Please try again with correct password.',
+            };
             res.status(401).send(response);
-            
+
             return;
         }
 
@@ -83,11 +83,11 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         if (oldUser.numberOfSessions === oldUser.sessions.length) {
             // status code 429 means that the user is rate limited
             // too many sessions
-            const response:ApiResponse<null> = {
+            const response: ApiResponse<null> = {
                 success: false,
-                status:429,
-                error:'Too many sessions. Please try again later.'
-            }
+                status: 429,
+                error: 'Too many sessions. Please try again later.',
+            };
             res.status(429).send(response);
             return;
         }
@@ -119,29 +119,29 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
             },
         });
 
-        const response:ApiResponse<ICommon> ={
-            success:true,
-            status:200,
-            data:{ token, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
-        }
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
         res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> ={
-                success : false,
-                status:400,
-                error:error.issues[0]?.message
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: error.issues[0]?.message,
+            };
             res.status(400).send(response);
             return;
         }
-        
-        const response:ApiResponse<null> = {
-            success : false,
+
+        const response: ApiResponse<null> = {
+            success: false,
             status: 500,
-            error: error
-        }
+            error: error,
+        };
         res.status(500).json(response);
         return;
     }
@@ -153,9 +153,11 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
  */
 router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
     try {
-        const parsedBody = emailPasswordObjectValidator.parse(req.body);
+        const reqClientData: IRequestAuthSignup = res.locals.reqClientData;
+        const parsedBody = emailPasswordObjectValidator.parse(reqClientData.body);
         const email = parsedBody.email;
         const password = parsedBody.password;
+
         // check if the user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
@@ -165,11 +167,11 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         });
 
         if (oldUser) {
-            const response:ApiResponse<null> = {
-                success : false,
+            const response: ApiResponse<null> = {
+                success: false,
                 status: 409,
-                error:'A account already exists with this email.'
-            }
+                error: 'A account already exists with this email.',
+            };
             res.status(500).json(response);
             return;
         }
@@ -214,32 +216,29 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
             },
         });
 
-        const response:ApiResponse<ICommon> = {
-            success : true,
-            status : 200,
-            data:{ token, isAdmin: false, userId: newUser.userId, email: newUser.email }
-        }
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token, isAdmin: false, userId: newUser.userId, email: newUser.email },
+        };
         res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> ={
-                success : false,
+            const response: ApiResponse<null> = {
+                success: false,
                 status: 400,
-                error: error.issues[0]?.message
-            }
+                error: error.issues[0]?.message,
+            };
             return res.status(400).send(response);
-            
         }
 
-        const response:ApiResponse<null> = {
-            success : false,
-            status:400,
-            error:error
-        }
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
         return res.status(400).send(response);
-
-    
     }
 });
 
@@ -300,29 +299,28 @@ router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
         }
 
         // TODO : In production mode, send the magic link to the user via email and don't return anything
-        const response : ApiResponse<IMagic> = {
-            success : true,
-            status : 200,
-            data:{ magicLink }
-        }
+        const response: ApiResponse<IMagic> = {
+            success: true,
+            status: 200,
+            data: { magicLink },
+        };
         res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> ={
-                success : false,
-                status:400,
-                error:error.issues[0]?.message
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: error.issues[0]?.message,
+            };
             return res.status(400).send(response);
         }
 
-        
-        const response:ApiResponse<null> = {
-            success : false,
-            status:400,
-            error:error
-        }
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
         return res.status(400).send(response);
     }
 });
@@ -331,7 +329,9 @@ router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
  * Magic URL login
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/magic_login', apiRequestAuthMagicLoginValidator,
+router.post(
+    '/magic_login',
+    apiRequestAuthMagicLoginValidator,
     rateLimit({
         windowMs: 5 * 60 * 1000, // 5 minutes
         max: 10,
@@ -356,22 +356,22 @@ router.post('/magic_login', apiRequestAuthMagicLoginValidator,
             });
 
             if (!oldUser) {
-                const response:ApiResponse<null> = {
-                    success : false,
-                    status : 401,
-                    error:'Invalid token or email'
-                }
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Invalid token or email',
+                };
                 res.status(401).send(response);
                 return;
             }
 
             const tokenFound = oldUser.magicLink.find((link) => link.linkToken === token);
             if (!tokenFound) {
-                const response:ApiResponse<null> = {
-                    success : false,
-                    status : 401,
-                    error:'Invalid token or email'
-                }
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Invalid token or email',
+                };
                 res.status(401).send(response);
                 return;
             }
@@ -381,22 +381,22 @@ router.post('/magic_login', apiRequestAuthMagicLoginValidator,
             const isTokenValid = isMagicTokenValid(tokenCreationTime, tokenExpirationTimeInMinutes);
 
             if (!isTokenValid) {
-                const response:ApiResponse<null> = {
-                    success : false,
-                    status : 401,
-                    error:'Invalid token or email'
-                }
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Invalid token or email',
+                };
                 res.status(401).send(response);
                 return;
             }
 
             // check for the number of active sessions
             if (oldUser.numberOfSessions === oldUser.sessions.length) {
-                const response:ApiResponse<null> = {
-                    success : false,
-                    status : 401,
-                    error:'Too many sessions'
-                }
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Too many sessions',
+                };
                 res.status(401).send(response);
                 return;
             }
@@ -427,24 +427,24 @@ router.post('/magic_login', apiRequestAuthMagicLoginValidator,
                     },
                 },
             });
-            const response:ApiResponse<ICommon> = {
+            const response: ApiResponse<ICommon> = {
                 success: true,
                 status: 200,
-                data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
-            }
+                data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+            };
             res.status(200).send(response);
             return;
         } catch (error) {
             // Handle errors and send appropriate response
             if (error instanceof ZodError && !error.isEmpty) {
-              const errorResponse: ApiResponse<null> = {
-                success: false,
-                status: 400,
-                error: 'Token and email are required and must be non-empty',
-              };
-              res.status(400).send(errorResponse);
-              return;
-            } 
+                const errorResponse: ApiResponse<null> = {
+                    success: false,
+                    status: 400,
+                    error: 'Token and email are required and must be non-empty',
+                };
+                res.status(400).send(errorResponse);
+                return;
+            }
 
             const genericErrorResponse: ApiResponse<null> = {
                 success: false,
@@ -472,11 +472,11 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
         const tokenPayload = await verifyGoogleAuthToken(token);
 
         if (!tokenPayload.success) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error:'Invalid token'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token',
+            };
             res.status(401).send(response);
             return;
         }
@@ -491,11 +491,11 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
         });
 
         if (oldUser) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error:'User with this email already exists'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'User with this email already exists',
+            };
             res.status(401).send(response);
             return;
         }
@@ -518,29 +518,29 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
 
         // generate the JWT token
         const tokenJWT = generateToken(email, newUser.userId, false);
-        const response:ApiResponse<ICommon> = {
-            success : true,
+        const response: ApiResponse<ICommon> = {
+            success: true,
             status: 200,
-            data:{ token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email }
-        }
+            data: { token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email },
+        };
         res.status(200).send(response);
-        
+
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 400,
-                error:'Token is required and must be non-empty'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token is required and must be non-empty',
+            };
             res.status(400).send(response);
             return;
         }
-        const response:ApiResponse<null> = {
-            success : false ,
-            status : 400,
-            error:error
-        }
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
         return res.status(400).send(response);
     }
 });
@@ -559,11 +559,11 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
         const tokenPayload = await verifyGoogleAuthToken(token);
 
         if (!tokenPayload.success) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error:'Invalid token'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token',
+            };
             res.status(401).send(response);
             return;
         }
@@ -582,11 +582,11 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
         });
 
         if (!oldUser) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error:'Invalid token'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token',
+            };
             res.status(401).send(response);
             return;
         }
@@ -596,11 +596,11 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
 
         // check for the number of active sessions
         if (oldUser.numberOfSessions === oldUser.sessions.length) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error:'Too many sessions'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Too many sessions',
+            };
             res.status(401).send(response);
             return;
         }
@@ -628,30 +628,29 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
                 },
             },
         });
-        const response:ApiResponse<ICommon> = {
-            success : true,
+        const response: ApiResponse<ICommon> = {
+            success: true,
             status: 200,
-            data:{ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
-        }
+            data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
         res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 400,
-                error:'Token is required and must be non-empty'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token is required and must be non-empty',
+            };
             res.status(400).send(response);
             return;
         }
-        const response:ApiResponse<null> = {
-            success : false ,
-            status : 400,
-            error:error
-        }
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
         return res.status(400).send(response);
-       
     }
 });
 
@@ -678,24 +677,23 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
         });
 
         if (!oldUser) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error: 'No such user exit'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'No such user exit',
+            };
             res.status(401).send(response);
-           
+
             return;
         }
 
-    
         const isSessionExists = !!oldUser.sessions.find((session) => session.token === token);
         if (!isSessionExists) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error: 'No such token'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'No such token',
+            };
             res.status(401).send(response);
             return;
         }
@@ -713,30 +711,29 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
                 },
             },
         });
-        const response:ApiResponse<ICommon> = {
-            success : true,
+        const response: ApiResponse<ICommon> = {
+            success: true,
             status: 200,
-            data:{ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
-        }
+            data: { token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
         res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 400,
-                error:  'Token and email are required and must be non-empty'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token and email are required and must be non-empty',
+            };
             res.status(400).send(response);
             return;
         }
-        const response:ApiResponse<null> = {
-            success : false ,
-            status : 500,
-            error:  error
-        }
-       return res.status(500).send(response);
-       
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: error,
+        };
+        return res.status(500).send(response);
     }
 });
 
@@ -760,15 +757,15 @@ router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) =
             },
             include: {
                 sessions: true,
-            }
+            },
         });
 
         if (!oldUser) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error:  'Invalid token or email'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token or email',
+            };
             res.status(401).send(response);
             return;
         }
@@ -784,30 +781,29 @@ router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) =
                 },
             },
         });
-        const response:ApiResponse<ICommon> = {
-            success : true,
+        const response: ApiResponse<ICommon> = {
+            success: true,
             status: 200,
-            data:{ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
-        }
+            data: { token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
         res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 400,
-                error:  'Token and email are required and must be non-empty'
-            }
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token and email are required and must be non-empty',
+            };
             res.status(400).send(response);
             return;
         }
-        const response:ApiResponse<null> = {
-            success : false ,
-            status : 400,
-            error:  error
-        }
-       return res.status(400).send(response);
-       
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
+        return res.status(400).send(response);
     }
 });
 
