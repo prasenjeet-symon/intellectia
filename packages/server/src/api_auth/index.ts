@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
+import { emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
 import {
     apiRequestAuthGoogleLoginValidator,
     apiRequestAuthGoogleValidator,
@@ -18,7 +18,8 @@ import {
     apiRequestAuthMagicValidator,
     apiRequestAuthSignupValidator,
 } from '@intellectia/utils/validators';
-import { ApiResponse, IRequestAuthLogin, ICommon, IMagic, IRequestAuthSignup } from '@intellectia/types';
+
+import { ApiResponse, IRequestAuthLogin, IRequestAuthMagicLogin, IRequestAuthMagic, IRequestAuthSignup, ICommon, IMagic } from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -247,8 +248,9 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
  */
 router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
     try {
-        const parsedBody = await emailObjectValidator.parseAsync(req.body);
-        const email = parsedBody.email;
+        const reqClientData: IRequestAuthMagic = res.locals.reqClientData;
+        const email: string = reqClientData.body.email;
+        console.log(req.body.email);
 
         const magicLinkToken = v4();
         const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
@@ -337,10 +339,9 @@ router.post(
     }),
     async (req, res) => {
         try {
-            // Validate res.locals using the Zod schema
-            const parsedLocals = await tokenEmailObjectValidator.parseAsync(req.body);
-            const email = parsedLocals.email;
-            const token = parsedLocals.token;
+            // Removed direct access to req.body
+            const reqClientData: IRequestAuthMagicLogin = res.locals.reqClientData;
+            const { email, token } = reqClientData.body;
 
             // check if the user is already associated with the email
             const prisma = PrismaClientSingleton.prisma;
@@ -434,21 +435,24 @@ router.post(
             res.status(200).send(response);
             return;
         } catch (error) {
+            // Handle errors and send appropriate response
             if (error instanceof ZodError && !error.isEmpty) {
-                const response: ApiResponse<null> = {
+                const errorResponse: ApiResponse<null> = {
                     success: false,
                     status: 400,
                     error: 'Token and email are required and must be non-empty',
                 };
-                res.status(400).send(response);
+                res.status(400).send(errorResponse);
                 return;
             }
-            const response: ApiResponse<null> = {
+
+            const genericErrorResponse: ApiResponse<null> = {
                 success: false,
-                status: 400,
-                error: error,
+                status: 500,
+                error: 'An unexpected error occurred.',
             };
-            return res.status(400).send(response);
+            res.status(500).send(genericErrorResponse);
+            return;
         }
     },
 );
