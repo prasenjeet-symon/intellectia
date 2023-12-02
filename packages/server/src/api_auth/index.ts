@@ -7,7 +7,6 @@ import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-//tslint:disable-next-line: no-unused-variable
 import {  emailPasswordObjectValidator,tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
 import {
     apiRequestAuthGoogleLoginValidator,
