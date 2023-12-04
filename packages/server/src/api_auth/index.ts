@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-import {  emailPasswordObjectValidator,tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
+import { emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
 import {
     apiRequestAuthGoogleLoginValidator,
     apiRequestAuthGoogleValidator,
@@ -463,27 +463,22 @@ router.post('/magic_login', apiRequestAuthMagicLoginValidator,
  * Signup with google
  * POSTMAN_TODO : This route is waiting to be added to postman and documented
  */
-// Helper function for sending error responses
-const sendGErrorResponse = (res: any,status:number,error:string) => {
-    const response:ApiResponse<null> = {
-        success: false,
-        status:status,
-        error:error,
-    };
-    res.status(status).send(response);
-};
-router.post('/google', apiRequestAuthGoogleValidator, async (req,res) => {
-
+router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(res.locals.reqClientData);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
 
         const tokenPayload = await verifyGoogleAuthToken(token);
 
         if (!tokenPayload.success) {
-            sendGErrorResponse(res, 401, 'Invalid token');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 401,
+                error:'Invalid token'
+            }
+            res.status(401).send(response);
             return;
         }
 
@@ -497,7 +492,12 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req,res) => {
         });
 
         if (oldUser) {
-            sendGErrorResponse(res, 401, 'User with this email already exists');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 401,
+                error:'User with this email already exists'
+            }
+            res.status(401).send(response);
             return;
         }
 
@@ -529,11 +529,20 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req,res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            sendGErrorResponse(res, 400, 'Token is required and must be non-empty');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 400,
+                error: error.issues[0]?.message
+            }
+            res.status(400).send(response);
             return;
         }
-        sendGErrorResponse(res, 400, "An unexpected error occurred "+error);
-        return;
+        const response:ApiResponse<null> = {
+            success : false ,
+            status : 500,
+            error:error
+        }
+        return res.status(500).send(response);
     }
 });
 
@@ -546,12 +555,17 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(res.locals.reqClientData);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
         const tokenPayload = await verifyGoogleAuthToken(token);
 
         if (!tokenPayload.success) {
-            sendGErrorResponse(res, 401, 'Invalid token');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 401,
+                error:'Invalid token'
+            }
+            res.status(401).send(response);
             return;
         }
 
@@ -569,7 +583,12 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
         });
 
         if (!oldUser) {
-            sendGErrorResponse(res, 401, 'User must be registered to sign in');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 401,
+                error:'Invalid token'
+            }
+            res.status(401).send(response);
             return;
         }
 
@@ -578,7 +597,12 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
 
         // check for the number of active sessions
         if (oldUser.numberOfSessions === oldUser.sessions.length) {
-            sendGErrorResponse(res, 401, 'Too many Sessions');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 401,
+                error:'Too many sessions'
+            }
+            res.status(401).send(response);
             return;
         }
 
@@ -614,11 +638,20 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            sendGErrorResponse(res, 400, 'Token is required and must be non-empty');
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 400,
+                error: error.issues[0]?.message
+            }
+            res.status(400).send(response);
             return;
         }
-        sendGErrorResponse(res, 400, "An unexpected error occurred "+error);
-        return;
+        const response:ApiResponse<null> = {
+            success : false ,
+            status : 500,
+            error:error
+        }
+        return res.status(500).send(response);
        
     }
 });
