@@ -467,7 +467,7 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
 
         const tokenPayload = await verifyGoogleAuthToken(token);
@@ -532,17 +532,17 @@ router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
             const response:ApiResponse<null> = {
                 success : false ,
                 status : 400,
-                error:'Token is required and must be non-empty'
+                error: error.issues[0]?.message
             }
             res.status(400).send(response);
             return;
         }
         const response:ApiResponse<null> = {
             success : false ,
-            status : 400,
+            status : 500,
             error:error
         }
-        return res.status(400).send(response);
+        return res.status(500).send(response);
     }
 });
 
@@ -555,7 +555,7 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
         const tokenPayload = await verifyGoogleAuthToken(token);
 
@@ -641,17 +641,17 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
             const response:ApiResponse<null> = {
                 success : false ,
                 status : 400,
-                error:'Token is required and must be non-empty'
+                error: error.issues[0]?.message
             }
             res.status(400).send(response);
             return;
         }
         const response:ApiResponse<null> = {
             success : false ,
-            status : 400,
+            status : 500,
             error:error
         }
-        return res.status(400).send(response);
+        return res.status(500).send(response);
        
     }
 });
