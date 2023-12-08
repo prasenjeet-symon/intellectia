@@ -662,7 +662,9 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
  */
 router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
     try {
-        const { email, token } = await tokenEmailObjectValidator.parseAsync(res.locals);
+        const parsedBody = res.locals.reqClientData;
+        const token = parsedBody.token;
+        const email = parsedBody.email;
 
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
@@ -718,12 +720,10 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
             const response: ApiResponse<null> = {
                 success: false,
                 status: 400,
-                error: 'Token and email are required and must be non-empty',
+                error:error.issues[0]?.message,
             };
             return res.status(400).send(response);
         } else {
-            // Log the error for debugging purposes
-            console.error('Error in /logout route:', error);
             const response: ApiResponse<null> = {
                 success: false,
                 status: 500,
