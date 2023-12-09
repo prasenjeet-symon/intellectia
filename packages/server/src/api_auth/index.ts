@@ -662,16 +662,14 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
  */
 router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
     try {
-        // Validate res.locals using the Zod schema
-        const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
-        const email = parsedLocals.email;
-        const token = parsedLocals.token;
+        const parsedBody = res.locals.reqClientData;
+        const token = parsedBody.token;
+        const email = parsedBody.email;
 
-        // check if the user is already associated with the email
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
             where: {
-                email: email,
+                email,
             },
             include: {
                 sessions: true,
@@ -679,67 +677,63 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
         });
 
         if (!oldUser) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error: 'No such user exit'
-            }
-            res.status(401).send(response);
-           
-            return;
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'No such user exit',
+            };
+            return res.status(401).send(response);
         }
 
-    
         const isSessionExists = !!oldUser.sessions.find((session) => session.token === token);
         if (!isSessionExists) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 401,
-                error: 'No such token'
-            }
-            res.status(401).send(response);
-            return;
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'No such token',
+            };
+            return res.status(401).send(response);
         }
 
-        // delete the session
         await prisma.user.update({
             where: {
-                email: email,
+                email,
             },
             data: {
                 sessions: {
                     delete: {
-                        token: token,
+                        token,
                     },
                 },
             },
         });
-        const response:ApiResponse<ICommon> = {
-            success : true,
+
+        const response: ApiResponse<ICommon> = {
+            success: true,
             status: 200,
-            data:{ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
-        }
+            data: { token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
+
         res.status(200).send(response);
-        return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response:ApiResponse<null> = {
-                success : false ,
-                status : 400,
-                error:  'Token and email are required and must be non-empty'
-            }
-            res.status(400).send(response);
-            return;
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error:error.issues[0]?.message,
+            };
+            return res.status(400).send(response);
+        } else {
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 500,
+                error,
+            };
+            return res.status(500).send(response);
         }
-        const response:ApiResponse<null> = {
-            success : false ,
-            status : 500,
-            error:  error
-        }
-       return res.status(500).send(response);
-       
     }
 });
+
 
 /**
  *
