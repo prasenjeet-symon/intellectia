@@ -8,12 +8,12 @@ import { PrismaClientSingleton } from '../utils';
 /**
  * Create new user given email and password
  */
-export async function createUserWithEmailPassword(email: string, password: string): Promise<void> {
+//export async function createUserWithEmailPassword(email: string, password: string): Promise<void> {
     // add new user to database
     // use the email and password
     // if the user already exit then just return silently
     // use prisma client directly ( no api call )
-}
+//}
 
 /**
  * Parse the Markdown file to JSON
@@ -28,6 +28,7 @@ export async function markdownToJSON(): Promise<{
     try {
         /* extracting HTML content using specified function markdownToHTML */
         const catFile = path.join(__dirname, '..', '/assets/catOnTheMoon.md');
+        
         let htmlContent = await markdownToHTML(catFile);
         if (!htmlContent) {
             throw new Error('Markdown to HTML conversion failed');
@@ -220,7 +221,41 @@ export async function createMultipleArticles(_min: number, _max: number): Promis
     // created n number of article per user using createArticlesPerUser function
     // choose n randomly where n = [min, max] // both min and max are integer
     // choose your n per user ( it will be random n per creation )
+
+    let min = Math.ceil(_min);
+    let max = Math.floor(_max);
+    let n;
+
+    const prisma = PrismaClientSingleton.prisma;
+    const users = await prisma.user.findMany(); //fetch all users from DB
+  
+    if ((min > max)){
+        //no users in database => no records generated
+        throw new Error("wrong minmax range - min > max");
+    }
+
+    if ((min < 0) || (max < 0)){
+        //no users in database => no records generated
+        throw new Error("wrong minmax range - negative params");
+    }
+
+    if (users.length == 0){
+    //no users in database => no records generated
+        throw new Error("no users recorded in the database");
+    }else{
+    //for each user, call createArticlesPerUser(), 
+    //using their email and generated number of articles from min-max range (min and max values included in the range)
+    
+        users.forEach(user => {
+            //generate random number n, _min & _max included in the range
+            n = Math.floor(Math.random() * (max - min + 1)) + min;
+            //generate articles per user
+            createArticlesPerUser(user.email, n);
+        });
+        return void 0;
+    }   
 }
+
 /**
  * Assign topics to the articles
  */
