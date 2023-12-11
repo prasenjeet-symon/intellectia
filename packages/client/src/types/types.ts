@@ -55,6 +55,10 @@ export enum APIHookType {
   EmailPasswordSignup = "EmailPasswordSignup",
   // email and password login
   EmailPasswordLogin = "EmailPasswordLogin",
+  //Google signup
+  GoogleSignup = "GoogleSignup",
+  //Google login
+  GoogleLogin = "GoogleLogin",
   // fetch all the topics of application ( useGetAllTopics )
   GetTopics = "GetTopics",
   // Fetch all the topics of the user

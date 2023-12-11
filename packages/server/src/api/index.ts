@@ -2,12 +2,66 @@ import { Router } from 'express';
 import { ZodError, ZodIssue } from 'zod';
 import { PrismaClientSingleton } from '../utils';
 import { articleSeriesValidator, articlesObjectValidator, emailObjectValidator, idObjectValidator, idValidatorUnit, topicsObjectValidator } from '../validators';
-
+import { ApiResponse, IHelloWorldResponse, IGetTopics, IGetUserTopics, IGetTopicById, IGetAllArticleSeries, IGetSingleArticleSeries} from '@intellectia/types';
+import {
+    apiRequestDELETEUserArticleSeriesArticleValidator,
+    apiRequestDELETEUserArticleSeriesArticlesValidator,
+    apiRequestDELETEUserArticleSeriesIdValidator,
+    apiRequestDELETEUserCommentIdValidator,
+    apiRequestDELETEUserFollowIdValidator,
+    apiRequestDELETEUserFollowerIdValidator,
+    apiRequestDELETEUserReadLaterIdValidator,
+    apiRequestDELETEUserTopicValidator,
+    apiRequestDELETEUserTopicsValidator,
+    apiRequestGETUserArticleIdCommentsSizeCursorValidator,
+    apiRequestGETUserArticleLikesValidator,
+    apiRequestGETUserArticleSeriesIdArticlesValidator,
+    apiRequestGETUserArticleSeriesIdValidator,
+    apiRequestGETUserArticleSeriesValidator,
+    apiRequestGETUserArticlesStatusSizeCursorValidator,
+    apiRequestGETUserArticlesStatusValidator,
+    apiRequestGETUserCommentIdRepliesSizeCursorValidator,
+    apiRequestGETUserFollowersValidator,
+    apiRequestGETUserFollowingsSuggestSizeValidator,
+    apiRequestGETUserFollowingsSuggestValidator,
+    apiRequestGETUserFollowingsValidator,
+    apiRequestGETUserLikedArticlesValidator,
+    apiRequestGETUserReadLaterUnreadValidator,
+    apiRequestGETUserReadLaterValidator,
+    apiRequestPOSTUserArticleIdCommentValidator,
+    apiRequestPOSTUserArticleSeriesValidator,
+    apiRequestPOSTUserArticleValidator,
+    apiRequestPOSTUserReadLaterValidator,
+    apiRequestPUTUserArticleIdDislikeValidator,
+    apiRequestPUTUserArticleIdLikeValidator,
+    apiRequestPUTUserArticleIdPublishValidator,
+    apiRequestPUTUserArticleIdRepublishValidator,
+    apiRequestPUTUserArticleIdUnpublishValidator,
+    apiRequestPUTUserArticleIdValidator,
+    apiRequestPUTUserArticleReadsIdTimeValidator,
+    apiRequestPUTUserArticleReadsIdValidator,
+    apiRequestPUTUserArticleSeriesArticleValidator,
+    apiRequestPUTUserArticleSeriesArticlesValidator,
+    apiRequestPUTUserCommentIdValidator,
+    apiRequestPUTUserFollowIdValidator,
+    apiRequestPUTUserFollowSuggestIdValidator,
+    apiRequestPUTUserFollowingsSuggestValidator,
+    apiRequestPUTUserTopicValidator,
+    apiRequestPUTUserTopicsValidator,
+    apiRequestTopicValidator,
+    apiRequestTopicsValidator,
+    apiRequestUserTopicsValidator
+} from '@intellectia/utils/validators';
 
 const router: Router = Router();
 
 router.get('/', (_req, res) => {
-    res.send({ message: 'Hello World' });
+    const response: ApiResponse<IHelloWorldResponse> = {
+        success: true,
+        status: 200 /* Done */,
+        message: 'Hello World',
+    };
+    res.status(200).send(response);
     return;
 });
 
@@ -15,10 +69,15 @@ router.get('/', (_req, res) => {
  * Fetch all the topics of intellectia
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/topics', async (_req, res) => {
+router.get('/topics', apiRequestTopicsValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
-    const topics = await prisma.topic.findMany();
-    res.send(topics);
+    const topics: IGetTopics[] = await prisma.topic.findMany();
+    const response: ApiResponse<IGetTopics[]> = {
+        success: true,
+        status: 200 /* Done */,
+        data: topics,
+    };
+    res.status(200).send(response);
     return;
 });
 
@@ -26,7 +85,7 @@ router.get('/topics', async (_req, res) => {
  * Fetch all the assigned topics of the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/user/topics', async (_req, res) => {
+router.get('/user/topics', apiRequestUserTopicsValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     // get all the topics of user
     const topics = await prisma.user.findUnique({
@@ -39,18 +98,28 @@ router.get('/user/topics', async (_req, res) => {
     });
 
     if (!topics) {
-        res.status(404).send({ error: 'No such user' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: 'No such User',
+        };
+        res.status(404).send(response); /* Done */
         return;
     }
 
-    res.send(topics.topics);
+    const response: ApiResponse<IGetUserTopics[]> = {
+        success: true,
+        status: 200,
+        data: topics.topics,
+    };
+    res.status(200).send(response);
     return;
 });
 /**
  * Get the single topic by id
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.get('/topic/:id', async (req, res) => {
+router.get('/topic/:id', apiRequestTopicValidator, async (req, res) => {
     try {
         const parsedParam = await idObjectValidator.parseAsync(req.params);
         const id = +parsedParam.id;
@@ -59,19 +128,33 @@ router.get('/topic/:id', async (req, res) => {
         const topic = await prisma.topic.findUnique({
             where: {
                 id: id,
-            },
+            } /* Done */,
         });
-
-        res.send(topic);
+        const response: ApiResponse<IGetTopicById | null> = {
+            success: true,
+            status: 200,
+            data: topic,
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: 'Internal server error',
+        };
 
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).send(response);
         return;
     }
 });
@@ -80,7 +163,7 @@ router.get('/topic/:id', async (req, res) => {
  * Assign multiple topics to the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.put('/user/topics', async (req, res) => {
+router.put('/user/topics', apiRequestPUTUserTopicsValidator, async (req, res) => {
     try {
         // topics is the array of numbers
         const parsedBody = await topicsObjectValidator.parseAsync(req.body);
@@ -92,7 +175,7 @@ router.put('/user/topics', async (req, res) => {
 
         await prisma.user.update({
             where: {
-                email: parsedLocals.email,
+                /* Done */ email: parsedLocals.email,
             },
             data: {
                 topics: {
@@ -114,17 +197,31 @@ router.put('/user/topics', async (req, res) => {
                 },
             },
         });
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 201,
+            message: 'Topic added',
+        };
 
-        res.send('Topics added');
+        res.status(201).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
-
-        res.status(500).json({ error: 'Internal server error' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: 'Internal server error',
+        };
+        res.status(500).send(response);
         return;
     }
 });
@@ -134,7 +231,7 @@ router.put('/user/topics', async (req, res) => {
  * Assign single topic to the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.put('/user/topic', async (req, res) => {
+router.put('/user/topic', apiRequestPUTUserTopicValidator, async (req, res) => {
     try {
         const parsedBody = await idObjectValidator.parseAsync(req.body);
         const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
@@ -169,16 +266,31 @@ router.put('/user/topic', async (req, res) => {
             },
         });
 
-        res.send('Topic added');
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 201,
+            message: 'Topic added',
+        };
+
+        res.status(201).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
-
-        res.status(500).json({ error: 'Internal server error' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: { error: 'Internal server error' },
+        };
+        res.status(500).send(response);
         return;
     }
 });
@@ -188,7 +300,7 @@ router.put('/user/topic', async (req, res) => {
  * Delete single topic from the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.delete('/user/topic/:id', async (req, res) => {
+router.delete('/user/topic/:id', apiRequestDELETEUserTopicValidator, async (req, res) => {
     try {
         const parsedParams = await idObjectValidator.parseAsync(req.params);
         const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
@@ -208,17 +320,31 @@ router.delete('/user/topic/:id', async (req, res) => {
                 },
             },
         });
-
-        res.send('Topic deleted');
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 200,
+            message: 'Topic deleted',
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
 
-        res.status(500).json({ error: 'Internal server error' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: { error: 'Internal server error' },
+        };
+        res.status(500).send(response);
         return;
     }
 });
@@ -227,7 +353,7 @@ router.delete('/user/topic/:id', async (req, res) => {
  * Delete multiple topics from the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.delete('/user/topics', async (req, res) => {
+router.delete('/user/topics', apiRequestDELETEUserTopicsValidator, async (req, res) => {
     try {
         const parsedBody = await topicsObjectValidator.parseAsync(req.body);
         const parsedLocals = await emailObjectValidator.parseAsync(res.locals);
@@ -248,17 +374,31 @@ router.delete('/user/topics', async (req, res) => {
                 },
             },
         });
-
-        res.send('Topics deleted');
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 200,
+            message: 'Topics deleted',
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
 
-        res.status(500).json({ error: 'Internal server error' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: { error: 'Internal server error' },
+        };
+        res.status(500).send(response);
         return;
     }
 });
@@ -266,7 +406,7 @@ router.delete('/user/topics', async (req, res) => {
  * Add an article to the article series
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.put('/user/article_series/:id/article', async (req, res) => {
+router.put('/user/article_series/:id/article', apiRequestPUTUserArticleSeriesArticleValidator, async (req, res) => {
     try {
         const parsedBody = await idObjectValidator.parseAsync(req.body);
         const parsedParams = await idObjectValidator.parseAsync(req.params);
@@ -322,24 +462,40 @@ router.put('/user/article_series/:id/article', async (req, res) => {
             },
         });
 
-        res.send('Article added to series');
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 201,
+            message: 'Article added to series',
+        };
+
+        res.status(201).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
 
-        res.status(500).json({ error: 'Internal server error' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: { error: 'Internal server error' },
+        };
+        res.status(500).send(response);
         return;
     }
 });
 /**
  * Delete an article from the article series
  * POSTMAN_DONE : This route is successfully added to postman and documented
- */ 
-router.delete('/user/article_series/:id/article', async (req, res) => {
+ */
+router.delete('/user/article_series/:id/article', apiRequestDELETEUserArticleSeriesArticleValidator, async (req, res) => {
     try {
         const parsedBody = await idObjectValidator.parseAsync(req.body);
         const parsedParam = await idObjectValidator.parseAsync(req.params);
@@ -370,44 +526,78 @@ router.delete('/user/article_series/:id/article', async (req, res) => {
                 },
             },
         });
-
-        res.send('Article deleted from series');
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 200,
+            message: 'Article deleted from series',
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
             const issue = error.issues[0] as ZodIssue;
-            res.status(400).send({ error: issue.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: issue.message },
+            };
+            res.status(400).send(response);
             return;
         }
 
-        res.status(500).json({ error: 'Internal server error' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: { error: 'Internal server error' },
+        };
+        res.status(500).send(response);
         return;
     }
 });
 /**
  * Add multiple articles to the article series
  */
-router.put('/user/article_series/:id/articles', async (req, res) => {
+router.put('/user/article_series/:id/articles', apiRequestPUTUserArticleSeriesArticlesValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('articles' in req.body)) {
-        res.status(400).send({ error: 'Articles is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Articles is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // articles is array of article ids that is numbers
     if (!Array.isArray(req.body.articles)) {
-        res.status(400).send({ error: 'Articles is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Articles is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -418,7 +608,12 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
     });
 
     if (!isArticleIdsValid) {
-        res.status(400).send({ error: 'Articles are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Articles is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -465,13 +660,17 @@ router.put('/user/article_series/:id/articles', async (req, res) => {
             },
         },
     });
-
-    res.send('Articles added to series');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Articles added to series',
+    };
+    res.status(201).send(response);
 });
 /**
  * Delete multiple articles from the article series
  */
-router.delete('/user/article_series/:id/articles', async (req, res) => {
+router.delete('/user/article_series/:id/articles', apiRequestDELETEUserArticleSeriesArticlesValidator, async (req, res) => {
     try {
         const parsedParam = await idObjectValidator.parseAsync(req.params);
         const parsedBody = await articlesObjectValidator.parseAsync(req.body);
@@ -501,12 +700,22 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
                 },
             },
         });
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 200,
+            message: 'Articles deleted to series',
+        };
+        res.status(200).send(response);
 
-        res.send('Articles deleted from series');
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: error.issues[0]?.message },
+            };
+            return res.status(400).send(response);
         }
         return res.status(400).json({ error });
     }
@@ -514,13 +723,18 @@ router.delete('/user/article_series/:id/articles', async (req, res) => {
 /**
  * Add article series
  */
-router.post('/user/article_series', async (req, res) => {
+router.post('/user/article_series', apiRequestPOSTUserArticleSeriesValidator, async (req, res) => {
     // title is required
 
     const response = articleSeriesValidator.safeParse(req.body);
 
     if (!response.success) {
-        res.status(400).send({ error: response.error.errors[0]?.message  });
+        const responseBody: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: response.error.errors[0]?.message },
+        };
+        res.status(400).send(responseBody);
         return;
     }
 
@@ -539,26 +753,39 @@ router.post('/user/article_series', async (req, res) => {
             },
         },
     });
-
-    res.send('Article series created');
+    const responseBody: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Article series created',
+    };
+    res.send(responseBody);
 });
 
 /**
  * Update article series
  */
 router.put('/user/article_series/:id', async (req, res) => {
-
-    const idResponse = idValidatorUnit.safeParse({id : req.params.id});
+    const idResponse = idValidatorUnit.safeParse({ id: req.params.id });
 
     if (!idResponse.success) {
-        res.status(400).send({ error: idResponse.error.errors[0]?.message});
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: idResponse.error.errors[0]?.message },
+        };
+        res.status(400).send(response);
         return;
     }
 
-    let bodyResponse = articleSeriesValidator.safeParse(req.body);
+    const bodyResponse = articleSeriesValidator.safeParse(req.body);
 
     if (!bodyResponse.success) {
-        res.status(400).send({ error: bodyResponse.error.errors[0]?.message});
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: bodyResponse.error.errors[0]?.message },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -588,14 +815,18 @@ router.put('/user/article_series/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Article series updated');
+    const response = {
+        success: true,
+        status: 201,
+        message: 'Article series updated',
+    };
+    res.status(201).send(response);
 });
 
 /**
  * Delete article series
  */
-router.delete('/user/article_series/:id', async (req, res) => {
+router.delete('/user/article_series/:id', apiRequestDELETEUserArticleSeriesIdValidator, async (req, res) => {
     try {
         const parsedParam = await idObjectValidator.parseAsync(req.params);
         const id = +parsedParam.id; // article series id
@@ -632,24 +863,36 @@ router.delete('/user/article_series/:id', async (req, res) => {
                 },
             },
         });
-
-        res.send('Article series deleted');
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 201,
+            message: 'Article series deleted',
+        };
+        res.status(201).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: error.issues[0]?.message },
+            };
+            return res.status(400).send(response);
         }
 
-        return res.status(400).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error },
+        };
+        return res.status(400).send(response);
     }
 });
 
 /**
  * Get all the article series
  */
-
-router.get('/user/article_series', async (_req, res) => {
-
+router.get('/user/article_series', apiRequestGETUserArticleSeriesValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const articleSeries = await prisma.user.findUnique({
         where: {
@@ -661,26 +904,47 @@ router.get('/user/article_series', async (_req, res) => {
     });
 
     if (!articleSeries) {
-        res.status(404).send({ error: 'Article series not found' });
+        const response: ApiResponse<null> = {
+            success: true,
+            status: 404,
+            error: { error: 'Article series not found' },
+        };
+        res.status(404).send(response);
         return;
     }
 
     // only return article series
-    res.send(articleSeries.articleSeries);
+    const response: ApiResponse<IGetAllArticleSeries[]> = {
+        success: true,
+        status: 200,
+        data: articleSeries.articleSeries,
+    };
+    res.status(200).send(response);
 });
+
 /**
  * Get single article series
  */
-router.get('/user/article_series/:id', async (req, res) => {
+router.get('/user/article_series/:id', apiRequestGETUserArticleSeriesIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -701,26 +965,48 @@ router.get('/user/article_series/:id', async (req, res) => {
     });
 
     if (!articleSeries) {
-        res.status(404).send({ error: 'Article series not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Article series not found' },
+        };
+        res.status(404).send(response);
+
         return;
     }
 
     // only return article series
-    res.send(articleSeries.articleSeries);
+    const response: ApiResponse<IGetSingleArticleSeries[]> = {
+        success: true,
+        status: 200,
+        data: articleSeries.articleSeries,
+    };
+    res.status(200).send(response);
 });
+
 /**
  * Get all the articles of given article series
  */
-router.get('/user/article_series/:id/articles', async (req, res) => {
+router.get('/user/article_series/:id/articles', apiRequestGETUserArticleSeriesIdArticlesValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -749,36 +1035,69 @@ router.get('/user/article_series/:id/articles', async (req, res) => {
     });
 
     if (!articles) {
-        res.status(404).send({ error: 'Article series not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Article series not found' },
+        };
+        res.status(404).send(response);
+
         return;
     }
 
     if (articles.articleSeries.length === 0) {
-        res.status(404).send({ error: 'Article series not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Article series not found' },
+        };
+        res.status(404).send(response);
         return;
     }
 
     // only return articles
-    res.send(articles.articleSeries[0]?.articles);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: articles.articleSeries[0]?.articles,
+    };
+    console.log(typeof articles )
+    res.status(200).send(response);
 });
+
 /**
  * Add article
  */
-router.post('/user/article', async (req, res) => {
+router.post('/user/article', apiRequestPOSTUserArticleValidator, async (req, res) => {
     // title is required , subtitle is required, htmlContent is required, markdownContent is required
     if (!('title' in req.body) || !('subtitle' in req.body) || !('htmlContent' in req.body) || !('markdownContent' in req.body)) {
-        res.status(400).send({ error: 'Title, subtitle, htmlContent and markdownContent are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Title, subtitle, htmlContent and markdownContent are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // title is string, subtitle is string, htmlContent is string, markdownContent is string
     if (!req.body.title || !req.body.subtitle || !req.body.htmlContent || !req.body.markdownContent) {
-        res.status(400).send({ error: 'Title, subtitle, htmlContent and markdownContent are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Title, subtitle, htmlContent and markdownContent are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (typeof req.body.title !== 'string' || typeof req.body.subtitle !== 'string' || typeof req.body.htmlContent !== 'string' || typeof req.body.markdownContent !== 'string') {
-        res.status(400).send({ error: 'Title, subtitle, htmlContent and markdownContent are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Title, subtitle, htmlContent and markdownContent are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -805,28 +1124,48 @@ router.post('/user/article', async (req, res) => {
             },
         },
     });
-
-    res.send('Article added');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Article added',
+    };
+    res.status(201).send(response);
 });
+
 /**
  * Publish article
  */
-router.put('/user/article/:id/publish', async (req, res) => {
+router.put('/user/article/:id/publish', apiRequestPUTUserArticleIdPublishValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // topic ids is required, articleSeriesId is required
     if (!('topics' in req.body)) {
-        res.status(400).send({ error: 'Topic ids are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Topic ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -840,7 +1179,12 @@ router.put('/user/article/:id/publish', async (req, res) => {
     });
 
     if (!isTopicIdsValid) {
-        res.status(400).send({ error: 'Topic ids are invalid' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Topic ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -895,34 +1239,59 @@ router.put('/user/article/:id/publish', async (req, res) => {
             },
         });
     }
-
-    res.send('Article published');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Article published',
+    };
+    res.status(201).send(response);
 });
+
 /**
  * Update article
  */
-router.put('/user/article/:id', async (req, res) => {
+router.put('/user/article/:id', apiRequestPUTUserArticleIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // title is required, subtitle is required, htmlContent is required, markdownContent is required
     if (!('title' in req.body) || !('subtitle' in req.body) || !('htmlContent' in req.body) || !('markdownContent' in req.body)) {
-        res.status(400).send({ error: 'Title, subtitle, htmlContent and markdownContent are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Title, subtitle, htmlContent and markdownContent are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // title is string, subtitle is string, htmlContent is string, markdownContent is string
     if (!req.body.title || !req.body.subtitle || !req.body.htmlContent || !req.body.markdownContent) {
-        res.status(400).send({ error: 'Title, subtitle, htmlContent and markdownContent are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Title, subtitle, htmlContent and markdownContent are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -956,22 +1325,36 @@ router.put('/user/article/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Article updated');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Article updated',
+    };
+    res.status(201).send(response);
 });
 /**
  * Unpublish article
  */
-router.put('/user/article/:id/unpublish', async (req, res) => {
+router.put('/user/article/:id/unpublish', apiRequestPUTUserArticleIdUnpublishValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -996,22 +1379,36 @@ router.put('/user/article/:id/unpublish', async (req, res) => {
             },
         },
     });
-
-    res.send('Article unpublished');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Article unpublished',
+    };
+    res.status(200).send(response);
 });
 /**
  * Republish article
  */
-router.put('/user/article/:id/republish', async (req, res) => {
+router.put('/user/article/:id/republish', apiRequestPUTUserArticleIdRepublishValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1036,21 +1433,35 @@ router.put('/user/article/:id/republish', async (req, res) => {
             },
         },
     });
-
-    res.send('Article republished');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Article republished',
+    };
+    res.status(200).send(response);
 });
 /**
  * Get all the articles of user
  */
-router.get('/user/articles/:status', async (req, res) => {
+router.get('/user/articles/:status', apiRequestGETUserArticlesStatusValidator, async (req, res) => {
     // status is required
     if (!('status' in req.params)) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Status is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.status) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Status is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1075,48 +1486,88 @@ router.get('/user/articles/:status', async (req, res) => {
     });
 
     if (!articles) {
-        res.status(404).send({ error: 'Articles not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Articles not found' },
+        };
+        res.status(404).send(response);
+
         return;
     }
-
-    res.send(articles.articles);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: articles.articles,
+    };
+    res.status(200).send(response);
 });
 /**
  * Get all the articles of user with pagination
  */
-router.get('/user/articles/:status/:size/:cursor', async (req, res) => {
+router.get('/user/articles/:status/:size/:cursor', apiRequestGETUserArticlesStatusSizeCursorValidator, async (req, res) => {
     // cursor is optional but it number , size is required and number , status is required and string
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
         // size cannot be 0
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('status' in req.params)) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Status is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.status) {
         // status is enum of published or unpublished
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Status is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // check for types
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if ('cursor' in req.params) {
         if (isNaN(+req.params.cursor)) {
-            res.status(400).send({ error: 'Cursor is required' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Cursor is required' },
+            };
+            res.status(400).send(response);
             return;
         }
     }
@@ -1151,36 +1602,65 @@ router.get('/user/articles/:status/:size/:cursor', async (req, res) => {
     });
 
     if (!articles) {
-        res.status(404).send({ error: 'No articles found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'No articles found' },
+        };
+        res.status(404).send(response);
         return;
     }
-
-    res.send(articles.articles);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: articles.articles,
+    };
+    res.status(200).send(response);
 });
 /**
  * Create a comment
  */
-router.post('/user/article/:id/comment', async (req, res) => {
+router.post('/user/article/:id/comment', apiRequestPOSTUserArticleIdCommentValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // comment is required
     if (!('comment' in req.body)) {
-        res.status(400).send({ error: 'Comment is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Comment is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.body.comment) {
-        res.status(400).send({ error: 'Comment is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Comment is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1214,33 +1694,57 @@ router.post('/user/article/:id/comment', async (req, res) => {
             },
         },
     });
-
-    res.send('Comment added');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Comment added',
+    };
+    res.status(201).send(response);
 });
 /**
  * Update single comment
  */
-router.put('/user/comment/:id', async (req, res) => {
+router.put('/user/comment/:id', apiRequestPUTUserCommentIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // comment is required
     if (!('comment' in req.body)) {
-        res.status(400).send({ error: 'Comment is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Comment is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.body.comment) {
-        res.status(400).send({ error: 'Comment is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Comment is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1266,22 +1770,36 @@ router.put('/user/comment/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Comment updated');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Comment updated',
+    };
+    res.status(201).send(response);
 });
 /**
  * Delete single comment
  */
-router.delete('/user/comment/:id', async (req, res) => {
+router.delete('/user/comment/:id', apiRequestDELETEUserCommentIdValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1301,36 +1819,65 @@ router.delete('/user/comment/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Comment deleted');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 201,
+        message: 'Comment deleted',
+    };
+    res.status(201).send(response);
 });
 /**
  * Get all the parent comments of given article
  */
-router.get('/user/article/:id/comments/:size/:cursor', async (req, res) => {
+router.get('/user/article/:id/comments/:size/:cursor', apiRequestGETUserArticleIdCommentsSizeCursorValidator, async (req, res) => {
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1358,37 +1905,66 @@ router.get('/user/article/:id/comments/:size/:cursor', async (req, res) => {
             id: 'asc',
         },
     });
-
-    res.send(comments);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: comments,
+    };
+    res.status(200).send(response);
 });
 /**
  * Get all the replies of given comment
  */
-router.get('/user/comment/:id/replies/:size/:cursor', async (req, res) => {
+router.get('/user/comment/:id/replies/:size/:cursor', apiRequestGETUserCommentIdRepliesSizeCursorValidator, async (req, res) => {
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // size should be number or convertible to number
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1414,24 +1990,38 @@ router.get('/user/comment/:id/replies/:size/:cursor', async (req, res) => {
             id: 'asc',
         },
     });
-
-    res.send(replies);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: replies,
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Add article to read later
  *
  */
-router.post('/user/read_later', async (req, res) => {
+router.post('/user/read_later', apiRequestPOSTUserReadLaterValidator, async (req, res) => {
     // id ( article id ) is required
     if (!('id' in req.body)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.body.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1455,8 +2045,12 @@ router.post('/user/read_later', async (req, res) => {
             },
         },
     });
-
-    res.send('Article added to read later');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Article added to read later',
+    };
+    res.status(200).send(response);
 });
 
 /**
@@ -1464,16 +2058,26 @@ router.post('/user/read_later', async (req, res) => {
  * Remove article from read later
  *
  */
-router.delete('/user/read_later/:id', async (req, res) => {
+router.delete('/user/read_later/:id', apiRequestDELETEUserReadLaterIdValidator, async (req, res) => {
     // read later id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1493,8 +2097,12 @@ router.delete('/user/read_later/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Article removed from read later');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Article removed from read later',
+    };
+    res.status(200).send(response);
 });
 
 /**
@@ -1502,7 +2110,7 @@ router.delete('/user/read_later/:id', async (req, res) => {
  * Get all the read later articles
  *
  */
-router.get('/user/read_later', async (_req, res) => {
+router.get('/user/read_later', apiRequestGETUserReadLaterValidator, async (_req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const readLater = await prisma.user.findUnique({
         where: {
@@ -1523,11 +2131,22 @@ router.get('/user/read_later', async (_req, res) => {
     });
 
     if (!readLater) {
-        res.status(404).send({ error: 'No articles found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'No articles found' },
+        };
+        res.status(404).send(response);
+
         return;
     }
-
-    res.send(readLater.readLater);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: readLater.readLater,
+    };
+    res.status(200).send(response);
+    res.send();
 });
 
 /**
@@ -1535,16 +2154,26 @@ router.get('/user/read_later', async (_req, res) => {
  * Like an article
  *
  */
-router.put('/user/article/:id/like', async (req, res) => {
+router.put('/user/article/:id/like', apiRequestPUTUserArticleIdLikeValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Id is required' },
+        };
+        res.status(404).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Id is required' },
+        };
+        res.status(404).send(response);
         return;
     }
 
@@ -1583,8 +2212,12 @@ router.put('/user/article/:id/like', async (req, res) => {
             },
         },
     });
-
-    res.send('Article liked');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Article liked',
+    };
+    res.status(200).send(response);
 });
 
 /**
@@ -1592,16 +2225,27 @@ router.put('/user/article/:id/like', async (req, res) => {
  * Dislike an article
  *
  */
-router.put('/user/article/:id/dislike', async (req, res) => {
+router.put('/user/article/:id/dislike', apiRequestPUTUserArticleIdDislikeValidator, async (req, res) => {
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
+
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1640,39 +2284,68 @@ router.put('/user/article/:id/dislike', async (req, res) => {
             },
         },
     });
-
-    res.send('Article disliked');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Article disliked',
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Get all the liked/disliked articles by the user with pagination
  *
  */
-router.get('/user/liked_articles/:status/:size/:cursor', async (req, res) => {
+router.get('/user/liked_articles/:status/:size/:cursor', apiRequestGETUserLikedArticlesValidator, async (req, res) => {
     // only cursor is optional , size is required, status is required
 
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('status' in req.params)) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.status) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1712,11 +2385,20 @@ router.get('/user/liked_articles/:status/:size/:cursor', async (req, res) => {
     });
 
     if (!likedArticles) {
-        res.status(404).send({ error: 'No articles found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'No articles found' },
+        };
+        res.status(404).send(response);
         return;
     }
-
-    res.send(likedArticles.likedArticles);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: likedArticles.likedArticles,
+    };
+    res.status(200).send(response);
 });
 
 /**
@@ -1724,43 +2406,78 @@ router.get('/user/liked_articles/:status/:size/:cursor', async (req, res) => {
  * Get all the likes/dislikes of the given article with pagination
  *
  */
-router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => {
+router.get('/user/article/:id/likes/:status/:size/:cursor', apiRequestGETUserArticleLikesValidator, async (req, res) => {
     // only cursor is optional , size is required, status is required, id is required
 
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
         // size cannot be 0
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!('status' in req.params)) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.status) {
-        res.status(400).send({ error: 'Status is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Status is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1787,14 +2504,19 @@ router.get('/user/article/:id/likes/:status/:size/:cursor', async (req, res) => 
         },
     });
 
-    res.send(likes);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: likes,
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Follow an user removing old follow if there is, that may be suggested user
  *
  */
-router.put('/user/follow/:id', async (req, res) => {
+router.put('/user/follow/:id', apiRequestPUTUserFollowIdValidator, async (req, res) => {
     // ( user 1 ) o------> ( user 2 )
     // user 1 is the follower of user 2
     // user 2 is the following of user 1
@@ -1802,13 +2524,23 @@ router.put('/user/follow/:id', async (req, res) => {
     // user 1 is always the logged in user who can follow user 2
 
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1845,15 +2577,19 @@ router.put('/user/follow/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('User followed');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'User followed',
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Remove from following also suggested
  *
  */
-router.delete('/user/follow/:id', async (req, res) => {
+router.delete('/user/follow/:id', apiRequestDELETEUserFollowIdValidator, async (req, res) => {
     // ( user 1 ) o------> ( user 2 )
     // user 1 is the follower of user 2
     // user 2 is the following of user 1
@@ -1861,13 +2597,23 @@ router.delete('/user/follow/:id', async (req, res) => {
     // user 1 is always the logged in user who can follow user 2
 
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1886,15 +2632,19 @@ router.delete('/user/follow/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('User removed from following');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'User removed from following',
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Remove from followers
  *
  */
-router.delete('/user/follower/:id', async (req, res) => {
+router.delete('/user/follower/:id', apiRequestDELETEUserFollowerIdValidator, async (req, res) => {
     // ( user 1 ) o------> ( user 2 )
     // user 1 is the follower of user 2
     // user 2 is the following of user 1
@@ -1902,13 +2652,23 @@ router.delete('/user/follower/:id', async (req, res) => {
     // id  ( user 1 user id )
 
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
         // id cannot be 0
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -1927,34 +2687,59 @@ router.delete('/user/follower/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('User removed from followers');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'User removed from followers',
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Get followers with pagination no suggested users
  *
  */
-router.get('/user/followers/:size/:cursor', async (req, res) => {
+router.get('/user/followers/:size/:cursor', apiRequestGETUserFollowersValidator, async (req, res) => {
     // only cursor is optional , size is required
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
+
         return;
     }
 
     if (!req.params.size) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if ('cursor' in req.params) {
         if (isNaN(+req.params.cursor)) {
-            res.status(400).send({ error: 'Cursor is required' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Cursor is required' },
+            };
+            res.status(400).send(response);
             return;
         }
     }
@@ -1987,37 +2772,66 @@ router.get('/user/followers/:size/:cursor', async (req, res) => {
     });
 
     if (!followers) {
-        res.status(404).send({ error: 'Followers not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Followers not found' },
+        };
+        res.status(404).send(response);
         return;
     }
-
-    res.send(followers.followers);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: followers.followers,
+    };
+    res.send(response);
 });
 /**
  *
  * Get followings with pagination no suggested users
  *
  */
-router.get('/user/followings/:size/:cursor', async (req, res) => {
+router.get('/user/followings/:size/:cursor', apiRequestGETUserFollowingsValidator, async (req, res) => {
     // only cursor is optional , size is required
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if ('cursor' in req.params) {
         if (isNaN(+req.params.cursor)) {
-            res.status(400).send({ error: 'Cursor is required' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Cursor is required' },
+            };
+            res.status(400).send(response);
             return;
         }
     }
@@ -2050,27 +2864,46 @@ router.get('/user/followings/:size/:cursor', async (req, res) => {
     });
 
     if (!followings) {
-        res.status(404).send({ error: 'Followings not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Followings not found' },
+        };
+        res.status(404).send(response);
         return;
     }
-
-    res.send(followings.followings);
+    const response: ApiResponse<unknown> = {
+        success: false,
+        status: 200,
+        data: followings.followings,
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Add suggested user
  *
  */
-router.put('/user/follow/suggest/:id', async (req, res) => {
+router.put('/user/follow/suggest/:id', apiRequestPUTUserFollowSuggestIdValidator, async (req, res) => {
     // id is the user id of suggested user to the logged in user
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Id is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2108,8 +2941,12 @@ router.put('/user/follow/suggest/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Suggested user added');
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Suggested user added',
+    };
+    res.status(200).send(response);
 });
 
 /**
@@ -2117,27 +2954,47 @@ router.put('/user/follow/suggest/:id', async (req, res) => {
  * Get all the suggested users to follow for the logged in user with pagination
  *
  */
-router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
+router.get('/user/followings/suggest/:size/:cursor', apiRequestGETUserFollowingsSuggestValidator, async (req, res) => {
     // size is required, cursor is optional
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
         // size cannot be 0
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if ('cursor' in req.params) {
         if (isNaN(+req.params.cursor)) {
-            res.status(400).send({ error: 'Cursor is required' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Cursor is required' },
+            };
+            res.status(400).send(response);
             return;
         }
     }
@@ -2172,31 +3029,55 @@ router.get('/user/followings/suggest/:size/:cursor', async (req, res) => {
     });
 
     if (!suggestedUsers) {
-        res.status(404).send({ error: 'Suggested users not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Suggested users not found' },
+        };
+        res.status(404).send(response);
         return;
     }
-
-    res.send(suggestedUsers.followings);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: suggestedUsers.followings,
+    };
+    res.status(200).send(response);
 });
 /**
  * Get suggested users to follow for the logged in user given the size sorted by suggestion count ( asc )
  *
  */
-router.get('/user/followings/suggest/:size', async (req, res) => {
+router.get('/user/followings/suggest/:size', apiRequestGETUserFollowingsSuggestSizeValidator, async (req, res) => {
     // size is required
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
         // size cannot be 0
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2225,32 +3106,57 @@ router.get('/user/followings/suggest/:size', async (req, res) => {
     });
 
     if (!suggestedUsers) {
-        res.status(404).send({ error: 'Suggested users not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Suggested users not found' },
+        };
+        res.status(404).send(response);
         return;
     }
-
-    res.send(suggestedUsers.followings);
+    const response: ApiResponse<unknown> = {
+        success: true,
+        status: 200,
+        data: suggestedUsers.followings,
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Update the suggestion count of the suggested users
  *
  */
-router.put('/user/followings/suggest', async (req, res) => {
+router.put('/user/followings/suggest', apiRequestPUTUserFollowingsSuggestValidator, async (req, res) => {
     // req body should contain ids of the suggested users
     // ids are required
     if (!('ids' in req.body)) {
-        res.status(400).send({ error: 'Ids are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
+
         return;
     }
 
     if (!req.body.ids) {
-        res.status(400).send({ error: 'Ids are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (req.body.ids.length === 0) {
-        res.status(400).send({ error: 'Ids are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2260,7 +3166,12 @@ router.put('/user/followings/suggest', async (req, res) => {
     });
 
     if (!isIdsNumbers) {
-        res.status(400).send({ error: 'Ids are required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2287,24 +3198,38 @@ router.put('/user/followings/suggest', async (req, res) => {
             },
         },
     });
-
-    res.send('Suggested users updated');
+    const response = {
+        success: true,
+        status: 200,
+        message: 'Suggested users updated',
+    };
+    res.status(200).send(response);
 });
 /**
  *
  * Add article to clicked articles, if already added then do nothing
  *
  */
-router.put('/user/article-reads/:id', async (req, res) => {
+router.put('/user/article-reads/:id', apiRequestPUTUserArticleReadsIdValidator, async (req, res) => {
     // id is the article id of the article to be added
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2328,7 +3253,13 @@ router.put('/user/article-reads/:id', async (req, res) => {
     });
 
     if (article) {
-        res.send('Article already added');
+        const response = {
+            success: true,
+            status: 200,
+            message: 'Article already added',
+        };
+        res.status(200).send(response);
+
         return;
     }
 
@@ -2349,8 +3280,12 @@ router.put('/user/article-reads/:id', async (req, res) => {
             },
         },
     });
-
-    res.send('Article added to clicked articles');
+    const response = {
+        success: true,
+        status: 200,
+        message: 'Article added to clicked articles',
+    };
+    res.status(200).send(response);
 });
 /**
  *
@@ -2358,33 +3293,58 @@ router.put('/user/article-reads/:id', async (req, res) => {
  * If the read time exceeds total reading time of the article then the article will be unaffected
  * Also increase the readCount of the article if under total reading time of the article
  */
-router.put('/user/article-reads/:id/time', async (req, res) => {
+router.put('/user/article-reads/:id/time', apiRequestPUTUserArticleReadsIdTimeValidator, async (req, res) => {
     // id is the article id of the article to be added
     // id is required
     if (!('id' in req.params)) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.id) {
-        res.status(400).send({ error: 'Id is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Ids are required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // req.body contains read time of the article
     if (!('readTimeMinutes' in req.body)) {
-        res.status(400).send({ error: 'Read time is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Read time is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.body.readTimeMinutes) {
         // read time cannot be 0
-        res.status(400).send({ error: 'Read time is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Read time is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.body.readTimeMinutes)) {
-        res.status(400).send({ error: 'Read time is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Read time is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2412,14 +3372,24 @@ router.put('/user/article-reads/:id/time', async (req, res) => {
     });
 
     if (!article || article.articleReads.length === 0) {
-        res.status(400).send({ error: 'Article not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Article not found' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     // check the article read time
     const articleRead = article.articleReads[0]?.article;
     if (!articleRead) {
-        res.status(400).send({ error: 'Article not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Article not found' },
+        };
+        res.status(400).send(response);
         return;
     }
 
@@ -2454,38 +3424,67 @@ router.put('/user/article-reads/:id/time', async (req, res) => {
             },
         },
     });
-
-    res.send('Article read time updated');
+    const response = {
+        success: true,
+        status: 200,
+        message: 'Article read time updated',
+    };
+    res.status(200).send(response);
 });
 /**
  * Get the read later articles of the logged in user with pagination that are not read
  *
  */
-router.get('/user/read-later/unread/:size/:cursor', async (req, res) => {
+router.get('/user/read-later/unread/:size/:cursor', apiRequestGETUserReadLaterUnreadValidator, async (req, res) => {
     // size is required, cursor is optional
     if (!('size' in req.params)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (!req.params.size) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if (isNaN(+req.params.size)) {
-        res.status(400).send({ error: 'Size is required' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Size is required' },
+        };
+        res.status(400).send(response);
         return;
     }
 
     if ('cursor' in req.params) {
         if (!req.params.cursor) {
-            res.status(400).send({ error: 'Cursor is required' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Cursor is required' },
+            };
+            res.status(400).send(response);
             return;
         }
 
         if (isNaN(+req.params.cursor)) {
-            res.status(400).send({ error: 'Cursor is required' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Cursor is required' },
+            };
+            res.status(400).send(response);
             return;
         }
     }
@@ -2548,7 +3547,12 @@ router.get('/user/read-later/unread/:size/:cursor', async (req, res) => {
     });
 
     if (!savedArticles) {
-        res.status(404).send({ error: 'Saved articles not found' });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 404,
+            error: { error: 'Saved articles not found' },
+        };
+        res.status(404).send(response);
         return;
     }
 
@@ -2567,10 +3571,19 @@ router.get('/user/read-later/unread/:size/:cursor', async (req, res) => {
         const onlyUnReadArticles = articleWithRead.filter((a) => {
             return !a.isRead;
         });
-
-        res.send(onlyUnReadArticles);
+        const response: ApiResponse<unknown> = {
+            success: true,
+            status: 200,
+            data: onlyUnReadArticles,
+        };
+        res.status(200).send(response);
     } else {
-        res.send(articleWithRead);
+        const response: ApiResponse<unknown> = {
+            success: true,
+            status: 200,
+            data: articleWithRead,
+        };
+        res.status(200).send(response);
     }
 });
 
@@ -2599,12 +3612,29 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
             },
         });
 
-        if (users.length < 1) return res.status(400).json({ error: 'Entity not found' });
-
-        res.json(users);
+        if (users.length < 1) {
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: { error: 'Entity not found' },
+            };
+            return res.status(400).send(response);
+        }
+        const response:ApiResponse<unknown> = {
+            success: true,
+            status: 200,
+            data: users,
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
-        res.status(400).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error },
+        };
+        return res.status(400).send(response);
+    
         return;
     }
 
@@ -2620,7 +3650,7 @@ router.get('/user/article-activities/:size/:cursor', async (req, res) => {
 /**
  * Get all active article stories of the logged in user to see
  */
-router.get('/user/article-stories', (_req) => {
+router.get('/user/article-stories', () => {
     // fetch all active article stories from the database for the logged in user
     // fetched stories should not contain full article
     // fetched stories should not be expired
@@ -2641,7 +3671,15 @@ router.put('/user/article-story/:id', async (req, res) => {
     const prisma = PrismaClientSingleton.prisma;
     const { id } = req.params;
 
-    if (!id) return res.status(400).json({ error: 'Story distribution id is missing' });
+    if (!id){
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: { error: 'Story distribution id is missing' },
+        };
+        return res.status(400).send(response);
+     
+    } 
 
     try {
         await prisma.articleStoryDistribution.update({
@@ -2652,10 +3690,21 @@ router.put('/user/article-story/:id', async (req, res) => {
                 isSeen: true,
             },
         });
-
-        return res.json({ message: 'Story distribution status updated successfully' });
+        const response:ApiResponse<null> = {
+            success: true,
+            status: 200,
+            message:'Story distribution status updated successfully',
+        };
+      
+        return res.status(200).send(response);
     } catch (error) {
-        return res.status(400).json({ message: 'Story distribution status updated failed', error });
+        const response:ApiResponse<null> = {
+            success : false,
+            status:400,
+            message:'Story distribution status updated failed',
+            error: error
+        }
+        return res.status(400).send(response);
     }
 });
 

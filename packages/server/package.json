@@ -10,7 +10,7 @@
     "generate": "pnpx prisma generate",
     "migrate": "pnpx prisma migrate deploy",
     "studio": "pnpx prisma studio",
-    "test": "pnpx jest",
+    "test": "pnpx jest --coverage --watch",
     "lint": "pnpx eslint .",
     "lint:fix": "pnpx eslint . --fix"
   },

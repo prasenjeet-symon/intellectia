@@ -2,33 +2,47 @@
  * Note that error response structure is  : { error: string }
  */
 
+import {
+    apiRequestAuthGoogleLoginValidator,
+    apiRequestAuthGoogleValidator,
+    apiRequestAuthLoginValidator,
+    apiRequestAuthLogoutAllValidator,
+    apiRequestAuthLogoutValidator,
+    apiRequestAuthMagicLoginValidator,
+    apiRequestAuthMagicValidator,
+    apiRequestAuthSignupValidator,
+} from '@intellectia/utils/validators';
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
-import { authenticateUser, Constants, generateToken, isMagicTokenValid, jwtExpireDate, PrismaClientSingleton, verifyGoogleAuthToken } from '../utils';
-import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
-import { apiRequestAuthLoginValidator } from '@intellectia/utils/validators';
-import { IRequestAuthLogin } from '@intellectia/types';
+import { Constants, PrismaClientSingleton, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
+import { tokenEmailObjectValidator } from '../validators';
+import { ApiResponse, ICommon, IMagic, IRequestAuthLogin, IRequestAuthMagic, IRequestAuthMagicLogin, IRequestAuthSignup } from '@intellectia/types';
 
 const router: Router = Router();
 
 router.get('/', (_req, res) => {
-    res.send({ message: 'Hello from Authentication' });
+    const response: ApiResponse<null> = {
+        success: true,
+        status: 200,
+        message: 'Hello from Authentication',
+    };
+
+    res.status(200).send(response);
     return;
 });
 
 /**
  * Authenticate user with email and password
- * POSTMAN_DONE : This route is successfully added to postman and documented    
+ * POSTMAN_DONE : This route is successfully added to postman and documented
  */
 router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
     try {
         const reqClientData: IRequestAuthLogin = res.locals.reqClientData;
-        console.log(reqClientData, 'reqClientData');
+        const prisma = PrismaClientSingleton.prisma;
 
         // check if the user already exit in the database
-        const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
             where: {
                 email: reqClientData.body.email,
@@ -41,15 +55,27 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         if (!oldUser) {
             // no such user exit
             // status code 404 means that the resource was not found ( no user exist with this email id )
-            res.status(404).send({ error: 'User not found. Please signup' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 404,
+                error: 'User not found. Please signup',
+            };
+
+            res.status(404).send(response);
             return;
         }
 
         // check if the password is correct
-        if (oldUser.password !== reqClientData.body.password) {
+        if (oldUser.password.trim() !== reqClientData.body.password.trim()) {
             // status code 401 means that the user is unauthorized
             // wrong password
-            res.status(401).send({ error: 'Wrong password. Please try again with correct password.' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Wrong password. Please try again with correct password.',
+            };
+
+            res.status(401).send(response);
             return;
         }
 
@@ -57,7 +83,13 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
         if (oldUser.numberOfSessions === oldUser.sessions.length) {
             // status code 429 means that the user is rate limited
             // too many sessions
-            res.status(429).send({ error: 'Too many sessions. Please try again later.' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 429,
+                error: 'Too many sessions. Please try again later.',
+            };
+
+            res.status(429).send(response);
             return;
         }
 
@@ -88,15 +120,33 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
             },
         });
 
-        res.send({ token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
+
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: error.issues[0]?.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: error.issues[0]?.message,
+            };
+
+            res.status(400).send(response);
             return;
         }
 
-        res.status(500).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: 'Internal server error. Please try again later.',
+        };
+
+        res.status(500).json(response);
         return;
     }
 });
@@ -105,11 +155,12 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
  * Signup user with email and password
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/signup', async (req, res) => {
+router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
     try {
-        const parsedBody = emailPasswordObjectValidator.parse(req.body);
-        const email = parsedBody.email;
-        const password = parsedBody.password;
+        const reqClientData: IRequestAuthSignup = res.locals.reqClientData;
+
+        const email = reqClientData.body.email;
+        const password = reqClientData.body.password;
         // check if the user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
@@ -119,7 +170,13 @@ router.post('/signup', async (req, res) => {
         });
 
         if (oldUser) {
-            res.status(409).send({ error: 'A account already exists with this email.' });
+            const response:ApiResponse<null> = {
+                success : false,
+                status: 409,
+                error:'A account already exists with this email.'
+            }
+
+            res.status(409).json(response);
             return;
         }
 
@@ -163,14 +220,32 @@ router.post('/signup', async (req, res) => {
             },
         });
 
-        res.send({ token, isAdmin: false, userId: newUser.userId, email: newUser.email });
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token, isAdmin: false, userId: newUser.userId, email: newUser.email },
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const response:ApiResponse<null> ={
+                success : false,
+                status: 400,
+                error: error.issues[0]?.message
+            }
+            res.status(400).send(response);
+            return;
         }
 
-        return res.status(400).json({ error});
+        const response:ApiResponse<null> = {
+            success : false,
+            status:500,
+            error: 'An unexpected error occurred.',
+        }
+        res.status(500).send(response);
+        return;
+    
     }
 });
 
@@ -178,10 +253,11 @@ router.post('/signup', async (req, res) => {
  * Magic URL creation
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/magic', async (req, res) => {
+router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
     try {
-        const parsedBody = await emailObjectValidator.parseAsync(req.body);
-        const email = parsedBody.email;
+        const reqClientData: IRequestAuthMagic = res.locals.reqClientData;
+        const email: string = reqClientData.body.email;
+        console.log(req.body.email);
 
         const magicLinkToken = v4();
         const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
@@ -230,14 +306,29 @@ router.post('/magic', async (req, res) => {
         }
 
         // TODO : In production mode, send the magic link to the user via email and don't return anything
-        res.send({ magicLink });
+        const response: ApiResponse<IMagic> = {
+            success: true,
+            status: 200,
+            data: { magicLink },
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            return res.status(400).send({ error: error.issues[0]?.message });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: error.issues[0]?.message,
+            };
+            return res.status(400).send(response);
         }
 
-        return res.status(400).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
+        return res.status(400).send(response);
     }
 });
 
@@ -247,6 +338,7 @@ router.post('/magic', async (req, res) => {
  */
 router.post(
     '/magic_login',
+    apiRequestAuthMagicLoginValidator,
     rateLimit({
         windowMs: 5 * 60 * 1000, // 5 minutes
         max: 10,
@@ -254,10 +346,9 @@ router.post(
     }),
     async (req, res) => {
         try {
-            // Validate res.locals using the Zod schema
-            const parsedLocals = await tokenEmailObjectValidator.parseAsync(req.body);
-            const email = parsedLocals.email;
-            const token = parsedLocals.token;
+            // Removed direct access to req.body
+            const reqClientData: IRequestAuthMagicLogin = res.locals.reqClientData;
+            const { email, token } = reqClientData.body;
 
             // check if the user is already associated with the email
             const prisma = PrismaClientSingleton.prisma;
@@ -272,13 +363,23 @@ router.post(
             });
 
             if (!oldUser) {
-                res.status(401).send({ error: 'Invalid token or email' });
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Invalid token or email',
+                };
+                res.status(401).send(response);
                 return;
             }
 
             const tokenFound = oldUser.magicLink.find((link) => link.linkToken === token);
             if (!tokenFound) {
-                res.status(401).send({ error: 'Invalid token or email' });
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Invalid token or email',
+                };
+                res.status(401).send(response);
                 return;
             }
 
@@ -287,13 +388,23 @@ router.post(
             const isTokenValid = isMagicTokenValid(tokenCreationTime, tokenExpirationTimeInMinutes);
 
             if (!isTokenValid) {
-                res.status(401).send({ error: 'Invalid token or email' });
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Invalid token or email',
+                };
+                res.status(401).send(response);
                 return;
             }
 
             // check for the number of active sessions
             if (oldUser.numberOfSessions === oldUser.sessions.length) {
-                res.status(401).send({ error: 'Too many sessions' });
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 401,
+                    error: 'Too many sessions',
+                };
+                res.status(401).send(response);
                 return;
             }
 
@@ -323,16 +434,30 @@ router.post(
                     },
                 },
             });
-
-            res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+            const response:ApiResponse<ICommon> = {
+                success: true,
+                status: 200,
+                data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
+            }
+            res.status(200).send(response);
             return;
         } catch (error) {
+            // Handle errors and send appropriate response
             if (error instanceof ZodError && !error.isEmpty) {
-                res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+                const response: ApiResponse<null> = {
+                    success: false,
+                    status: 400,
+                    error: 'Token and email are required and must be non-empty',
+                };
+                res.status(400).send(response);
                 return;
             }
-
-            return res.status(400).json({ error });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: error,
+            };
+            return res.status(400).send(response);
         }
     },
 );
@@ -342,17 +467,22 @@ router.post(
  * Signup with google
  * POSTMAN_TODO : This route is waiting to be added to postman and documented
  */
-router.post('/google', async (req, res) => {
+router.post('/google', apiRequestAuthGoogleValidator, async (_req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
 
         const tokenPayload = await verifyGoogleAuthToken(token);
 
         if (!tokenPayload.success) {
-            res.status(401).send({ error: 'Invalid token' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token',
+            };
+            res.status(401).send(response);
             return;
         }
 
@@ -366,7 +496,12 @@ router.post('/google', async (req, res) => {
         });
 
         if (oldUser) {
-            res.status(409).send({ error: 'User with this email already exists' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'User with this email already exists',
+            };
+            res.status(401).send(response);
             return;
         }
 
@@ -388,15 +523,30 @@ router.post('/google', async (req, res) => {
 
         // generate the JWT token
         const tokenJWT = generateToken(email, newUser.userId, false);
-        res.send({ token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email });
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token: tokenJWT, isAdmin: false, userId: newUser.userId, email: newUser.email },
+        };
+        res.status(200).send(response);
+
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: 'Token is required and must be non-empty' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token is required and must be non-empty',
+            };
+            res.status(400).send(response);
             return;
         }
-
-        return res.status(400).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
+        return res.status(400).send(response);
     }
 });
 
@@ -405,16 +555,21 @@ router.post('/google', async (req, res) => {
  * POSTMAN_TODO : This route is waiting to be added to postman and documented
  *
  */
-router.post('/google_login', async (req, res) => {
+router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
         const tokenPayload = await verifyGoogleAuthToken(token);
 
         if (!tokenPayload.success) {
-            res.status(401).send({ error: 'Invalid token' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token',
+            };
+            res.status(401).send(response);
             return;
         }
 
@@ -432,7 +587,12 @@ router.post('/google_login', async (req, res) => {
         });
 
         if (!oldUser) {
-            res.status(401).send({ error: 'Invalid token' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token',
+            };
+            res.status(401).send(response);
             return;
         }
 
@@ -441,7 +601,12 @@ router.post('/google_login', async (req, res) => {
 
         // check for the number of active sessions
         if (oldUser.numberOfSessions === oldUser.sessions.length) {
-            res.status(401).send({ error: 'Too many sessions' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Too many sessions',
+            };
+            res.status(401).send(response);
             return;
         }
 
@@ -468,16 +633,31 @@ router.post('/google_login', async (req, res) => {
                 },
             },
         });
-
-        res.send({ token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: 'Token is required and must be non-empty' });
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 400,
+                error: error.issues[0]?.message
+            }
+            res.status(400).send(response);
             return;
         }
 
-        return res.status(400).json({ error });
+        const response:ApiResponse<null> = {
+            success : false ,
+            status : 500,
+            error:error
+        }
+
+        return res.status(500).send(response);
     }
 });
 
@@ -485,18 +665,16 @@ router.post('/google_login', async (req, res) => {
  * Logout the user
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/logout', authenticateUser, async (_req, res) => {
+router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
     try {
-        // Validate res.locals using the Zod schema
-        const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
-        const email = parsedLocals.email;
-        const token = parsedLocals.token;
+        const parsedBody = res.locals.reqClientData;
+        const token = parsedBody.token;
+        const email = parsedBody.email;
 
-        // check if the user is already associated with the email
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
             where: {
-                email: email,
+                email,
             },
             include: {
                 sessions: true,
@@ -504,49 +682,76 @@ router.post('/logout', authenticateUser, async (_req, res) => {
         });
 
         if (!oldUser) {
-            res.status(401).send({ error: 'No such user exit' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'No such user exit',
+            };
+            res.status(401).send(response);
             return;
         }
 
-    
         const isSessionExists = !!oldUser.sessions.find((session) => session.token === token);
         if (!isSessionExists) {
-            res.status(401).send({ error: 'No such token' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'No such token',
+            };
+            res.status(401).send(response);
             return;
         }
 
-        // delete the session
         await prisma.user.update({
             where: {
-                email: email,
+                email,
             },
             data: {
                 sessions: {
                     delete: {
-                        token: token,
+                        token,
                     },
                 },
             },
         });
 
-        res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };  
+        
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token and email are required and must be non-empty',
+            };
+            res.status(400).send(response);
             return;
         }
 
-        return res.status(500).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 500,
+            error: error,
+        };
+
+        res.status(500).send(response);
+        return;
     }
 });
+
 
 /**
  *
  * Logout all the sessions
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/logout_all', authenticateUser, async (_req, res) => {
+router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) => {
     try {
         // Validate res.locals using the Zod schema
         const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
@@ -565,7 +770,12 @@ router.post('/logout_all', authenticateUser, async (_req, res) => {
         });
 
         if (!oldUser) {
-            res.status(401).send({ error: 'Invalid token or email' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 401,
+                error: 'Invalid token or email',
+            };
+            res.status(401).send(response);
             return;
         }
 
@@ -580,16 +790,29 @@ router.post('/logout_all', authenticateUser, async (_req, res) => {
                 },
             },
         });
-
-        res.send({ token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email });
+        const response: ApiResponse<ICommon> = {
+            success: true,
+            status: 200,
+            data: { token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
+        };
+        res.status(200).send(response);
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            res.status(400).send({ error: 'Token and email are required and must be non-empty' });
+            const response: ApiResponse<null> = {
+                success: false,
+                status: 400,
+                error: 'Token and email are required and must be non-empty',
+            };
+            res.status(400).send(response);
             return;
         }
-
-        return res.status(400).json({ error });
+        const response: ApiResponse<null> = {
+            success: false,
+            status: 400,
+            error: error,
+        };
+        return res.status(400).send(response);
     }
 });
 
