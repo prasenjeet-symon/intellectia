@@ -2,7 +2,6 @@
  * Note that error response structure is  : { error: string }
  */
 
-import { ApiResponse, ICommon, IMagic, IRequestAuthLogin } from '@intellectia/types';
 import {
     apiRequestAuthGoogleLoginValidator,
     apiRequestAuthGoogleValidator,
@@ -18,7 +17,8 @@ import rateLimit from 'express-rate-limit';
 import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { Constants, PrismaClientSingleton, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
-import { emailObjectValidator, emailPasswordObjectValidator, tokenEmailObjectValidator, tokenObjectValidator } from '../validators';
+import { tokenEmailObjectValidator } from '../validators';
+import { ApiResponse, ICommon, IMagic, IRequestAuthLogin, IRequestAuthMagic, IRequestAuthMagicLogin, IRequestAuthSignup } from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -157,9 +157,10 @@ router.post('/login', apiRequestAuthLoginValidator, async (req, res) => {
  */
 router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
     try {
-        const parsedBody = emailPasswordObjectValidator.parse(req.body);
-        const email = parsedBody.email;
-        const password = parsedBody.password;
+        const reqClientData: IRequestAuthSignup = res.locals.reqClientData;
+
+        const email = reqClientData.body.email;
+        const password = reqClientData.body.password;
         // check if the user already exit in the database
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
@@ -169,12 +170,13 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         });
 
         if (oldUser) {
-            const response: ApiResponse<null> = {
-                success: false,
+            const response:ApiResponse<null> = {
+                success : false,
                 status: 409,
-                error: 'A account already exists with this email.',
-            };
-            res.status(500).json(response);
+                error:'A account already exists with this email.'
+            }
+
+            res.status(409).json(response);
             return;
         }
 
@@ -227,20 +229,23 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response: ApiResponse<null> = {
-                success: false,
+            const response:ApiResponse<null> ={
+                success : false,
                 status: 400,
-                error: error.issues[0]?.message,
-            };
-            return res.status(400).send(response);
+                error: error.issues[0]?.message
+            }
+            res.status(400).send(response);
+            return;
         }
 
-        const response: ApiResponse<null> = {
-            success: false,
-            status: 400,
-            error: error,
-        };
-        return res.status(400).send(response);
+        const response:ApiResponse<null> = {
+            success : false,
+            status:500,
+            error: 'An unexpected error occurred.',
+        }
+        res.status(500).send(response);
+        return;
+    
     }
 });
 
@@ -250,8 +255,9 @@ router.post('/signup', apiRequestAuthSignupValidator, async (req, res) => {
  */
 router.post('/magic', apiRequestAuthMagicValidator, async (req, res) => {
     try {
-        const parsedBody = await emailObjectValidator.parseAsync(req.body);
-        const email = parsedBody.email;
+        const reqClientData: IRequestAuthMagic = res.locals.reqClientData;
+        const email: string = reqClientData.body.email;
+        console.log(req.body.email);
 
         const magicLinkToken = v4();
         const magicLink = `${Constants.CLIENT_HOST}/server/auth/magic_login?token=${magicLinkToken}&email=${email}`;
@@ -340,10 +346,9 @@ router.post(
     }),
     async (req, res) => {
         try {
-            // Validate res.locals using the Zod schema
-            const parsedLocals = await tokenEmailObjectValidator.parseAsync(req.body);
-            const email = parsedLocals.email;
-            const token = parsedLocals.token;
+            // Removed direct access to req.body
+            const reqClientData: IRequestAuthMagicLogin = res.locals.reqClientData;
+            const { email, token } = reqClientData.body;
 
             // check if the user is already associated with the email
             const prisma = PrismaClientSingleton.prisma;
@@ -429,14 +434,15 @@ router.post(
                     },
                 },
             });
-            const response: ApiResponse<ICommon> = {
+            const response:ApiResponse<ICommon> = {
                 success: true,
                 status: 200,
-                data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
-            };
+                data: { token: tokenJWT, isAdmin: false, userId: oldUser.userId, email: oldUser.email }
+            }
             res.status(200).send(response);
             return;
         } catch (error) {
+            // Handle errors and send appropriate response
             if (error instanceof ZodError && !error.isEmpty) {
                 const response: ApiResponse<null> = {
                     success: false,
@@ -461,11 +467,11 @@ router.post(
  * Signup with google
  * POSTMAN_TODO : This route is waiting to be added to postman and documented
  */
-router.post('/google', apiRequestAuthGoogleValidator, async (req, res) => {
+router.post('/google', apiRequestAuthGoogleValidator, async (_req, res) => {
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
 
         const tokenPayload = await verifyGoogleAuthToken(token);
@@ -553,7 +559,7 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
     // token is required
     try {
         // Validate the request body using the Zod schema
-        const parsedBody = await tokenObjectValidator.parseAsync(req.body);
+        const parsedBody = res.locals.reqClientData;
         const token = parsedBody.token;
         const tokenPayload = await verifyGoogleAuthToken(token);
 
@@ -636,20 +642,22 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
         return;
     } catch (error) {
         if (error instanceof ZodError && !error.isEmpty) {
-            const response: ApiResponse<null> = {
-                success: false,
-                status: 400,
-                error: 'Token is required and must be non-empty',
-            };
+            const response:ApiResponse<null> = {
+                success : false ,
+                status : 400,
+                error: error.issues[0]?.message
+            }
             res.status(400).send(response);
             return;
         }
-        const response: ApiResponse<null> = {
-            success: false,
-            status: 400,
-            error: error,
-        };
-        return res.status(400).send(response);
+
+        const response:ApiResponse<null> = {
+            success : false ,
+            status : 500,
+            error:error
+        }
+
+        return res.status(500).send(response);
     }
 });
 
@@ -659,16 +667,14 @@ router.post('/google_login', apiRequestAuthGoogleLoginValidator, async (req, res
  */
 router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
     try {
-        // Validate res.locals using the Zod schema
-        const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
-        const email = parsedLocals.email;
-        const token = parsedLocals.token;
+        const parsedBody = res.locals.reqClientData;
+        const token = parsedBody.token;
+        const email = parsedBody.email;
 
-        // check if the user is already associated with the email
         const prisma = PrismaClientSingleton.prisma;
         const oldUser = await prisma.user.findUnique({
             where: {
-                email: email,
+                email,
             },
             include: {
                 sessions: true,
@@ -682,7 +688,6 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
                 error: 'No such user exit',
             };
             res.status(401).send(response);
-
             return;
         }
 
@@ -697,24 +702,25 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
             return;
         }
 
-        // delete the session
         await prisma.user.update({
             where: {
-                email: email,
+                email,
             },
             data: {
                 sessions: {
                     delete: {
-                        token: token,
+                        token,
                     },
                 },
             },
         });
+
         const response: ApiResponse<ICommon> = {
             success: true,
             status: 200,
             data: { token: token, isAdmin: false, userId: oldUser.userId, email: oldUser.email },
-        };
+        };  
+        
         res.status(200).send(response);
         return;
     } catch (error) {
@@ -727,14 +733,18 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
             res.status(400).send(response);
             return;
         }
+
         const response: ApiResponse<null> = {
             success: false,
             status: 500,
             error: error,
         };
-        return res.status(500).send(response);
+
+        res.status(500).send(response);
+        return;
     }
 });
+
 
 /**
  *
