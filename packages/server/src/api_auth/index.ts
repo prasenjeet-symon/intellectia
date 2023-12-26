@@ -18,7 +18,7 @@ import { v4 } from 'uuid';
 import { ZodError } from 'zod';
 import { Constants, PrismaClientSingleton, generateToken, isMagicTokenValid, jwtExpireDate, verifyGoogleAuthToken } from '../utils';
 import { tokenEmailObjectValidator } from '../validators';
-import { ApiResponse, ICommon, IMagic, IRequestAuthLogin, IRequestAuthMagic, IRequestAuthMagicLogin, IRequestAuthSignup } from '@intellectia/types';
+import { ApiResponse, ICommon, IMagic, IRequestAuthLogin, IRequestAuthLogoutAll, IRequestAuthMagic, IRequestAuthMagicLogin, IRequestAuthSignup } from '@intellectia/types';
 
 const router: Router = Router();
 
@@ -751,12 +751,12 @@ router.post('/logout', apiRequestAuthLogoutValidator, async (_req, res) => {
  * Logout all the sessions
  * POSTMAN_DONE : This route is successfully added to postman and documented
  */
-router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) => {
+router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req:any, res:any) => {
     try {
         // Validate res.locals using the Zod schema
-        const parsedLocals = await tokenEmailObjectValidator.parseAsync(res.locals);
-        const email = parsedLocals.email;
-        const token = parsedLocals.token;
+        const parsedLocals:IRequestAuthLogoutAll = res.locals.reqClientData;
+        const email = parsedLocals.body.email;
+        const token = parsedLocals.body.token;
 
         // check if the user is already associated with the email
         const prisma = PrismaClientSingleton.prisma;
@@ -773,7 +773,7 @@ router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) =
             const response: ApiResponse<null> = {
                 success: false,
                 status: 401,
-                error: 'Invalid token or email',
+                error: 'User does not exist.',
             };
             res.status(401).send(response);
             return;
@@ -797,20 +797,21 @@ router.post('/logout_all', apiRequestAuthLogoutAllValidator, async (_req, res) =
         };
         res.status(200).send(response);
         return;
-    } catch (error) {
+    } catch (error:any) {
         if (error instanceof ZodError && !error.isEmpty) {
+            const errorMessage = error.issues.length > 0 ? error.issues[0]?.message : 'Validation error';
             const response: ApiResponse<null> = {
                 success: false,
                 status: 400,
-                error: 'Token and email are required and must be non-empty',
+                error: errorMessage,
             };
             res.status(400).send(response);
             return;
         }
         const response: ApiResponse<null> = {
             success: false,
-            status: 400,
-            error: error,
+            status: 500,
+            error: 'Internal server error',
         };
         return res.status(400).send(response);
     }
