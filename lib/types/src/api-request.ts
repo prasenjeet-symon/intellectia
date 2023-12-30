@@ -63,7 +63,14 @@ export interface IRequestAuthLogout {}
 /**
  * Request validation for - /server/auth/logout_all
  */
-export interface IRequestAuthLogoutAll {}
+export interface IRequestAuthLogoutAll {
+  body: {
+    email: string;
+    token: string;
+  };
+  param: object;
+  query: object;
+}
 /**
  * Request validation for - /server/api/topics
  */
